@@ -2,9 +2,10 @@
 
 const path = require('path');
 const parseArgs = require('minimist');
+const chalk = require('chalk');
 
 require('ts-node').register({
-  transpileOnly: false,
+  transpileOnly: true,
 });
 
 const importScript = name => {

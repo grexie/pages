@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-import chalk from 'chalk';
+import { existsSync, readFileSync } from 'fs';
+import { basename, resolve } from 'path';
+import { cyan, gray } from 'chalk';
 import { getWorkspaces } from '../utils/workspaces';
 
 interface RunOptions {
@@ -57,7 +57,7 @@ export default async (
   );
 
   const maxLength = packages.reduce(
-    (a, b) => Math.max(a, path.basename(b.location).length),
+    (a, b) => Math.max(a, basename(b.location).length),
     0
   );
 
@@ -68,23 +68,23 @@ export default async (
   await Promise.all(
     packages.map(async ({ workspace, location }) => {
       const skipped = (reason: string) =>
-        console.error(chalk.gray(`${workspace} skipped due to ${reason}`));
+        console.error(gray(`${workspace} skipped due to ${reason}`));
 
-      const packagePath = path.resolve(location, 'package.json');
+      const packagePath = resolve(location, 'package.json');
 
-      if (!fs.existsSync(packagePath)) {
+      if (!existsSync(packagePath)) {
         skipped('no package.json');
         return;
       }
 
-      const pkg = JSON.parse(fs.readFileSync(packagePath).toString());
+      const pkg = JSON.parse(readFileSync(packagePath).toString());
 
       if (!pkg.scripts[command]) {
         skipped(`no script named ${command}`);
         return;
       }
 
-      const logName = path.basename(location).padEnd(maxLength, ' ');
+      const logName = basename(location).padEnd(maxLength, ' ');
 
       if (!parallel) {
         if (runLock) {
@@ -93,7 +93,7 @@ export default async (
         runLock = createResolver();
       }
 
-      console.error(chalk.cyan(`[${logName}] yarn run ${command}`));
+      console.error(cyan(`[${logName}] yarn run ${command}`));
 
       const child = spawn('yarn', ['run', command, ...args], {
         env: { ...process.env, FORCE_COLOR: '3' },
@@ -108,7 +108,7 @@ export default async (
         }
         const lines = data.split(/\n|\r\n|\r/g) as string[];
         lines.forEach(line => {
-          process.stdout.write(chalk.cyan(`[${logName}] `));
+          process.stdout.write(cyan(`[${logName}] `));
           process.stdout.write(line);
           process.stdout.write('\n');
         });
@@ -120,7 +120,7 @@ export default async (
         }
         const lines = data.split(/\n|\r\n/g) as string[];
         lines.forEach(line => {
-          process.stderr.write(chalk.cyan(`[${logName}] `));
+          process.stderr.write(cyan(`[${logName}] `));
           process.stderr.write(line);
           process.stderr.write('\n');
         });
