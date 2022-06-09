@@ -1,0 +1,12 @@
+{
+  "name": "@grexie/pages",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc --watch"
+  },
+  "dependencies": {
+    "@grexie/pages-cli": "^0"
+  }
+}

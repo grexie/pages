@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "noEmit": true,
+  },
+  "references": [
+    {
+      "path": "packages/cli"
+    },
+    {
+      "path": "packages/pages"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@grexie/pages-monorepo",
+  "version": "0.0.1",
+  "license": "MIT",
+  "private": true,
+  "bin": {
+    "monorepo": "bin/monorepo.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@babel/plugin-transform-runtime": "^7.16.7",
+    "@babel/preset-env": "^7.16.7",
+    "@babel/register": "^7.16.7",
+    "@types/glob": "^7.2.0",
+    "@types/minimist": "^1.2.2",
+    "chalk": "^4",
+    "glob": "^8.0.3",
+    "minimist": "^1.2.6"
+  }
+}
