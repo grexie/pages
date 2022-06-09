@@ -22,6 +22,7 @@ const main = async (name: string, ...args: string[]) => {
       if (fs.realpathSync(module) !== __filename) {
         const localPages = require(module).default;
         localPages();
+        return;
       }
     } catch (err) {}
   }
@@ -54,7 +55,3 @@ const run = () =>
   });
 
 export default run;
-
-if ((module = require.main)) {
-  run();
-}
