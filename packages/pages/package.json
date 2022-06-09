@@ -9,6 +9,6 @@
     "start": "tsc --watch"
   },
   "dependencies": {
-    "@grexie/pages-cli": "^0"
+    "@grexie/pages-cli": "^0.0.1"
   }
 }
