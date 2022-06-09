@@ -11,10 +11,6 @@
     "build": "tsc",
     "start": "tsc --watch"
   },
-  "files": [
-    "index.js",
-    "scripts/*"
-  ],
   "dependencies": {
     "resolve": "^1.22.0",
     "chalk": "^4"

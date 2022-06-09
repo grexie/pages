@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { sync as resolve } from 'resolve';
+import resolve from 'resolve/sync';
 import chalk from 'chalk';
 
 type Script = (...args: string[]) => Promise<void>;
