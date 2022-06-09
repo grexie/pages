@@ -1,25 +1,9 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "./",
-    "rootDir": "./src/",
-    "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "jsx": "react",
-    "incremental": true,
+        "outDir": "./",
+        "rootDir": "./src/",
   },
   "include": [
     "src/**/*.ts",

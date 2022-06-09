@@ -1,23 +1,7 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "jsx": "react",
-    "incremental": true,
-    "preserveWatchOutput": true,
+    "noEmit": true
   },
   "include": [
     "src/**/*.ts",

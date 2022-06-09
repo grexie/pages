@@ -5,6 +5,7 @@
     "tools/*"
   ],
   "scripts": {
+    "clean": "git clean -dfX && yarn && yarn build",
     "start": "tsc -b --watch --preserveWatchOutput",
     "build": "tsc -b",
     "publish": "tsc -b && monorepo workspaces npm publish",
