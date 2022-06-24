@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/builder"
+    },
+    {
+      "path": "packages/cli"
+    },
+    {
+      "path": "packages/pages"
+    }
+  ]
+}

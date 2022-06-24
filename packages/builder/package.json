@@ -1,0 +1,12 @@
+{
+  "name": "@grexie/builder",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src/ -d . -x .ts,.tsx"
+  },
+  "dependencies": {
+    "webpack": "^5.73.0"
+  }
+}

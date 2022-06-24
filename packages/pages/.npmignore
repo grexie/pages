@@ -1,0 +1,7 @@
+/src/
+.gitignore
+tsconfig.json
+tsconfig.tsbuildinfo
+.babelrc
+yarn-error.log
+/index.d.js

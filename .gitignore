@@ -1,0 +1,10 @@
+.DS_Store
+tsconfig.tsbuildinfo
+yarn-error.log
+node_modules/
+/packages/*/*.js
+/packages/*/*.ts
+/packages/*/*/
+!/packages/*/src/
+!/packages/*/bin/
+

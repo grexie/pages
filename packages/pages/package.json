@@ -1,0 +1,43 @@
+{
+  "name": "@grexie/pages",
+  "version": "0.0.3",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "babel src/ -d . -x .ts,.tsx"
+  },
+  "dependencies": {
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-react": "^7.17.12",
+    "@babel/preset-typescript": "^7.17.12",
+    "@grexie/compose": "^0.1.8",
+    "@grexie/pages-cli": "^0.0.3",
+    "@mdx-js/mdx": "^2.1.1",
+    "@types/mime": "^2.0.3",
+    "babel-loader": "^8.2.5",
+    "es-main": "^1.0.2",
+    "gray-matter": "^4.0.3",
+    "loader-utils": "^3.2.0",
+    "nodemon": "^2.0.16",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "resolve": "^1.22.0",
+    "schema-utils": "^4.0.0",
+    "webpack-node-externals": "^3.0.0",
+    "whatwg-url": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/babel__core": "^7.1.19",
+    "@types/loader-utils": "^2.0.3",
+    "@types/nodemon": "^1.19.1",
+    "@types/react": "^18.0.12",
+    "@types/react-dom": "^18.0.5",
+    "@types/resolve": "^1.20.2",
+    "@types/schema-utils": "^2.4.0",
+    "@types/webpack-node-externals": "^2.5.3",
+    "@types/whatwg-url": "^8.2.1",
+    "mime": "^3.0.0"
+  }
+}
