@@ -91,7 +91,6 @@ export class Registry {
 
   async tree(options: ListOptions): Promise<SourceTree> {
     const resources = await this.list(options);
-    console.info(resources, options);
     const tree: SourceTree = {};
     for (const resource of resources) {
       let current = tree;

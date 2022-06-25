@@ -20,6 +20,7 @@
     "es-main": "^1.0.2",
     "gray-matter": "^4.0.3",
     "loader-utils": "^3.2.0",
+    "memfs": "^3.4.7",
     "nodemon": "^2.0.16",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",

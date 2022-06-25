@@ -1,5 +1,6 @@
 import { ContentResource, ResourceMetadata } from './Resource';
 import { dirname } from 'path';
+import EventEmitter from 'events';
 export type SourceTree = { [key: string]: SourceTree | string };
 
 export interface SourceOptions {
@@ -12,12 +13,13 @@ export interface CreateOptions<C = any, M extends ResourceMetadata = any> {
   metadata?: M;
 }
 
-export class Source {
+export class Source extends EventEmitter {
   readonly filename: string;
   readonly path: string[];
   readonly slug: string;
 
   constructor({ filename, path }: SourceOptions) {
+    super();
     this.filename = filename;
     this.path = path;
     this.slug = path.join('/');

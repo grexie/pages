@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { BuildContext } from './BuildContext';
 import type { LoaderContext, NormalModule } from 'webpack';
 import _Module from 'module';
@@ -50,7 +51,7 @@ export interface ModuleOptions {
   imports: Record<string, Import>;
 }
 
-export class Module {
+export class Module extends EventEmitter {
   readonly filename: string;
   readonly source: string;
   readonly load: ModuleLoader;
@@ -61,6 +62,7 @@ export class Module {
   readonly id = ++Module.#id;
 
   constructor({ filename, source, loader, imports }: ModuleOptions) {
+    super();
     this.filename = filename;
     this.source = source;
     this.load = (parent: _Module) => {
@@ -196,6 +198,7 @@ export class ModuleResolver {
 export class ModuleContext {
   readonly build: BuildContext;
   readonly #modules: Modules = {};
+  readonly #loadedModules: Record<string, Module> = {};
   readonly #compiler: ModuleCompiler;
 
   constructor(context: BuildContext) {
@@ -207,12 +210,15 @@ export class ModuleContext {
     return new ModuleResolver(this.build, loader);
   }
 
-  evict(filename: string) {
+  async evict(filename: string) {
+    const module = this.#loadedModules[filename];
+    module?.emit('evict', module);
+    try {
+      delete module.module.require.cache[filename];
+      module.module.children.forEach(module => this.evict(module.id));
+    } catch (err) {}
+    delete this.#loadedModules[filename];
     delete this.#modules[filename];
-    const module = require.cache[filename];
-    delete require.cache[filename];
-    module?.parent?.children.splice(module.parent.children.indexOf(module), 1);
-    module?.children.forEach(module => this.evict(module.id));
   }
 
   async require(resolver: ModuleResolver, context: string, request: string) {
@@ -244,17 +250,59 @@ export class ModuleContext {
 
       const { load } = modules[filename];
       const m = load(_module);
+
       return m.exports;
     });
 
     return _module.require;
   }
 
+  async #compile(
+    resolver: ModuleResolver,
+    context: string,
+    _source: string,
+    filename: string,
+    sourceFilename: string
+  ) {
+    const cacheFile = path.join(filename, 'build');
+
+    return this.build.persistentCache.lock(cacheFile, async cache => {
+      const stats = await this.build.fs.stat(sourceFilename);
+
+      if (await cache.has(cacheFile)) {
+        const cached = await cache.modified(cacheFile);
+
+        if (stats.mtime.getTime() <= cached.getTime()) {
+          return JSON.parse((await cache.get(cacheFile)).toString()) as {
+            source: string;
+            imports: Record<string, Import>;
+          };
+        }
+      }
+
+      const compiled = await this.#compiler.compile({
+        source: _source,
+        filename,
+      });
+      const source = compiled.source;
+      const imports = await resolver.resolveImports(context, compiled.imports);
+
+      await cache.set(
+        cacheFile,
+        JSON.stringify({ source, imports }),
+        stats.mtime
+      );
+
+      return { source, imports };
+    });
+  }
+
   async create(
     resolver: ModuleResolver,
     context: string,
     filename: string,
-    source: string,
+    _source: string,
+    sourceFilename: string = filename,
     modules: Record<string, Module> = {}
   ): Promise<Module> {
     if (this.#modules[filename]) {
@@ -269,11 +317,16 @@ export class ModuleContext {
     const promise = createResolver<Module>();
     this.#modules[filename] = promise;
 
-    const compiled = await this.#compiler.compile({ source, filename });
-    const imports = await resolver.resolveImports(context, compiled.imports);
+    const { source, imports } = await this.#compile(
+      resolver,
+      context,
+      _source,
+      filename,
+      sourceFilename
+    );
 
     await Promise.all(
-      Object.entries(imports).map(async ([request, require]) => {
+      Object.values(imports).map(async require => {
         if (!require.compile || this.#modules[require.filename]) {
           return;
         }
@@ -284,18 +337,19 @@ export class ModuleContext {
           module.context!,
           require.filename,
           source,
+          require.filename,
           modules
         );
       })
     );
 
-    const script = new Script(wrapScript(compiled.source), {
+    const script = new Script(wrapScript(source), {
       filename,
       displayErrors: true,
     }).runInThisContext() as WrappedScript;
 
     let _module: _Module;
-    const loader = (parent?: _Module) => {
+    const loader = (parent: _Module) => {
       if (_module) {
         return _module;
       }
@@ -318,7 +372,7 @@ export class ModuleContext {
 
     const module = new Module({
       filename,
-      source: compiled.source,
+      source,
       loader,
       imports,
     });

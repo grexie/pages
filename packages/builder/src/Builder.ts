@@ -1,18 +1,16 @@
-import webpack, { Stats } from 'webpack';
+import webpack from 'webpack';
 import { Configuration, EntryObject } from 'webpack';
-import { MountOptions, Store } from './Store';
+import { FileSystem } from './FileSystem';
 import { EventEmitter } from 'events';
 
+export type WebpackStats = webpack.Stats;
 export type { Configuration, EntryObject };
-export type { Stats };
 
 export interface BuildOptions {
   config: Configuration;
 }
 
-export interface BuilderOptions {
-  mounts?: MountOptions[];
-}
+export interface BuilderOptions {}
 
 export class Watcher extends EventEmitter {
   readonly #watching: webpack.Watching;
@@ -22,7 +20,7 @@ export class Watcher extends EventEmitter {
 
     this.#watching = compiler.watch(
       {},
-      (err: Error | null | undefined, stats?: webpack.Stats) => {
+      (err: Error | null | undefined, stats?: WebpackStats) => {
         this.emit('build', err, stats);
       }
     );
@@ -43,19 +41,17 @@ export class Watcher extends EventEmitter {
 }
 
 export class Builder {
-  readonly store: Store;
+  readonly fs = new FileSystem();
 
-  constructor({ mounts }: BuilderOptions = {}) {
-    this.store = new Store({ mounts });
-  }
+  constructor({}: BuilderOptions = {}) {}
 
-  async build({ config }: BuildOptions): Promise<webpack.Stats> {
+  async build({ config }: BuildOptions): Promise<WebpackStats> {
     const compiler = webpack(config);
 
-    compiler.inputFileSystem = this.store;
-    compiler.outputFileSystem = this.store;
+    compiler.inputFileSystem = this.fs;
+    compiler.outputFileSystem = this.fs;
 
-    return new Promise<webpack.Stats>((resolve, reject) =>
+    return new Promise<WebpackStats>((resolve, reject) =>
       compiler.run((err, stats) => {
         if (err) {
           reject(err);
@@ -70,8 +66,8 @@ export class Builder {
   watch({ config }: BuildOptions): Watcher {
     const compiler = webpack(config);
 
-    compiler.inputFileSystem = this.store;
-    compiler.outputFileSystem = this.store;
+    compiler.inputFileSystem = this.fs;
+    compiler.outputFileSystem = this.fs;
 
     return new Watcher(compiler);
   }

@@ -1,5 +1,6 @@
 import { Provider } from '../api/Provider';
 import { Server } from './Server';
+import fs from 'fs';
 import 'source-map-support/register.js';
 
 const server = new Server({
@@ -9,6 +10,7 @@ const server = new Server({
       provider: Provider,
     },
   ],
+  fs,
 });
 
 server.start().then(server => {

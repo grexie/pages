@@ -1,31 +1,86 @@
 import {
   Builder as BuilderBase,
   Watcher,
-  Stats,
   Configuration,
   EntryObject,
+  FileSystemOptions,
+  WebpackStats,
+  FileSystem,
+  WritableFileSystem,
 } from '@grexie/builder';
 import { BuildContext } from './BuildContext';
+import { Cache } from '@grexie/builder';
 import { Source } from '../api';
 import nodeExternals from 'webpack-node-externals';
 import _path from 'path';
-
-const mountPoints = () => {
-  return ['/Users/tim/src/grexie/grexie-pages'];
-};
+import { Volume } from 'memfs';
 
 export class Builder {
   readonly context: BuildContext;
+  readonly defaultFiles: WritableFileSystem;
   readonly #builder: BuilderBase;
+  readonly ephemeralCache: Cache;
+  readonly persistentCache: Cache;
 
-  constructor(context: BuildContext) {
+  get fs() {
+    return this.#builder.fs;
+  }
+
+  constructor(
+    context: BuildContext,
+    fs: WritableFileSystem,
+    fsOptions: FileSystemOptions[]
+  ) {
     this.context = context;
-    this.#builder = new BuilderBase({
-      mounts: [this.context.rootDir, ...mountPoints()].map(path => ({
-        path,
-        readonly: true,
-      })),
-    });
+    this.#builder = new BuilderBase();
+    const { defaultFiles, ephemeralCache, persistentCache } =
+      this.#createFileSystem(fs, fsOptions);
+    this.defaultFiles = defaultFiles;
+    this.ephemeralCache = ephemeralCache;
+    this.persistentCache = persistentCache;
+  }
+
+  #createFileSystem(fs: WritableFileSystem, fsOptions: FileSystemOptions[]) {
+    this.#builder.fs.add(_path.resolve(this.context.pagesDir, '..', '..'), fs);
+
+    const defaultFiles = new Volume();
+    defaultFiles.mkdirSync(this.context.rootDir, { recursive: true });
+    defaultFiles.writeFileSync(
+      _path.resolve(this.context.rootDir, 'package.json'),
+      '{}'
+    );
+
+    this.#builder.fs.add(
+      this.context.rootDir,
+      new FileSystem()
+        .add('/', defaultFiles, true)
+        .add(this.context.rootDir, fs),
+      true
+    );
+
+    fsOptions.forEach(options =>
+      this.#builder.fs.add(options.path, options.fs, options.writable)
+    );
+
+    const ephemeralCache = new Cache(
+      new FileSystem().add(
+        _path.resolve(this.context.cacheDir, 'ephemeral'),
+        new Volume(),
+        true
+      ),
+      _path.resolve(this.context.cacheDir, 'ephemeral')
+    );
+
+    const persistentCache = new Cache(
+      new FileSystem().add(
+        _path.resolve(this.context.cacheDir, 'persistent'),
+        fs,
+        true
+      ),
+      _path.resolve(this.context.cacheDir, 'persistent')
+    );
+
+    return { defaultFiles, ephemeralCache, persistentCache };
   }
 
   filenameToPath(
@@ -68,31 +123,19 @@ export class Builder {
 
     filename = _path.resolve(this.context.outputDir, filename);
 
-    const readFile = (): Promise<Buffer> =>
-      new Promise((resolve, reject) =>
-        this.#builder.store.readFile(filename!, (err, buffer) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          resolve(buffer!);
-        })
-      );
-
     try {
-      const buffer = await readFile();
-      return buffer;
+      const buffer = await this.fs.readFile(filename);
+      return Buffer.from(buffer);
     } catch (err) {
       if (!wait) {
         throw err;
       }
 
       await new Promise(resolve => {
-        this.#builder.store.once(`write:${filename}`, () => resolve);
+        this.#builder.fs.once(`write:${filename}`, () => resolve);
       });
-      const buffer = await readFile();
-      return buffer;
+      const buffer = await this.fs.readFile(filename);
+      return Buffer.from(buffer);
     }
   }
 
@@ -103,12 +146,23 @@ export class Builder {
     }
     const slug = path.join('/');
     return {
-      [slug]: source.filename,
+      [slug]: `./${_path.relative(this.context.rootDir, source.filename)}`,
+    };
+  }
+
+  #loader(loader: string, options: any = {}) {
+    return {
+      loader,
+      options: {
+        context: this.context,
+        ...options,
+      },
     };
   }
 
   async config(sources: Source[]): Promise<Configuration> {
     return {
+      cache: { type: 'memory' },
       context: this.context.rootDir,
       entry: {
         ...sources
@@ -132,24 +186,19 @@ export class Builder {
           {
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
-            use: {
-              loader: 'pages-loader',
-              options: {
-                context: this.context,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('pages-loader', {
                 handler: '@grexie/pages/handlers/markdown',
-              },
-            },
+              }),
+            ],
           },
           {
             test: /\.(js|jsx|mjs|cjs)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              {
-                loader: 'pages-loader',
-                options: {
-                  context: this.context,
-                },
-              },
+              this.#loader('cache-loader'),
+              this.#loader('pages-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -164,12 +213,8 @@ export class Builder {
             test: /\.(ts|tsx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              {
-                loader: 'pages-loader',
-                options: {
-                  context: this.context,
-                },
-              },
+              this.#loader('cache-loader'),
+              this.#loader('pages-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -199,11 +244,12 @@ export class Builder {
     };
   }
 
-  async build(sources: Source[]): Promise<Stats> {
+  async build(sources: Source[]): Promise<WebpackStats> {
     sources = sources.filter(source =>
       /\.(js|jsx|tsx|ts|md)$/.test(source.filename)
     );
     const config = await this.config(sources);
+    console.info(config);
     return this.#builder.build({ config });
   }
 

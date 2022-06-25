@@ -21,6 +21,7 @@ export class SourceContext extends Source {
   readonly resolver: ModuleResolver;
   readonly module: Module;
   readonly content: Buffer;
+
   #index = 0;
 
   constructor({
@@ -55,8 +56,11 @@ export class SourceContext extends Source {
       this.resolver,
       this.dirname,
       `${this.filename}$${++this.#index}`,
-      code
+      code,
+      this.filename
     );
+
+    this.once('end', () => this.context.modules.evict(module.filename));
 
     const { exports } = module.load(this.module.module);
 
