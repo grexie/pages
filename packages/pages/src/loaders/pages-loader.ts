@@ -47,14 +47,13 @@ export default async function PagesLoader(
     };
 
     const resolver = context.modules.createResolver(this);
-
     let handlerModule = await createHandler();
 
     const handler = handlerModule.load(module).exports as Handler;
 
     console.timeEnd(`pages-loader:createHandler ${this.resourcePath}`);
 
-    let resource: Resource;
+    let resource: Resource | undefined = undefined;
     const sourceContext = new SourceContext({
       resolver,
       context,
@@ -66,8 +65,10 @@ export default async function PagesLoader(
 
     if (typeof handler.resource === 'function') {
       resource = await handler.resource(sourceContext);
-    } else {
-      resource = sourceContext.createBuffer();
+    }
+
+    if (!resource) {
+      return handlerModule.source;
     }
 
     const composables = [];
@@ -129,7 +130,7 @@ export default async function PagesLoader(
       context.modules.evict(this.resourcePath);
       sourceContext.emit('end');
 
-      return `
+      const out = `
       const { wrapHandler } = require("@grexie/pages");
       const { createComposable } = require("@grexie/compose");
       const resource = ${resource.serialize()};
@@ -139,6 +140,7 @@ export default async function PagesLoader(
         .join(',\n')}
       );
     `;
+      return out;
     } else {
       context.modules.evict(this.resourcePath);
       sourceContext.emit('end');

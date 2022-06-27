@@ -8,17 +8,20 @@ import { ModuleContext } from './ModuleContext';
 import os from 'os';
 
 export interface BuildOptions extends ContextOptions {
-  providers: ProviderConfig[];
+  providers?: ProviderConfig[];
   rootDir?: string;
   fs: WritableFileSystem;
   fsOptions?: FileSystemOptions[];
 }
 
 const defaultOptions = () => ({
-  rootDir: process.env.PAGES_ROOT || process.cwd(),
-  cacheDir:
-    process.env.PAGES_CACHE ||
-    path.resolve(os.tmpdir(), '@grexie', 'pages', 'cache'),
+  providers: [] as ProviderConfig[],
+  rootDir: path.resolve(process.cwd(), process.env.PAGES_ROOT ?? '.'),
+  cacheDir: path.resolve(
+    process.cwd(),
+    process.env.PAGES_CACHE ??
+      path.resolve(os.tmpdir(), '@grexie', 'pages', 'cache')
+  ),
   fsOptions: [],
 });
 

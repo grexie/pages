@@ -1,10 +1,14 @@
-import { FileSystem } from './FileSystem';
+import { FileSystem, Dirent } from './FileSystem';
 import os from 'os';
 import path from 'path';
 import { createHash } from 'crypto';
-import { createResolver } from '@grexie/pages/utils/resolvable';
+import { createResolver, ResolvablePromise } from './utils/resolvable';
 
 export interface ICache {
+  lock<T = any>(
+    filename: string | string[],
+    cb: (cache: ICache) => Promise<T>
+  ): Promise<T>;
   set: (
     filename: string,
     content: Buffer | string,
@@ -20,7 +24,7 @@ export class Cache implements ICache {
   readonly #fs: FileSystem;
   readonly #cacheDir: string;
   readonly #locks: Record<string, Promise<void>> = {};
-  readonly #keys: Record<string, string> = {};
+  readonly #globalLock = new Mutex();
 
   constructor(fs: FileSystem, cacheDir: string = os.tmpdir()) {
     this.#fs = fs;
@@ -28,50 +32,66 @@ export class Cache implements ICache {
   }
 
   #key(filename: string) {
-    if (this.#keys[filename]) {
-      return this.#keys[filename];
+    if (process.env.GREXIE_BUILDER_CACHE_HASH === 'false') {
+      return path.resolve(this.#cacheDir, filename.substring(1));
     }
-
     const hash = createHash('sha1');
     hash.update(filename);
     const key = Array.from(hash.digest().toString('hex'));
-    return path.resolve(
+    return `${path.resolve(
       this.#cacheDir,
       path.join(...key.slice(0, 5), key.slice(5).join(''))
-    );
+    )}${path.extname(filename)}`;
   }
 
-  async lock<T = any>(
-    filename: string,
-    cb: (cache: ICache) => Promise<T>
+  async #lock<T = any>(
+    filename: string | string[],
+    cb: (cache: ICache) => Promise<T>,
+    locked: Record<string, boolean> = {}
   ): Promise<T> {
-    const key = this.#key(filename);
-    this.#keys[filename] = key;
-    const promise = this.#locks[key];
-    const resolver = createResolver<void>();
-    this.#locks[key] = resolver;
-    await promise;
+    if (!Array.isArray(filename)) {
+      filename = [filename];
+    }
 
-    const locks = {} as Record<string, Promise<any>>;
+    const globalLock = await this.#globalLock.lock();
+
+    const keys = filename
+      .filter(filename => !locked[filename])
+      .map(filename => ({ [filename]: this.#key(filename) }))
+      .reduce((a, b) => ({ ...a, ...b }), {});
+
+    const promises = Object.values(keys)
+      .map(key => ({ [key]: this.#locks[key] }))
+      .reduce((a, b) => ({ ...a, ...b }), {});
+
+    const resolvers = Object.values(keys)
+      .map(key => ({
+        [key]: (this.#locks[key] = createResolver()),
+      }))
+      .reduce((a, b) => ({ ...a, ...b }), {});
+
+    globalLock.unlock();
+    await Promise.all(Object.values(promises));
+    locked = Object.assign(
+      {},
+      locked,
+      Object.keys(keys).reduce((a, b) => ({ ...a, [b]: true }), {})
+    );
 
     const wrap = (
       cb: (filename: string, ...args: any[]) => Promise<any>
     ): any => {
       return async (filename: string, ...args: any[]): Promise<any> => {
-        const promise = this.#locks[key];
-        const resolver = createResolver<void>();
-        locks[filename] = resolver;
-        await promise;
-
-        try {
-          return cb(filename, ...args);
-        } finally {
-          resolver.resolve();
+        if (!locked[filename]) {
+          throw new Error(`no lock for ${filename}`);
         }
+
+        return cb(filename, ...args);
       };
     };
 
     const cache = {
+      lock: (filename, cb) => this.#lock(filename, cb, locked),
       set: wrap(this.#set.bind(this)),
       get: wrap(this.#get.bind(this)),
       has: wrap(this.#has.bind(this)),
@@ -80,11 +100,23 @@ export class Cache implements ICache {
     } as ICache;
 
     try {
-      return cb(cache);
+      return await cb(cache);
     } finally {
-      delete this.#keys[filename];
-      resolver.resolve();
+      Object.entries(resolvers).forEach(([key, resolver]) => {
+        if (this.#locks[key] === resolver) {
+          delete this.#locks[key];
+        }
+      });
+
+      Object.values(resolvers).forEach(resolver => resolver.resolve());
     }
+  }
+
+  async lock<T = any>(
+    filename: string | string[],
+    cb: (cache: ICache) => Promise<T>
+  ) {
+    return this.#lock(filename, cb);
   }
 
   async #set(
@@ -93,6 +125,8 @@ export class Cache implements ICache {
     modified: Date | number = Date.now()
   ): Promise<void> {
     const key = this.#key(filename);
+
+    await this.#fs.mkdir(path.dirname(key), { recursive: true });
 
     await Promise.all([
       new Promise<void>((resolve, reject) => {
@@ -146,7 +180,7 @@ export class Cache implements ICache {
   }
 
   async get(filename: string) {
-    return this.#get(filename);
+    return this.lock(filename, () => this.#get(filename));
   }
 
   async #has(filename: string): Promise<boolean> {
@@ -164,7 +198,7 @@ export class Cache implements ICache {
   }
 
   async has(filename: string): Promise<boolean> {
-    return this.#has(filename);
+    return this.lock(filename, () => this.#has(filename));
   }
 
   async #remove(filename: string): Promise<void> {
@@ -195,7 +229,7 @@ export class Cache implements ICache {
   }
 
   async remove(filename: string) {
-    this.#remove(filename);
+    return this.lock(filename, () => this.#remove(filename));
   }
 
   async #modified(filename: string): Promise<Date> {
@@ -216,6 +250,45 @@ export class Cache implements ICache {
   }
 
   async modified(filename: string): Promise<Date> {
-    return this.#modified(filename);
+    return this.lock(filename, () => this.#modified(filename));
+  }
+
+  async clean(): Promise<void> {
+    const globalLock = await this.#globalLock.lock();
+    await Promise.all(Object.values(this.#locks));
+
+    try {
+      await this.#fs.rm(this.#cacheDir, { recursive: true, force: true });
+    } finally {
+      globalLock.unlock();
+    }
+  }
+}
+
+class Lock {
+  readonly #resolver: ResolvablePromise<void>;
+
+  constructor(resolver: ResolvablePromise<void>) {
+    this.#resolver = resolver;
+  }
+
+  unlock() {
+    this.#resolver.resolve();
+  }
+}
+
+class Mutex {
+  #current = Promise.resolve();
+
+  async lock() {
+    const resolver = createResolver();
+
+    const promise = this.#current;
+    this.#current = resolver;
+    try {
+      await promise;
+    } catch (err) {}
+
+    return new Lock(resolver);
   }
 }

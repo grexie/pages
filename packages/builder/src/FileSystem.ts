@@ -2,7 +2,7 @@ import path from 'path';
 import type { MakeDirectoryOptions } from 'fs';
 import { Compiler } from 'webpack';
 import { EventEmitter } from 'events';
-import { createResolver } from '@grexie/pages/utils/resolvable';
+import { createResolver } from './utils/resolvable';
 
 interface ReadableFileSystemSync {
   readFileSync(filename: string): Buffer | string;
@@ -15,16 +15,38 @@ interface ReadableFileSystemSync {
 
 interface WritableFileSystemSync extends ReadableFileSystemSync {
   writeFileSync(filename: string, data: string | Buffer): void;
-  mkdirSync(dirname: string): void;
-  rmdirSync(dirname: string): void;
+  mkdirSync(dirname: string, options?: { recursive?: boolean }): void;
+  rmSync(
+    filename: string,
+    options: { recursive?: boolean; force?: boolean }
+  ): void;
+  rmdirSync(
+    dirname: string,
+    options?: { recursive?: boolean; force?: boolean }
+  ): void;
   unlinkSync(filename: string): void;
 }
 
 export type ReadableFileSystem = Compiler['inputFileSystem'] &
   ReadableFileSystemSync;
 export type WritableFileSystem = ReadableFileSystem &
-  Compiler['outputFileSystem'] &
-  WritableFileSystemSync;
+  Compiler['outputFileSystem'] & {
+    mkdir(
+      dirname: string,
+      options: { recursive?: boolean },
+      callback: (err: null | NodeJS.ErrnoException) => void
+    ): void;
+    rm(
+      filename: string,
+      options: { recursive?: boolean; force?: boolean },
+      callback: (err: null | NodeJS.ErrnoException) => void
+    ): void;
+    rmdir(
+      dirname: string,
+      options: { recursive?: boolean; force?: boolean },
+      callback: (err: null | NodeJS.ErrnoException) => void
+    ): void;
+  } & WritableFileSystemSync;
 
 export interface Stats {
   isFile(): boolean;
@@ -105,6 +127,8 @@ export interface FileSystemOptions<
 
 export class FileSystem extends EventEmitter implements WritableFileSystem {
   readonly #fileSystems: FileSystemOptions[] = [];
+  readonly #debug: boolean =
+    process.env.GREXIE_BUILDER_DEBUG_FS === 'true' || false;
 
   constructor() {
     super();
@@ -157,6 +181,10 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     args: any[],
     handler: (...args: P) => T
   ): Promise<T> {
+    if (this.#debug) {
+      console.debug('GREXIE_BUILDER_DEBUG_FS', name, ...args);
+    }
+
     const filename = args[0] as string;
     const fileSystems = this.find(filename, writable) as (ReadableFileSystem &
       WritableFileSystem)[];
@@ -178,6 +206,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
 
     for (const fs of fileSystems) {
       try {
+        err = undefined as any;
         value = await new Promise<P>((resolve, reject) => {
           try {
             (fs as any)[name](...args, (err: E, ...value: P) => {
@@ -220,6 +249,10 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
   }
 
   #callSync<T>(name: string, writable: boolean, args: any[]): T {
+    if (this.#debug) {
+      console.debug('GREXIE_BUILDER_DEBUG_FS', name, ...args);
+    }
+
     const filename = args[0] as string;
     const fileSystems = this.find(filename, writable) as (ReadableFileSystem &
       WritableFileSystem)[];
@@ -233,6 +266,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
 
     for (const fs of fileSystems) {
       try {
+        err = undefined as any;
         value = (fs as any)[name](...args);
 
         break;
@@ -416,151 +450,110 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     const callback =
       typeof args[args.length - 1] === 'function' ? args.pop() : undefined;
     const [options] = args;
-
-    if (options?.recursive) {
-      const fs = this.#fileSystems.find(
-        ({ fs }) => fs === this.find(dirname, true)[0]
-      );
-
-      const resolver = createResolver<void>();
-      const fsCheck = () =>
-        resolver.reject(
-          new Error(
-            `target filesystem is not rooted at directory to create recursively ${dirs.join(
-              path.delimiter
-            )}`
-          )
-        );
-      if (!fs) {
-        fsCheck();
-        return resolver;
-      }
-
-      const toCreate: string[] = [];
-      const dirs: string[] = dirname.split(path.delimiter);
-
-      const nextStat = (err?: any, stats?: Stats) => {
-        if (err) {
-          toCreate.unshift(dirs.pop()!);
-        } else if (!stats!.isDirectory()) {
-          resolver.reject(
-            new Error(`${dirs.join(path.delimiter)} is not a directory`)
-          );
-          return;
-        } else {
-          if (!dirs.join(path.delimiter).startsWith(fs?.path!)) {
-            fsCheck();
-            return;
-          }
-
-          next();
-        }
-
-        if (dirs.length) {
-          try {
-            this.stat(dirs.join(path.delimiter), nextStat);
-          } catch (err) {
-            nextStat(err);
-          }
-        }
-      };
-
-      const next = (err?: any) => {
-        if (toCreate.length) {
-          const dir = [...dirs, toCreate[0]].join(path.delimiter);
-          dirs.push(toCreate.shift()!);
-          this.#call('mkdir', true, next, [dir], () => {});
-        } else {
-          resolver.resolve();
-        }
-      };
-
-      const promise = resolver.then(
-        () => {
-          if (callback) {
-            callback(null);
-          }
-        },
-        err => {
-          if (callback) {
-            callback(null, err);
-          } else {
-            throw err;
-          }
-        }
-      );
-      if (!callback) {
-        return promise;
-      }
-    } else {
-      return this.#call(
-        'mkdir',
-        true,
-        callback,
-        [dirname, ...args],
-        () => undefined
-      );
-    }
+    return this.#call(
+      'mkdir',
+      true,
+      callback,
+      [dirname, { recursive: options?.recursive ?? false }],
+      () => {}
+    );
   }
   mkdirSync(dirname: string, options?: { recursive?: boolean }): void {
-    if (options?.recursive) {
-      const fs = this.#fileSystems.find(
-        ({ fs }) => fs === this.find(dirname, true)[0]
-      );
-      const fsCheck = () => {
-        throw new Error(
-          `target filesystem is not rooted at directory to create recursively ${dirs.join(
-            path.delimiter
-          )}`
-        );
-      };
-      if (!fs) {
-        fsCheck();
-      }
+    this.#callSync('mkdirSync', true, [
+      dirname,
+      { recursive: options?.recursive ?? false },
+    ]);
+  }
 
-      const toCreate: string[] = [];
-      const dirs: string[] = dirname.split(path.delimiter);
-      dirs.pop();
+  rm(filename: string): Promise<void>;
+  rm(
+    filename: string,
+    options: { recursive?: boolean; force?: boolean }
+  ): Promise<void>;
+  rm(
+    filename: string,
+    callback: (err: null | NodeJS.ErrnoException) => void
+  ): void;
+  rm(
+    filename: string,
+    options: { recursive?: boolean; force?: boolean },
+    callback: (err: null | NodeJS.ErrnoException) => void
+  ): void;
+  rm(filename: string, ...args: any[]) {
+    const callback =
+      typeof args[args.length - 1] === 'function' ? args.pop() : undefined;
+    const [options] = args;
 
-      while (dirs.length) {
-        try {
-          const stats = this.statSync(dirs.join(path.delimiter));
-          if (!stats.isDirectory()) {
-            throw new Error(`${dirs.join(path.delimiter)} is not a directory`);
-          }
-          break;
-        } catch (err) {
-          toCreate.unshift(dirs.pop()!);
-        }
-      }
-
-      if (!dirs.join(path.delimiter).startsWith(fs!.path)) {
-        fsCheck();
-      }
-
-      while (toCreate.length > 1) {
-        const dir = [...dirs, toCreate[0]].join(path.delimiter);
-        this.#callSync('mkdirSync', true, [dir]);
-        dirs.push(toCreate.shift()!);
-      }
-    }
-
-    this.#callSync('mkdirSync', true, [dirname]);
+    return this.#call(
+      'rm',
+      true,
+      callback,
+      [
+        filename,
+        {
+          recursive: options?.recursive ?? false,
+          force: options?.force ?? false,
+        },
+      ],
+      () => {}
+    );
+  }
+  rmSync(
+    filename: string,
+    options?: { recursive?: boolean; force?: boolean }
+  ): void {
+    this.#callSync('rmSync', true, [
+      filename,
+      {
+        recursive: options?.recursive ?? false,
+        force: options?.force ?? false,
+      },
+    ]);
   }
 
   rmdir(dirname: string): Promise<void>;
+  rmdir(
+    dirname: string,
+    options: { recursive?: boolean; force?: boolean }
+  ): Promise<void>;
   rmdir(
     dirname: string,
     callback: (err: null | NodeJS.ErrnoException) => void
   ): void;
   rmdir(
     dirname: string,
-    callback?: (err: null | NodeJS.ErrnoException) => void
-  ) {
-    return this.#call('mkdir', true, callback, [dirname], () => undefined);
+    options: { recursive?: boolean; force?: boolean },
+    callback: (err: null | NodeJS.ErrnoException) => void
+  ): void;
+  rmdir(dirname: string, ...args: any[]) {
+    const callback =
+      typeof args[args.length - 1] === 'function' ? args.pop() : undefined;
+    const [options] = args;
+    return this.#call(
+      'rmdir',
+      true,
+      callback,
+      [
+        dirname,
+        {
+          recursive: options?.recursive ?? false,
+          force: options?.force ?? false,
+        },
+      ],
+      () => {}
+    );
   }
-  rmdirSync(dirname: string): void {
-    return this.#callSync('rmdirSync', true, [dirname]);
+  rmdirSync(
+    dirname: string,
+    options?: { recursive?: boolean; force?: boolean }
+  ): void {
+    this.#callSync('rmdirSync', true, [
+      dirname,
+      {
+        recursive: options?.recursive ?? false,
+        force: options?.force ?? false,
+      },
+    ]);
   }
 
   unlink(filename: string): Promise<void>;

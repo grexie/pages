@@ -35,10 +35,20 @@ export class Provider {
     const files = await globAsync('**/*', {
       cwd: this.context.rootDir,
       nodir: true,
+      dot: true,
       ignore: [
+        _path.relative(
+          this.context.rootDir,
+          _path.join(this.context.outputDir, '**')
+        ),
+        _path.relative(
+          this.context.rootDir,
+          _path.join(this.context.cacheDir, '**')
+        ),
         'node_modules/**',
         '.git/**',
         '.github/**',
+        '.gitignore',
         'yarn-error.log',
         'yarn.lock',
         'package-lock.json',

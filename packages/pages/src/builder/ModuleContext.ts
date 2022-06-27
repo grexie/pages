@@ -264,37 +264,48 @@ export class ModuleContext {
     filename: string,
     sourceFilename: string
   ) {
-    const cacheFile = path.join(filename, 'build');
+    const cacheFile = path.join(filename, `build.${path.basename(filename)}`);
+    const cacheImportsFile = `${cacheFile}.imports.json`;
 
-    return this.build.persistentCache.lock(cacheFile, async cache => {
-      const stats = await this.build.fs.stat(sourceFilename);
+    return this.build.persistentCache.lock(
+      [cacheFile, cacheImportsFile],
+      async cache => {
+        const stats = await this.build.fs.stat(sourceFilename);
 
-      if (await cache.has(cacheFile)) {
-        const cached = await cache.modified(cacheFile);
+        if (await cache.has(cacheFile)) {
+          const cached = await cache.modified(cacheFile);
 
-        if (stats.mtime.getTime() <= cached.getTime()) {
-          return JSON.parse((await cache.get(cacheFile)).toString()) as {
-            source: string;
-            imports: Record<string, Import>;
-          };
+          if (stats.mtime.getTime() <= cached.getTime()) {
+            const [source, imports] = await Promise.all([
+              cache.get(cacheFile).then(data => data.toString()),
+              cache
+                .get(cacheImportsFile)
+                .then(
+                  data => JSON.parse(data.toString()) as Record<string, Import>
+                ),
+            ]);
+            return { source, imports };
+          }
         }
+
+        const compiled = await this.#compiler.compile({
+          source: _source,
+          filename,
+        });
+        const source = compiled.source;
+        const imports = await resolver.resolveImports(
+          context,
+          compiled.imports
+        );
+
+        await Promise.all([
+          cache.set(cacheFile, source, stats.mtime),
+          cache.set(cacheImportsFile, JSON.stringify(imports), stats.mtime),
+        ]);
+
+        return { source, imports };
       }
-
-      const compiled = await this.#compiler.compile({
-        source: _source,
-        filename,
-      });
-      const source = compiled.source;
-      const imports = await resolver.resolveImports(context, compiled.imports);
-
-      await cache.set(
-        cacheFile,
-        JSON.stringify({ source, imports }),
-        stats.mtime
-      );
-
-      return { source, imports };
-    });
+    );
   }
 
   async create(
@@ -315,6 +326,8 @@ export class ModuleContext {
     }
 
     const promise = createResolver<Module>();
+
+    promise.catch(err => console.error(`error creating module: ${filename}`));
     this.#modules[filename] = promise;
 
     const { source, imports } = await this.#compile(

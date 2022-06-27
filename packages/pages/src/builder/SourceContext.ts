@@ -45,9 +45,9 @@ export class SourceContext extends Source {
   }
 
   async createModule<X = any, M extends ResourceMetadata = any>({
-    code,
+    source,
     metadata,
-  }: Omit<CreateOptions<X, M>, 'content'> & { code: string }) {
+  }: Omit<CreateOptions<X, M>, 'content'> & { source: string }) {
     if (!this.module.module) {
       throw new Error('state error: source module not loaded');
     }
@@ -56,7 +56,7 @@ export class SourceContext extends Source {
       this.resolver,
       this.dirname,
       `${this.filename}$${++this.#index}`,
-      code,
+      source,
       this.filename
     );
 

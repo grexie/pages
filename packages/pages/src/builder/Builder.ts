@@ -43,7 +43,7 @@ export class Builder {
   #createFileSystem(fs: WritableFileSystem, fsOptions: FileSystemOptions[]) {
     this.#builder.fs.add(_path.resolve(this.context.pagesDir, '..', '..'), fs);
 
-    const defaultFiles = new Volume();
+    const defaultFiles = new Volume() as WritableFileSystem;
     defaultFiles.mkdirSync(this.context.rootDir, { recursive: true });
     defaultFiles.writeFileSync(
       _path.resolve(this.context.rootDir, 'package.json'),
@@ -62,25 +62,18 @@ export class Builder {
       this.#builder.fs.add(options.path, options.fs, options.writable)
     );
 
-    const ephemeralCache = new Cache(
-      new FileSystem().add(
-        _path.resolve(this.context.cacheDir, 'ephemeral'),
-        new Volume(),
-        true
-      ),
-      _path.resolve(this.context.cacheDir, 'ephemeral')
-    );
-
-    const persistentCache = new Cache(
-      new FileSystem().add(
-        _path.resolve(this.context.cacheDir, 'persistent'),
-        fs,
-        true
-      ),
-      _path.resolve(this.context.cacheDir, 'persistent')
-    );
+    const ephemeralCache = this.#createCache(fs);
+    const persistentCache = this.#createCache(fs);
 
     return { defaultFiles, ephemeralCache, persistentCache };
+  }
+
+  #createCache(fs: WritableFileSystem = new Volume() as WritableFileSystem) {
+    const cacheDir = this.context.cacheDir;
+    const fileSystem = new FileSystem().add(cacheDir, fs, true);
+    fs.mkdirSync(cacheDir, { recursive: true });
+    const cache = new Cache(fileSystem, cacheDir);
+    return cache;
   }
 
   filenameToPath(
@@ -90,7 +83,7 @@ export class Builder {
     const path = _path
       .relative(rootDir, filename)
       .split(/\//g)
-      .map(p => p.replace(/\..*$/g, ''));
+      .map(p => p.substring(0, p.length - _path.extname(p).length));
 
     if (path[path.length - 1] === 'index') {
       path.pop();
@@ -110,10 +103,7 @@ export class Builder {
   }): Promise<Buffer> {
     if (path) {
       path = path.slice();
-      if (path.length === 0) {
-        path = ['index'];
-      }
-      const slug = path.join('/');
+      const slug = [...path, 'index.js'].join('/');
       filename = `${slug}.js`;
     }
 
@@ -141,10 +131,7 @@ export class Builder {
 
   entry(source: Source): EntryObject {
     let path = source.path.slice();
-    if (path.length === 0) {
-      path = ['index'];
-    }
-    const slug = path.join('/');
+    const slug = [...path, 'index'].join('/');
     return {
       [slug]: `./${_path.relative(this.context.rootDir, source.filename)}`,
     };
@@ -195,6 +182,7 @@ export class Builder {
           },
           {
             test: /\.(js|jsx|mjs|cjs)$/,
+            include: [/node_modules\/@mdx-js/],
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),
@@ -249,7 +237,6 @@ export class Builder {
       /\.(js|jsx|tsx|ts|md)$/.test(source.filename)
     );
     const config = await this.config(sources);
-    console.info(config);
     return this.#builder.build({ config });
   }
 
