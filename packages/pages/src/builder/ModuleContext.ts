@@ -94,11 +94,6 @@ export class Module extends EventEmitter {
   }
 
   async evict({ recompile = false }: ModuleEvictOptions) {
-    console.info(
-      'evicting',
-      this.filename,
-      !!this.#context.loadedModules[this.filename]
-    );
     delete this.#context.loadedModules[this.filename];
     delete this.#context.modules[this.filename];
 
@@ -255,9 +250,7 @@ export class ModuleContext {
 
   async evict(filename: string, options: ModuleEvictOptions = {}) {
     const module = this.loadedModules[filename];
-    console.info('trying evict', filename, options, !!module);
     await module?.evict(options);
-    console.info('evicted', filename, options);
   }
 
   async require(resolver: ModuleResolver, context: string, request: string) {
@@ -276,26 +269,13 @@ export class ModuleContext {
       };
 
       if (!compile) {
-        if (/Home/.test(filename)) {
-          console.info('using builtin require', filename);
-        }
         return _require(filename);
       }
 
       if (_require.cache[filename]) {
-        if (/Home/.test(filename)) {
-          console.info('using require cache', filename);
-        }
         return _require.cache[filename]!.exports;
       }
 
-      if (/Home/.test(filename)) {
-        console.info(
-          'loading module from source',
-          filename,
-          this.loadedModules[filename]
-        );
-      }
       const { load } = this.loadedModules[filename];
       const m = load(_module);
 

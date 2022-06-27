@@ -14,7 +14,7 @@ export default async function CacheLoader(
   const { context } = this.getOptions();
   const cache = context.cache.create('webpack');
 
-  return cache.lock(
+  await cache.lock(
     [this.resourcePath, `${this.resourcePath}.webpack.json`],
     async cache => {
       const stats = await new Promise<any>((resolve, reject) =>
@@ -31,7 +31,7 @@ export default async function CacheLoader(
         )
       );
 
-      let dependencies = Array.from(new Set(this.getDependencies()));
+      const dependencies = Array.from(new Set(this.getDependencies()));
       const dependencyStats = await Promise.all(
         dependencies.map(
           filename =>
@@ -41,32 +41,43 @@ export default async function CacheLoader(
                   resolve({ filename, isFile: false });
                 }
 
-                resolve({ filename, isFile: stats?.isFile() });
+                resolve({
+                  filename,
+                  isFile: stats?.isFile(),
+                  mtime: stats?.mtimeMs,
+                });
               })
             )
         )
       );
-      dependencies = dependencyStats
+      const dependencyMap = dependencyStats
         .filter(({ isFile }) => isFile)
-        .map(({ filename }) => filename) as string[];
+        .map(({ filename, mtime }) => ({ [filename]: mtime }))
+        .reduce((a, b) => ({ ...a, ...b }), {});
 
       await Promise.all([
         cache.set(this.resourcePath, content, stats.mtime),
         cache.set(
           `${this.resourcePath}.webpack.json`,
-          JSON.stringify({ dependencies }, null, 2),
+          JSON.stringify({ dependencies: dependencyMap }, null, 2),
           stats.mtime
         ),
       ]);
     }
   );
+
+  return content;
 }
 
 export async function pitch(this: LoaderContext<LoaderOptions>) {
   const { context } = this.getOptions();
   const cache = context.cache.create('webpack');
 
-  const hasChanged = async (cache: ICache, filename: string) => {
+  const hasChanged = async (
+    cache: ICache,
+    filename: string,
+    mtime: number = Number.MAX_VALUE
+  ): Promise<boolean> => {
     if (!(await cache.has(filename))) {
       return false;
     }
@@ -85,28 +96,45 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       ),
     ]);
 
-    return !stats || stats.mtime.getTime() > cached.getTime();
+    if (
+      !stats ||
+      cached.getTime() > mtime ||
+      stats.mtime.getTime() > cached.getTime()
+    ) {
+      return true;
+    }
+
+    const { dependencies } = JSON.parse(
+      (await cache.get(`${filename}.webpack.json`)).toString()
+    ) as { dependencies: Record<string, number> };
+
+    if (dependencies[filename]) {
+      delete dependencies[filename];
+    }
+
+    const results = await cache.lock(
+      [
+        ...Object.keys(dependencies),
+        ...Object.keys(dependencies).map(
+          filename => `${filename}.webpack.json`
+        ),
+      ],
+      async cache =>
+        Promise.all(
+          Object.entries(dependencies).map(([filename, mtime]) =>
+            hasChanged(cache, filename, mtime)
+          )
+        )
+    );
+
+    return results.reduce((a, b) => a || b, false);
   };
 
   return cache.lock(
     [this.resourcePath, `${this.resourcePath}.webpack.json`],
     async cache => {
       if (await cache.has(this.resourcePath)) {
-        const { dependencies } = JSON.parse(
-          (await cache.get(`${this.resourcePath}.webpack.json`)).toString()
-        ) as { dependencies: string[] };
-
-        if (!dependencies.includes(this.resourcePath)) {
-          dependencies.unshift(this.resourcePath);
-        }
-
-        const results = await cache.lock(dependencies, async cache =>
-          Promise.all(dependencies.map(filename => hasChanged(cache, filename)))
-        );
-
-        const changed = results.reduce((a, b) => a || b, false);
-
-        if (!changed) {
+        if (!(await hasChanged(cache, this.resourcePath))) {
           return await cache.get(this.resourcePath);
         } else {
           await cache.remove(this.resourcePath);
