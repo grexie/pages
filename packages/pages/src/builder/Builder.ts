@@ -7,6 +7,7 @@ import {
   WebpackStats,
   FileSystem,
   WritableFileSystem,
+  CacheStorage,
 } from '@grexie/builder';
 import { BuildContext } from './BuildContext';
 import { Cache } from '@grexie/builder';
@@ -19,8 +20,7 @@ export class Builder {
   readonly context: BuildContext;
   readonly defaultFiles: WritableFileSystem;
   readonly #builder: BuilderBase;
-  readonly ephemeralCache: Cache;
-  readonly persistentCache: Cache;
+  readonly cache: Cache;
 
   get fs() {
     return this.#builder.fs;
@@ -33,11 +33,9 @@ export class Builder {
   ) {
     this.context = context;
     this.#builder = new BuilderBase();
-    const { defaultFiles, ephemeralCache, persistentCache } =
-      this.#createFileSystem(fs, fsOptions);
+    const { defaultFiles, cache } = this.#createFileSystem(fs, fsOptions);
     this.defaultFiles = defaultFiles;
-    this.ephemeralCache = ephemeralCache;
-    this.persistentCache = persistentCache;
+    this.cache = cache;
   }
 
   #createFileSystem(fs: WritableFileSystem, fsOptions: FileSystemOptions[]) {
@@ -62,18 +60,17 @@ export class Builder {
       this.#builder.fs.add(options.path, options.fs, options.writable)
     );
 
-    const ephemeralCache = this.#createCache(fs);
-    const persistentCache = this.#createCache(fs);
+    const cacheStorage: CacheStorage = {
+      ephemeral: new FileSystem().add(this.context.cacheDir, fs, true),
+      persistent: new FileSystem().add(this.context.cacheDir, fs, true),
+    };
 
-    return { defaultFiles, ephemeralCache, persistentCache };
-  }
+    const cache = new Cache({
+      storage: cacheStorage,
+      cacheDir: this.context.cacheDir,
+    });
 
-  #createCache(fs: WritableFileSystem = new Volume() as WritableFileSystem) {
-    const cacheDir = this.context.cacheDir;
-    const fileSystem = new FileSystem().add(cacheDir, fs, true);
-    fs.mkdirSync(cacheDir, { recursive: true });
-    const cache = new Cache(fileSystem, cacheDir);
-    return cache;
+    return { defaultFiles, cache };
   }
 
   filenameToPath(
@@ -149,7 +146,6 @@ export class Builder {
 
   async config(sources: Source[]): Promise<Configuration> {
     return {
-      cache: { type: 'memory' },
       context: this.context.rootDir,
       entry: {
         ...sources

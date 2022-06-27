@@ -7,8 +7,5 @@ export default async () => {
   });
 
   //await new Promise(() => {});
-  await Promise.all([
-    context.ephemeralCache.clean(),
-    context.persistentCache.clean(),
-  ]);
+  await context.cache.clean();
 };

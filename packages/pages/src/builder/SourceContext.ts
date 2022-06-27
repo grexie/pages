@@ -60,7 +60,9 @@ export class SourceContext extends Source {
       this.filename
     );
 
-    this.once('end', () => this.context.modules.evict(module.filename));
+    this.once('end', () =>
+      this.context.modules.evict(module.filename, { recompile: true })
+    );
 
     const { exports } = module.load(this.module.module);
 

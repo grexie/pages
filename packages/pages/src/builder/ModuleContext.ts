@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { BuildContext } from './BuildContext';
+import { Cache } from '@grexie/builder';
 import type { LoaderContext, NormalModule } from 'webpack';
 import _Module from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
@@ -45,13 +46,19 @@ interface Import {
 type ModuleLoader = (parent: _Module) => _Module;
 
 export interface ModuleOptions {
+  context: ModuleContext;
   filename: string;
   source: string;
   loader: ModuleLoader;
   imports: Record<string, Import>;
 }
 
+export interface ModuleEvictOptions {
+  recompile?: boolean;
+}
+
 export class Module extends EventEmitter {
+  readonly #context: ModuleContext;
   readonly filename: string;
   readonly source: string;
   readonly load: ModuleLoader;
@@ -61,8 +68,9 @@ export class Module extends EventEmitter {
   static #id = 0;
   readonly id = ++Module.#id;
 
-  constructor({ filename, source, loader, imports }: ModuleOptions) {
+  constructor({ context, filename, source, loader, imports }: ModuleOptions) {
     super();
+    this.#context = context;
     this.filename = filename;
     this.source = source;
     this.load = (parent: _Module) => {
@@ -84,9 +92,42 @@ export class Module extends EventEmitter {
   get exports() {
     return this.module.exports;
   }
-}
 
-type Modules = Record<string, Promise<Module> | undefined>;
+  async evict({ recompile = false }: ModuleEvictOptions) {
+    console.info(
+      'evicting',
+      this.filename,
+      !!this.#context.loadedModules[this.filename]
+    );
+    delete this.#context.loadedModules[this.filename];
+    delete this.#context.modules[this.filename];
+
+    const promises: Promise<any>[] = [];
+
+    if (recompile) {
+      promises.push(
+        this.#context.cache.lock(
+          [this.filename, `${this.filename}.imports.json`],
+          cache =>
+            Promise.all([
+              cache.remove(this.filename),
+              cache.remove(`${this.filename}.imports.json`),
+            ])
+        )
+      );
+    }
+
+    try {
+      delete this.module?.require.cache[this.filename];
+      promises.push(
+        ...this.module?.children.map(module => this.#context.evict(module.id))
+      );
+    } catch (err) {}
+
+    await Promise.all(promises);
+    this.emit('evict', module);
+  }
+}
 
 export class ModuleResolver {
   readonly context: BuildContext;
@@ -197,28 +238,26 @@ export class ModuleResolver {
 }
 export class ModuleContext {
   readonly build: BuildContext;
-  readonly #modules: Modules = {};
-  readonly #loadedModules: Record<string, Module> = {};
-  readonly #compiler: ModuleCompiler;
+  readonly cache: Cache;
+  readonly compiler: ModuleCompiler;
+  readonly modules: Record<string, Promise<Module> | undefined> = {};
+  readonly loadedModules: Record<string, Module> = {};
 
   constructor(context: BuildContext) {
     this.build = context;
-    this.#compiler = new ModuleCompiler({ context: this });
+    this.cache = this.build.cache.create('modules');
+    this.compiler = new ModuleCompiler({ context: this });
   }
 
   createResolver(loader: LoaderContext<any>) {
     return new ModuleResolver(this.build, loader);
   }
 
-  async evict(filename: string) {
-    const module = this.#loadedModules[filename];
-    module?.emit('evict', module);
-    try {
-      delete module.module.require.cache[filename];
-      module.module.children.forEach(module => this.evict(module.id));
-    } catch (err) {}
-    delete this.#loadedModules[filename];
-    delete this.#modules[filename];
+  async evict(filename: string, options: ModuleEvictOptions = {}) {
+    const module = this.loadedModules[filename];
+    console.info('trying evict', filename, options, !!module);
+    await module?.evict(options);
+    console.info('evicted', filename, options);
   }
 
   async require(resolver: ModuleResolver, context: string, request: string) {
@@ -227,13 +266,9 @@ export class ModuleContext {
     return this.create(resolver, module.context!, filename, source);
   }
 
-  #createRequire(
-    modules: Record<string, Module>,
-    _module: _Module,
-    _filename: string
-  ) {
+  #createRequire(_module: _Module, _filename: string) {
     const _require = _module.require;
-    const module = modules[_filename];
+    const module = this.loadedModules[_filename];
     _module.require = cloneRequire(_module, request => {
       const { compile, filename } = module.imports[request] ?? {
         compile: false,
@@ -241,14 +276,27 @@ export class ModuleContext {
       };
 
       if (!compile) {
+        if (/Home/.test(filename)) {
+          console.info('using builtin require', filename);
+        }
         return _require(filename);
       }
 
       if (_require.cache[filename]) {
+        if (/Home/.test(filename)) {
+          console.info('using require cache', filename);
+        }
         return _require.cache[filename]!.exports;
       }
 
-      const { load } = modules[filename];
+      if (/Home/.test(filename)) {
+        console.info(
+          'loading module from source',
+          filename,
+          this.loadedModules[filename]
+        );
+      }
+      const { load } = this.loadedModules[filename];
       const m = load(_module);
 
       return m.exports;
@@ -264,48 +312,42 @@ export class ModuleContext {
     filename: string,
     sourceFilename: string
   ) {
-    const cacheFile = path.join(filename, `build.${path.basename(filename)}`);
+    const cacheFile = filename;
     const cacheImportsFile = `${cacheFile}.imports.json`;
 
-    return this.build.persistentCache.lock(
-      [cacheFile, cacheImportsFile],
-      async cache => {
-        const stats = await this.build.fs.stat(sourceFilename);
+    return this.cache.lock([cacheFile, cacheImportsFile], async cache => {
+      const stats = await this.build.fs.stat(sourceFilename);
 
-        if (await cache.has(cacheFile)) {
-          const cached = await cache.modified(cacheFile);
+      if (await cache.has(cacheFile)) {
+        const cached = await cache.modified(cacheFile);
 
-          if (stats.mtime.getTime() <= cached.getTime()) {
-            const [source, imports] = await Promise.all([
-              cache.get(cacheFile).then(data => data.toString()),
-              cache
-                .get(cacheImportsFile)
-                .then(
-                  data => JSON.parse(data.toString()) as Record<string, Import>
-                ),
-            ]);
-            return { source, imports };
-          }
+        if (stats.mtime.getTime() <= cached.getTime()) {
+          const [source, imports] = await Promise.all([
+            cache.get(cacheFile).then(data => data.toString()),
+            cache
+              .get(cacheImportsFile)
+              .then(
+                data => JSON.parse(data.toString()) as Record<string, Import>
+              ),
+          ]);
+          return { source, imports };
         }
-
-        const compiled = await this.#compiler.compile({
-          source: _source,
-          filename,
-        });
-        const source = compiled.source;
-        const imports = await resolver.resolveImports(
-          context,
-          compiled.imports
-        );
-
-        await Promise.all([
-          cache.set(cacheFile, source, stats.mtime),
-          cache.set(cacheImportsFile, JSON.stringify(imports), stats.mtime),
-        ]);
-
-        return { source, imports };
       }
-    );
+
+      const compiled = await this.compiler.compile({
+        source: _source,
+        filename,
+      });
+      const source = compiled.source;
+      const imports = await resolver.resolveImports(context, compiled.imports);
+
+      await Promise.all([
+        cache.set(cacheFile, source, stats.mtime),
+        cache.set(cacheImportsFile, JSON.stringify(imports), stats.mtime),
+      ]);
+
+      return { source, imports };
+    });
   }
 
   async create(
@@ -313,22 +355,15 @@ export class ModuleContext {
     context: string,
     filename: string,
     _source: string,
-    sourceFilename: string = filename,
-    modules: Record<string, Module> = {}
+    sourceFilename: string = filename
   ): Promise<Module> {
-    if (this.#modules[filename]) {
-      if (!modules[filename]) {
-        const module = await this.#modules[filename]!;
-        modules[filename] = module;
-      }
-
-      return this.#modules[filename]!;
+    if (this.modules[filename]) {
+      return this.modules[filename]!;
     }
 
     const promise = createResolver<Module>();
 
-    promise.catch(err => console.error(`error creating module: ${filename}`));
-    this.#modules[filename] = promise;
+    this.modules[filename] = promise;
 
     const { source, imports } = await this.#compile(
       resolver,
@@ -340,7 +375,7 @@ export class ModuleContext {
 
     await Promise.all(
       Object.values(imports).map(async require => {
-        if (!require.compile || this.#modules[require.filename]) {
+        if (!require.compile || this.modules[require.filename]) {
           return;
         }
 
@@ -350,8 +385,7 @@ export class ModuleContext {
           module.context!,
           require.filename,
           source,
-          require.filename,
-          modules
+          require.filename
         );
       })
     );
@@ -369,7 +403,7 @@ export class ModuleContext {
 
       _module = new _Module(filename, parent);
       _module.require = _Module.createRequire(filename);
-      _module.require = this.#createRequire(modules, _module, filename);
+      _module.require = this.#createRequire(_module, filename);
       _module.require.cache[filename] = _module;
 
       script(
@@ -384,14 +418,16 @@ export class ModuleContext {
     };
 
     const module = new Module({
+      context: this,
       filename,
       source,
       loader,
       imports,
     });
 
+    this.loadedModules[filename] = module;
+
     promise.resolve(module);
-    modules[filename] = module;
     return promise;
   }
 }

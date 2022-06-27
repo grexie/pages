@@ -16,121 +16,110 @@ export default async function PagesLoader(
   this: LoaderContext<LoaderOptions>,
   content: Buffer
 ) {
-  console.time(`pages-loader ${this.resourcePath}`);
-  try {
-    const { context, ...options } = this.getOptions();
-    const path = context.builder.filenameToPath(this.resourcePath);
-    const filename = _path.join(...path, 'index.html');
+  const { context, ...options } = this.getOptions();
+  context.modules.evict(this.resourcePath, { recompile: true });
+  const path = context.builder.filenameToPath(this.resourcePath);
+  const filename = _path.join(...path, 'index.html');
 
-    console.info('loader', this.resourcePath);
-
-    context.modules.evict(this.resourcePath);
-
-    console.time(`pages-loader:createHandler ${this.resourcePath}`);
-    const createHandler = async () => {
-      let handlerModule: Module;
-      if (typeof options.handler === 'string') {
-        handlerModule = await context.modules.require(
-          resolver,
-          this._module!.context!,
-          options.handler
-        );
-      } else {
-        handlerModule = await context.modules.create(
-          resolver,
-          this._module!.context!,
-          this.resourcePath,
-          content.toString()
-        );
-      }
-      return handlerModule;
-    };
-
-    const resolver = context.modules.createResolver(this);
-    let handlerModule = await createHandler();
-
-    const handler = handlerModule.load(module).exports as Handler;
-
-    console.timeEnd(`pages-loader:createHandler ${this.resourcePath}`);
-
-    let resource: Resource | undefined = undefined;
-    const sourceContext = new SourceContext({
-      resolver,
-      context,
-      module: handlerModule,
-      content,
-      filename: this.resourcePath,
-      path,
-    });
-
-    if (typeof handler.resource === 'function') {
-      resource = await handler.resource(sourceContext);
-    }
-
-    if (!resource) {
-      return handlerModule.source;
-    }
-
-    const composables = [];
-    const composablesRequires = [];
-    let layouts = resource.metadata.layout ?? [];
-    if (!Array.isArray(layouts)) {
-      layouts = [layouts];
-    }
-
-    for (let layout of layouts) {
-      if (/^\./.test(layout)) {
-        layout = _path.resolve(_path.dirname(this.resourcePath), layout);
-        composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
-        );
-      } else if (/^\//.test(layout)) {
-        layout = _path.resolve(context.rootDir, layout.substring(1));
-        composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
-        );
-      } else {
-        composablesRequires.push(layout);
-      }
-
-      const layoutModule = await context.modules.require(
+  const createHandler = async () => {
+    let handlerModule: Module;
+    if (typeof options.handler === 'string') {
+      handlerModule = await context.modules.require(
         resolver,
+        this._module!.context!,
+        options.handler
+      );
+    } else {
+      handlerModule = await context.modules.create(
+        resolver,
+        this._module!.context!,
         this.resourcePath,
-        layout
-      );
-
-      this.addDependency(layoutModule.filename);
-
-      composables.push(
-        createComposable(
-          layoutModule.load(handlerModule.module!).exports.default
-        )
+        content.toString()
       );
     }
+    return handlerModule;
+  };
 
-    if (handler.default) {
-      try {
-        const buffer = await context.renderer.render(
-          new WritableBuffer(),
-          resource,
-          ...composables,
-          withResource({ resource }),
-          handler.default
-        );
-        this.emitFile(filename, buffer);
-      } catch (err) {
-        if (!(err instanceof Error)) {
-          err = new Error(String(err));
-        }
-        this.emitError(err as Error);
+  const resolver = context.modules.createResolver(this);
+  let handlerModule = await createHandler();
+
+  const handler = handlerModule.load(module).exports as Handler;
+
+  let resource: Resource | undefined = undefined;
+  const sourceContext = new SourceContext({
+    resolver,
+    context,
+    module: handlerModule,
+    content,
+    filename: this.resourcePath,
+    path,
+  });
+
+  if (typeof handler.resource === 'function') {
+    resource = await handler.resource(sourceContext);
+  }
+
+  if (!resource) {
+    return handlerModule.source;
+  }
+
+  const composables = [];
+  const composablesRequires = [];
+  let layouts = resource.metadata.layout ?? [];
+  if (!Array.isArray(layouts)) {
+    layouts = [layouts];
+  }
+
+  for (let layout of layouts) {
+    if (/^\./.test(layout)) {
+      layout = _path.resolve(_path.dirname(this.resourcePath), layout);
+      composablesRequires.push(
+        `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
+      );
+    } else if (/^\//.test(layout)) {
+      layout = _path.resolve(context.rootDir, layout.substring(1));
+      composablesRequires.push(
+        `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
+      );
+    } else {
+      composablesRequires.push(layout);
+    }
+
+    const layoutModule = await context.modules.require(
+      resolver,
+      this.resourcePath,
+      layout
+    );
+
+    this.addDependency(layoutModule.filename);
+
+    composables.push(
+      createComposable(layoutModule.load(handlerModule.module!).exports.default)
+    );
+  }
+
+  if (handler.default) {
+    try {
+      const buffer = await context.renderer.render(
+        new WritableBuffer(),
+        resource,
+        ...composables,
+        withResource({ resource }),
+        handler.default
+      );
+      this.emitFile(filename, buffer);
+    } catch (err) {
+      if (!(err instanceof Error)) {
+        err = new Error(String(err));
       }
+      this.emitError(err as Error);
     }
+  }
 
-    if (options.handler) {
-      context.modules.evict(this.resourcePath);
-      sourceContext.emit('end');
+  if (options.handler) {
+    sourceContext.emit('end');
 
-      const out = `
+    const out = `
       const { wrapHandler } = require("@grexie/pages");
       const { createComposable } = require("@grexie/compose");
       const resource = ${resource.serialize()};
@@ -140,12 +129,12 @@ export default async function PagesLoader(
         .join(',\n')}
       );
     `;
-      return out;
-    } else {
-      context.modules.evict(this.resourcePath);
-      sourceContext.emit('end');
+    return out;
+  } else {
+    context.modules.evict(this.resourcePath, { recompile: true });
+    sourceContext.emit('end');
 
-      return `
+    return `
       (() => {
         ${handlerModule.source}
       })();
@@ -158,8 +147,5 @@ export default async function PagesLoader(
           .join(',\n')}
       );
     `;
-    }
-  } finally {
-    console.timeEnd(`pages-loader ${this.resourcePath}`);
   }
 }

@@ -14,7 +14,7 @@ export default async () => {
   });
   context.fs.add(path.resolve(context.rootDir, 'build'), fs, true);
 
-  let sources = await context.registry.list();
+  let sources = await context.registry.list({ slug: '' });
   const stats = await context.builder.build(sources);
   console.info(stats.toString());
 };

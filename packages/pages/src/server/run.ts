@@ -1,6 +1,7 @@
 import { Provider } from '../api/Provider';
 import { Server } from './Server';
 import fs from 'fs';
+import path from 'path';
 import 'source-map-support/register.js';
 
 const server = new Server({
@@ -12,6 +13,8 @@ const server = new Server({
   ],
   fs,
 });
+
+server.context.fs.add(path.resolve(server.context.rootDir, 'build'), fs, true);
 
 server.start().then(server => {
   const { port } = server.address() as any;

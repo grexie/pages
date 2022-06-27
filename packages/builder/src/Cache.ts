@@ -1,8 +1,14 @@
-import { FileSystem, Dirent } from './FileSystem';
-import os from 'os';
+import { FileSystem } from './FileSystem';
 import path from 'path';
 import { createHash } from 'crypto';
-import { createResolver, ResolvablePromise } from './utils/resolvable';
+import { createResolver } from './utils/resolvable';
+import { Mutex } from './utils/mutex';
+
+export enum CacheType {
+  inherit,
+  ephemeral,
+  persistent,
+}
 
 export interface ICache {
   lock<T = any>(
@@ -18,17 +24,46 @@ export interface ICache {
   has: (filename: string) => Promise<boolean>;
   remove: (filename: string) => Promise<void>;
   modified: (filename: string) => Promise<Date>;
+  create: (name: string, storage?: CacheType) => ICache;
 }
 
-export class Cache implements ICache {
-  readonly #fs: FileSystem;
-  readonly #cacheDir: string;
-  readonly #locks: Record<string, Promise<void>> = {};
-  readonly #globalLock = new Mutex();
+export interface CacheStorage {
+  ephemeral: FileSystem;
+  persistent: FileSystem;
+}
 
-  constructor(fs: FileSystem, cacheDir: string = os.tmpdir()) {
-    this.#fs = fs;
+export interface CacheOptions {
+  storage: CacheStorage;
+  cacheDir: string;
+}
+
+const cacheGlobalLock = new Mutex();
+
+export class Cache implements ICache {
+  readonly #storage: CacheStorage;
+  readonly #cacheDir: string;
+  #locks: Record<string, Promise<void>> = {};
+  #fs: FileSystem;
+
+  constructor({ storage, cacheDir }: CacheOptions) {
+    this.#storage = storage;
     this.#cacheDir = cacheDir;
+    this.#fs = storage.ephemeral;
+  }
+
+  create(name: string, storage: CacheType = CacheType.inherit) {
+    const cache = new Cache({
+      storage: this.#storage,
+      cacheDir: path.resolve(this.#cacheDir, name),
+    });
+
+    if (storage === CacheType.ephemeral) {
+      cache.#fs = this.#storage.ephemeral;
+    } else if (storage === CacheType.persistent) {
+      cache.#fs = this.#storage.persistent;
+    }
+
+    return cache;
   }
 
   #key(filename: string) {
@@ -36,7 +71,7 @@ export class Cache implements ICache {
       return path.resolve(this.#cacheDir, filename.substring(1));
     }
     const hash = createHash('sha1');
-    hash.update(filename);
+    hash.update(path.resolve(this.#cacheDir, filename.substring(1)));
     const key = Array.from(hash.digest().toString('hex'));
     return `${path.resolve(
       this.#cacheDir,
@@ -53,7 +88,7 @@ export class Cache implements ICache {
       filename = [filename];
     }
 
-    const globalLock = await this.#globalLock.lock();
+    const globalLock = await cacheGlobalLock.lock();
 
     const keys = filename
       .filter(filename => !locked[filename])
@@ -64,14 +99,21 @@ export class Cache implements ICache {
       .map(key => ({ [key]: this.#locks[key] }))
       .reduce((a, b) => ({ ...a, ...b }), {});
 
+    const nameObject = (name: any, o: any) => {
+      o.name = name;
+      return o;
+    };
+
     const resolvers = Object.values(keys)
       .map(key => ({
-        [key]: (this.#locks[key] = createResolver()),
+        [key]: nameObject(filename, (this.#locks[key] = createResolver())),
       }))
       .reduce((a, b) => ({ ...a, ...b }), {});
 
     globalLock.unlock();
+
     await Promise.all(Object.values(promises));
+
     locked = Object.assign(
       {},
       locked,
@@ -102,13 +144,13 @@ export class Cache implements ICache {
     try {
       return await cb(cache);
     } finally {
+      Object.values(resolvers).forEach(resolver => resolver.resolve());
+
       Object.entries(resolvers).forEach(([key, resolver]) => {
         if (this.#locks[key] === resolver) {
           delete this.#locks[key];
         }
       });
-
-      Object.values(resolvers).forEach(resolver => resolver.resolve());
     }
   }
 
@@ -208,7 +250,7 @@ export class Cache implements ICache {
       new Promise<void>((resolve, reject) => {
         this.#fs.unlink!(`${key}.stats`, err => {
           if (err) {
-            reject(err);
+            resolve();
             return;
           }
 
@@ -218,7 +260,7 @@ export class Cache implements ICache {
       new Promise<void>((resolve, reject) => {
         this.#fs.unlink!(key, err => {
           if (err) {
-            reject(err);
+            resolve();
             return;
           }
 
@@ -254,41 +296,22 @@ export class Cache implements ICache {
   }
 
   async clean(): Promise<void> {
-    const globalLock = await this.#globalLock.lock();
+    const globalLock = await cacheGlobalLock.lock();
     await Promise.all(Object.values(this.#locks));
 
     try {
-      await this.#fs.rm(this.#cacheDir, { recursive: true, force: true });
+      await Promise.all([
+        this.#storage.ephemeral.rm(this.#cacheDir, {
+          recursive: true,
+          force: true,
+        }),
+        this.#storage.persistent.rm(this.#cacheDir, {
+          recursive: true,
+          force: true,
+        }),
+      ]);
     } finally {
       globalLock.unlock();
     }
-  }
-}
-
-class Lock {
-  readonly #resolver: ResolvablePromise<void>;
-
-  constructor(resolver: ResolvablePromise<void>) {
-    this.#resolver = resolver;
-  }
-
-  unlock() {
-    this.#resolver.resolve();
-  }
-}
-
-class Mutex {
-  #current = Promise.resolve();
-
-  async lock() {
-    const resolver = createResolver();
-
-    const promise = this.#current;
-    this.#current = resolver;
-    try {
-      await promise;
-    } catch (err) {}
-
-    return new Lock(resolver);
   }
 }

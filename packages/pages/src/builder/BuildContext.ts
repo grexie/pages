@@ -54,9 +54,9 @@ export class BuildContext extends Context {
     ];
     this.outputDir = path.resolve(this.rootDir, 'build');
 
-    this.modules = new ModuleContext(this);
     this.builder = new Builder(this, fs, fsOptions);
     this.renderer = new Renderer(this);
+    this.modules = new ModuleContext(this);
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
         new provider({
@@ -67,12 +67,8 @@ export class BuildContext extends Context {
     });
   }
 
-  get ephemeralCache() {
-    return this.builder.ephemeralCache;
-  }
-
-  get persistentCache() {
-    return this.builder.persistentCache;
+  get cache() {
+    return this.builder.cache;
   }
 
   get fs() {
