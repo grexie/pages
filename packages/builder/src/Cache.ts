@@ -1,8 +1,7 @@
 import { FileSystem } from './FileSystem';
 import path from 'path';
 import { createHash } from 'crypto';
-import { createResolver } from './utils/resolvable';
-import { Mutex } from './utils/mutex';
+import { KeyedMutex, Mutex } from './utils/mutex';
 
 export enum CacheType {
   inherit,
@@ -13,7 +12,8 @@ export enum CacheType {
 export interface ICache {
   lock<T = any>(
     filename: string | string[],
-    cb: (cache: ICache) => Promise<T>
+    cb: (cache: ICache) => Promise<T>,
+    fail?: boolean
   ): Promise<T>;
   set: (
     filename: string,
@@ -35,46 +35,58 @@ export interface CacheStorage {
 export interface CacheOptions {
   storage: CacheStorage;
   cacheDir: string;
+  cacheType?: Omit<CacheType, CacheType.inherit>;
+  parent?: Cache;
 }
 
-const cacheGlobalLock = new Mutex();
-
 export class Cache implements ICache {
-  readonly #storage: CacheStorage;
-  readonly #cacheDir: string;
-  #locks: Record<string, Promise<void>> = {};
-  #fs: FileSystem;
+  protected readonly storage: CacheStorage;
+  protected readonly cacheDir: string;
+  protected readonly cacheType: Omit<CacheType, CacheType.inherit>;
+  readonly #fs: FileSystem;
+  readonly #locks: KeyedMutex;
 
-  constructor({ storage, cacheDir }: CacheOptions) {
-    this.#storage = storage;
-    this.#cacheDir = cacheDir;
-    this.#fs = storage.ephemeral;
+  constructor({
+    storage,
+    cacheDir,
+    cacheType = CacheType.ephemeral,
+    parent,
+  }: CacheOptions) {
+    this.storage = storage;
+    this.cacheDir = cacheDir;
+    this.cacheType = cacheType;
+    if (cacheType === CacheType.ephemeral) {
+      this.#fs = this.storage.ephemeral;
+    } else if (cacheType === CacheType.persistent) {
+      this.#fs = this.storage.persistent;
+    } else {
+      throw new TypeError('invalid cache type');
+    }
+    if (parent) {
+      this.#locks = parent.#locks;
+    } else {
+      this.#locks = new KeyedMutex();
+    }
   }
 
-  create(name: string, storage: CacheType = CacheType.inherit) {
-    const cache = new Cache({
-      storage: this.#storage,
-      cacheDir: path.resolve(this.#cacheDir, name),
+  create(name: string, cacheType: CacheType = CacheType.inherit) {
+    return new Cache({
+      storage: this.storage,
+      cacheDir: path.resolve(this.cacheDir, name),
+      cacheType: cacheType === CacheType.inherit ? this.cacheType : cacheType,
+      parent: this,
     });
-
-    if (storage === CacheType.ephemeral) {
-      cache.#fs = this.#storage.ephemeral;
-    } else if (storage === CacheType.persistent) {
-      cache.#fs = this.#storage.persistent;
-    }
-
-    return cache;
   }
 
   #key(filename: string) {
     if (process.env.GREXIE_BUILDER_CACHE_HASH === 'false') {
-      return path.resolve(this.#cacheDir, filename.substring(1));
+      return path.resolve(this.cacheDir, filename.substring(1));
     }
     const hash = createHash('sha1');
-    hash.update(path.resolve(this.#cacheDir, filename.substring(1)));
+    hash.update(path.resolve(this.cacheDir, filename.substring(1)));
     const key = Array.from(hash.digest().toString('hex'));
     return `${path.resolve(
-      this.#cacheDir,
+      this.cacheDir,
       path.join(...key.slice(0, 5), key.slice(5).join(''))
     )}${path.extname(filename)}`;
   }
@@ -82,83 +94,40 @@ export class Cache implements ICache {
   async #lock<T = any>(
     filename: string | string[],
     cb: (cache: ICache) => Promise<T>,
-    locked: Record<string, boolean> = {}
+    fail: boolean = false,
+    locked: Set<string> = new Set()
   ): Promise<T> {
     if (!Array.isArray(filename)) {
       filename = [filename];
     }
 
-    const globalLock = await cacheGlobalLock.lock();
-
     const keys = filename
-      .filter(filename => !locked[filename])
+      .filter(filename => !locked.has(filename))
       .map(filename => ({ [filename]: this.#key(filename) }))
       .reduce((a, b) => ({ ...a, ...b }), {});
 
-    const promises = Object.values(keys)
-      .map(key => ({ [key]: this.#locks[key] }))
-      .reduce((a, b) => ({ ...a, ...b }), {});
-
-    const nameObject = (name: any, o: any) => {
-      o.name = name;
-      return o;
-    };
-
-    const resolvers = Object.values(keys)
-      .map(key => ({
-        [key]: nameObject(filename, (this.#locks[key] = createResolver())),
-      }))
-      .reduce((a, b) => ({ ...a, ...b }), {});
-
-    globalLock.unlock();
-
-    await Promise.all(Object.values(promises));
-
-    locked = Object.assign(
-      {},
-      locked,
-      Object.keys(keys).reduce((a, b) => ({ ...a, [b]: true }), {})
-    );
-
-    const wrap = (
-      cb: (filename: string, ...args: any[]) => Promise<any>
-    ): any => {
-      return async (filename: string, ...args: any[]): Promise<any> => {
-        if (!locked[filename]) {
-          throw new Error(`no lock for ${filename}`);
-        }
-
-        return cb(filename, ...args);
-      };
-    };
-
-    const cache = {
-      lock: (filename, cb) => this.#lock(filename, cb, locked),
-      set: wrap(this.#set.bind(this)),
-      get: wrap(this.#get.bind(this)),
-      has: wrap(this.#has.bind(this)),
-      remove: wrap(this.#remove.bind(this)),
-      modified: wrap(this.#modified.bind(this)),
-    } as ICache;
+    const lock = await this.#locks.lock(Object.values(keys), fail);
+    const cache = new LockedCache({
+      locked: filename,
+      storage: this.storage,
+      cacheDir: this.cacheDir,
+      cacheType: this.cacheType,
+      parent: this,
+    });
 
     try {
       return await cb(cache);
     } finally {
-      Object.values(resolvers).forEach(resolver => resolver.resolve());
-
-      Object.entries(resolvers).forEach(([key, resolver]) => {
-        if (this.#locks[key] === resolver) {
-          delete this.#locks[key];
-        }
-      });
+      lock.unlock();
     }
   }
 
   async lock<T = any>(
     filename: string | string[],
-    cb: (cache: ICache) => Promise<T>
+    cb: (cache: ICache) => Promise<T>,
+    fail: boolean = false
   ) {
-    return this.#lock(filename, cb);
+    return this.#lock(filename, cb, fail);
   }
 
   async #set(
@@ -296,22 +265,77 @@ export class Cache implements ICache {
   }
 
   async clean(): Promise<void> {
-    const globalLock = await cacheGlobalLock.lock();
-    await Promise.all(Object.values(this.#locks));
+    const lock = await this.#locks.lockGlobal();
+
+    const promises: Promise<any>[] = [];
+    promises.push(
+      this.storage.ephemeral.rm(this.cacheDir, {
+        recursive: true,
+        force: true,
+      })
+    );
+    if (this.storage.ephemeral !== this.storage.persistent) {
+      promises.push(
+        this.storage.persistent.rm(this.cacheDir, {
+          recursive: true,
+          force: true,
+        })
+      );
+    }
 
     try {
-      await Promise.all([
-        this.#storage.ephemeral.rm(this.#cacheDir, {
-          recursive: true,
-          force: true,
-        }),
-        this.#storage.persistent.rm(this.#cacheDir, {
-          recursive: true,
-          force: true,
-        }),
-      ]);
+      await Promise.all(promises);
     } finally {
-      globalLock.unlock();
+      lock.unlock();
     }
+  }
+}
+
+interface LockedCacheOptions extends CacheOptions {
+  locked: string[];
+}
+
+class LockedCache extends Cache {
+  readonly #locked: Set<string>;
+
+  constructor({ locked, ...options }: LockedCacheOptions) {
+    super(options);
+    this.#locked = new Set(locked);
+  }
+
+  async lock<T = any>(
+    filename: string | string[],
+    cb: (cache: ICache) => Promise<T>,
+    fail?: boolean
+  ): Promise<T> {
+    if (typeof filename === 'string') {
+      filename = [filename];
+    }
+
+    if (!filename.length) {
+      return super.lock(filename, cb, fail);
+    }
+
+    let notLocked: string[] = [];
+    for (const f of filename) {
+      if (!this.#locked.has(f)) {
+        notLocked.push(f);
+      }
+    }
+
+    return super.lock(
+      notLocked,
+      () => {
+        const cache = new LockedCache({
+          locked: filename as string[],
+          storage: this.storage,
+          cacheDir: this.cacheDir,
+          cacheType: this.cacheType,
+          parent: this,
+        });
+        return cb(cache);
+      },
+      fail
+    );
   }
 }

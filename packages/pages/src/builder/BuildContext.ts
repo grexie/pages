@@ -6,6 +6,7 @@ import { ProviderConfig, Registry } from '../api';
 import { Renderer } from './Renderer';
 import { ModuleContext } from './ModuleContext';
 import os from 'os';
+import { ConfigContext } from './ConfigContext';
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -37,6 +38,7 @@ export class BuildContext extends Context {
   readonly builder: Builder;
   readonly renderer: Renderer;
   readonly modules: ModuleContext;
+  readonly config: ConfigContext;
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
     const { rootDir, cacheDir, providers, fs, fsOptions, ...opts } =
@@ -56,7 +58,13 @@ export class BuildContext extends Context {
 
     this.builder = new Builder(this, fs, fsOptions);
     this.renderer = new Renderer(this);
-    this.modules = new ModuleContext(this);
+    this.modules = new ModuleContext({
+      context: this,
+      resolver: {
+        extensions: ['.md', '.jsx', '.ts', '.tsx'],
+        forceCompile: ['@mdx-js/mdx'],
+      },
+    });
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
         new provider({
@@ -65,6 +73,8 @@ export class BuildContext extends Context {
         })
       );
     });
+
+    this.config = new ConfigContext({ context: this });
   }
 
   get cache() {

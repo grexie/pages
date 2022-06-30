@@ -43,7 +43,7 @@ const createResolver = <T = void>() => {
 
 const stripAnsiCursor = (text: string) =>
   text.replace(
-    /\033(c|\[\d+;\d+[Hf]|\[[HM78suJK]|\[\d+[ABCDEFGnJK]|\[[=?]\d+[hl])/g,
+    /\033(c|\[\d+;\d+[Hf]|\[[HMsuJK]|\[\d+[ABCDEFGnJK]|\[[=?]\d+[hl])/g,
     ''
   );
 

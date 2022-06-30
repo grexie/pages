@@ -105,7 +105,7 @@ export class ErrorManager {
   readonly errors: any[] = [];
 
   constructor() {
-    ErrorManager.patch(React);
+    //ErrorManager.patch(React);
   }
 
   report(error: any) {

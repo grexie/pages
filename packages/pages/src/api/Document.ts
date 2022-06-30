@@ -1,7 +1,9 @@
+import { ResourceContext } from '../hooks';
 import { Resource } from './Resource';
 
 export interface DocumentOptions {
   resource: Resource;
+  resourceContext: ResourceContext;
   initialProps?: DocumentProps;
 }
 
@@ -11,10 +13,16 @@ export interface DocumentProps {
 }
 
 export class Document {
+  readonly resourceContext: ResourceContext;
   readonly resource: Resource;
   readonly props: DocumentProps = {};
 
-  constructor({ resource, initialProps = {} }: DocumentOptions) {
+  constructor({
+    initialProps = {},
+    resource,
+    resourceContext,
+  }: DocumentOptions) {
+    this.resourceContext = resourceContext;
     this.resource = resource;
     let { title, scripts } = initialProps;
 

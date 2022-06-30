@@ -163,12 +163,14 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     writable: boolean = false
   ): (ReadableFileSystem | (ReadableFileSystem & WritableFileSystem))[] {
     let fileSystems = this.#fileSystems;
+    filename = path.resolve(process.cwd(), filename);
 
     if (writable) {
       fileSystems = fileSystems.filter(({ writable }) => writable);
     }
 
     fileSystems = fileSystems.filter(({ path }) => filename.startsWith(path));
+
     fileSystems.sort((a, b) => b.path.length - a.path.length);
 
     return fileSystems.map(({ fs }) => fs);
@@ -193,14 +195,14 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let value = [] as unknown as P;
 
     if (fileSystems.length === 0) {
+      const error = new Error(`no filesystems: ${name} ${filename}`);
+      (error as any).code = 'ENOFS';
+
       if (callback) {
-        callback(
-          new Error('no filesystems') as unknown as E,
-          ...([] as unknown as P)
-        );
+        callback(error as any, ...([] as unknown as P));
         return undefined as any;
       } else {
-        return Promise.reject(new Error('no filesystems'));
+        return Promise.reject(error as any);
       }
     }
 
@@ -223,7 +225,10 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
         });
         break;
       } catch (_err) {
-        err = _err as E;
+        if (!['ENOFS'].includes((_err as any)?.code)) {
+          err = _err as E;
+          break;
+        }
       }
     }
 
@@ -261,7 +266,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let value = undefined as any;
 
     if (fileSystems.length === 0) {
-      throw new Error('no filesystems');
+      throw new Error(`no filesystems: ${name} ${filename}`);
     }
 
     for (const fs of fileSystems) {
@@ -272,6 +277,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
         break;
       } catch (_err) {
         err = _err;
+        break;
       }
     }
 
@@ -449,20 +455,14 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
   mkdir(dirname: string, ...args: any[]) {
     const callback =
       typeof args[args.length - 1] === 'function' ? args.pop() : undefined;
-    const [options] = args;
-    return this.#call(
-      'mkdir',
-      true,
-      callback,
-      [dirname, { recursive: options?.recursive ?? false }],
-      () => {}
-    );
+    return this.#call('mkdir', true, callback, [dirname, ...args], () => {});
   }
   mkdirSync(dirname: string, options?: { recursive?: boolean }): void {
-    this.#callSync('mkdirSync', true, [
-      dirname,
-      { recursive: options?.recursive ?? false },
-    ]);
+    const args: any[] = [dirname];
+    if (options) {
+      args.push(options);
+    }
+    this.#callSync('mkdirSync', true, args);
   }
 
   rm(filename: string): Promise<void>;

@@ -3,7 +3,12 @@ import { renderToPipeableStream } from 'react-dom/server';
 import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
 import { withDocumentComponent } from '../components/Document';
-import { withDocument, withContext } from '../hooks';
+import {
+  withDocument,
+  withContext,
+  ResourceContext,
+  withResourceContext,
+} from '../hooks';
 import { Handler, Resource } from '../api';
 import { BuildContext } from '../builder';
 import {
@@ -22,6 +27,7 @@ export class Renderer {
 
   async render<T extends Writable>(
     writable: T,
+    resourceContext: ResourceContext,
     resource: Resource,
     ...composables: any[]
   ): Promise<T> {
@@ -31,7 +37,8 @@ export class Renderer {
       withErrorManager({ errorManager }),
       withLazy({ errorManager }),
       withContext({ context: this.context }),
-      withDocument({ resource }),
+      withResourceContext({ resourceContext }),
+      withDocument({ resourceContext, resource }),
       withDocumentComponent,
       ...composables
     );
@@ -63,6 +70,7 @@ export const wrapHandler = (
       handler.default as any
     );
     exports.default = Component;
+    exports.resource = resource;
     if (!exports.__esModule) {
       exports.__esModule = true;
     }

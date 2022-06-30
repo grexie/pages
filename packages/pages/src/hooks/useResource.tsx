@@ -1,11 +1,75 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createContextWithProps } from '../utils/context';
 import { ContentResource, ModuleResource, Resource } from '../api';
 import { useDocument } from './useDocument';
 
-export interface ResourceQueryOptions {
-  resource?: boolean;
+const ResourceContextSet = Symbol();
+
+export class ResourceContext {
+  readonly parent?: ResourceContext;
+  readonly #children: ResourceContext[] = [];
+  #resource?: Resource;
+
+  constructor(parent?: ResourceContext) {
+    this.parent = parent;
+    if (parent) {
+      parent.#children.push(this);
+    }
+  }
+
+  get root() {
+    let self: ResourceContext = this;
+    while (self.parent) {
+      self = self.parent;
+    }
+    return self;
+  }
+
+  get children() {
+    return this.#children.slice();
+  }
+
+  get resource() {
+    return this.#resource!;
+  }
+
+  get resources() {
+    const stack: ResourceContext[] = [this];
+    let el: ResourceContext | undefined;
+    const out: Resource[] = [];
+    while ((el = stack.shift())) {
+      if (el.resource) {
+        out.push(el.resource);
+      }
+      stack.push(...el.#children);
+    }
+    return out;
+  }
+
+  [ResourceContextSet](resource: Resource) {
+    this.#resource = resource;
+  }
 }
+
+export interface ResourceContextProviderProps {
+  resourceContext: ResourceContext;
+}
+
+export const {
+  Provider: ResourceContextProvider,
+  with: withResourceContext,
+  use: useResourceContext,
+} = createContextWithProps<ResourceContext, ResourceContextProviderProps>(
+  Provider =>
+    ({ resourceContext, children }) => {
+      return <Provider value={resourceContext}>{children}</Provider>;
+    }
+);
+
+export const useRootResourceContext = () => {
+  const resourceContext = useResourceContext();
+  return resourceContext.root;
+};
 
 export interface ResourceProviderProps {
   resource: Resource;
@@ -17,9 +81,28 @@ const {
   use: useResourceUntyped,
 } = createContextWithProps<Resource, ResourceProviderProps>(
   Provider =>
-    ({ resource, children }) =>
-      <Provider value={resource}>{children}</Provider>
+    ({ resource, children }) => {
+      const parentResourceContext = useResourceContext();
+      const resourceContext = useMemo(() => {
+        let resourceContext = parentResourceContext;
+        if (resourceContext.resource) {
+          resourceContext = new ResourceContext(resourceContext);
+        }
+        resourceContext[ResourceContextSet](resource);
+        return resourceContext;
+      }, [parentResourceContext, resource]);
+
+      return (
+        <ResourceContextProvider resourceContext={resourceContext}>
+          <Provider value={resource}>{children}</Provider>
+        </ResourceContextProvider>
+      );
+    }
 );
+
+export interface ResourceQueryOptions {
+  resource?: boolean;
+}
 
 export const useResource = <M = any, T extends Resource<M> = Resource<M>>({
   resource = false,

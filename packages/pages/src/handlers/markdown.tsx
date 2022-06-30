@@ -16,6 +16,7 @@ export const resource = async (
   context: SourceContext
 ): Promise<Resource<any>> => {
   const { content, data: metadata } = grayMatter(context.content.toString());
+  Object.assign(context.metadata, metadata);
 
   const source = await compile(content, {
     outputFormat: 'program',
@@ -23,6 +24,5 @@ export const resource = async (
 
   return context.createModule({
     source: source.toString(),
-    metadata,
   });
 };

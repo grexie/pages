@@ -1,5 +1,5 @@
-import { ContentResource, ResourceMetadata } from './Resource';
-import { dirname } from 'path';
+import { ContentResource, Resource, ResourceMetadata } from './Resource';
+import path from 'path';
 import EventEmitter from 'events';
 export type SourceTree = { [key: string]: SourceTree | string };
 
@@ -8,35 +8,42 @@ export interface SourceOptions {
   path: string[];
 }
 
-export interface CreateOptions<C = any, M extends ResourceMetadata = any> {
-  content: C;
-  metadata?: M;
-}
-
 export class Source extends EventEmitter {
   readonly filename: string;
-  readonly path: string[];
-  readonly slug: string;
+  readonly #path: string[];
 
   constructor({ filename, path }: SourceOptions) {
     super();
     this.filename = filename;
-    this.path = path;
-    this.slug = path.join('/');
+    this.#path = path;
+  }
+
+  get isPagesConfig() {
+    const lastPath = this.#path[this.#path.length - 1];
+    return (
+      ['.yml', '.yaml', '.json'].includes(path.extname(this.filename)) &&
+      ['.pages', 'pages'].includes(path.extname(lastPath) || lastPath)
+    );
+  }
+
+  get path() {
+    if (!this.isPagesConfig) {
+      return this.#path;
+    }
+
+    const _path = this.#path.slice();
+    const lastPath = _path.pop()!.replace(/(^\.?|\.)pages$/, '');
+    if (lastPath && lastPath !== 'index') {
+      _path.push(lastPath);
+    }
+    return _path;
+  }
+
+  get slug() {
+    return this.path.join('/');
   }
 
   get dirname() {
-    return dirname(this.filename);
-  }
-
-  create<C = any, M extends ResourceMetadata = any>({
-    content,
-    metadata,
-  }: CreateOptions<C, M>) {
-    return new ContentResource({
-      path: this.path,
-      content,
-      metadata: metadata ?? {},
-    });
+    return path.dirname(this.filename);
   }
 }

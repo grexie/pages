@@ -3,6 +3,8 @@ import type { Stats } from '@grexie/builder';
 import { BuildContext, BuildContextOptions } from '../builder';
 import { ResolvablePromise, createResolver } from '../utils/resolvable';
 import { RequestHandler } from './RequestHandler';
+import path from 'path';
+import fs from 'fs';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;
@@ -69,7 +71,7 @@ export class Server {
         return;
       }
 
-      console.info(stats?.toString());
+      console.info((stats as any).toString({ colors: true }));
     });
   }
 

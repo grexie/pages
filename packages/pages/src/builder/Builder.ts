@@ -15,6 +15,8 @@ import { Source } from '../api';
 import nodeExternals from 'webpack-node-externals';
 import _path from 'path';
 import { Volume } from 'memfs';
+import { ResourcesPlugin } from '../loaders/resources-plugin';
+import path from 'path';
 
 export class Builder {
   readonly context: BuildContext;
@@ -50,9 +52,7 @@ export class Builder {
 
     this.#builder.fs.add(
       this.context.rootDir,
-      new FileSystem()
-        .add('/', defaultFiles, true)
-        .add(this.context.rootDir, fs),
+      new FileSystem().add('/', defaultFiles).add(this.context.rootDir, fs),
       true
     );
 
@@ -61,8 +61,12 @@ export class Builder {
     );
 
     const cacheStorage: CacheStorage = {
-      ephemeral: new FileSystem().add(this.context.cacheDir, fs, true),
-      persistent: new FileSystem().add(this.context.cacheDir, fs, true),
+      ephemeral: new FileSystem()
+        .add('/', new Volume(), true)
+        .add(this.context.cacheDir, fs, true),
+      persistent: new FileSystem()
+        .add('/', new Volume(), true)
+        .add(this.context.cacheDir, fs, true),
     };
 
     const cache = new Cache({
@@ -130,7 +134,12 @@ export class Builder {
     let path = source.path.slice();
     const slug = [...path, 'index'].join('/');
     return {
-      [slug]: `./${_path.relative(this.context.rootDir, source.filename)}`,
+      // [slug]: {
+      //   import: `resource-loader!./${_path.relative(
+      //     this.context.rootDir,
+      //     source.filename
+      //   )}`,
+      // },
     };
   }
 
@@ -155,8 +164,7 @@ export class Builder {
       mode: 'production',
       output: {
         path: this.context.outputDir,
-        filename: `[name].js`,
-        libraryTarget: this.context.isServer ? 'commonjs' : undefined,
+        filename: `[name].html`,
       },
       externals: [
         nodeExternals({
@@ -167,11 +175,40 @@ export class Builder {
       module: {
         rules: [
           {
+            test: require.resolve('../defaults.pages'),
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('pages-loader'),
+              {
+                loader: 'babel-loader',
+                options: {
+                  presets: ['@babel/typescript', '@babel/env'],
+                  cwd: this.context.pagesDir,
+                  root: this.context.rootDir,
+                },
+              },
+            ],
+          },
+          {
+            test: /(^\.?|\/\.?|\.)pages.ya?ml/,
+            exclude: /(node_modules|bower_components)/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('pages-loader'),
+              'yaml-loader',
+            ],
+          },
+          {
+            test: /\.(html)$/,
+            exclude: /(node_modules|bower_components)/,
+            use: [this.#loader('cache-loader'), this.#loader('html-loader')],
+          },
+          {
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),
-              this.#loader('pages-loader', {
+              this.#loader('module-loader', {
                 handler: '@grexie/pages/handlers/markdown',
               }),
             ],
@@ -182,11 +219,11 @@ export class Builder {
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),
-              this.#loader('pages-loader'),
+              this.#loader('module-loader'),
               {
                 loader: 'babel-loader',
                 options: {
-                  presets: ['@babel/preset-react', '@babel/preset-env'],
+                  presets: ['@babel/react', '@babel/env'],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                 },
@@ -198,15 +235,11 @@ export class Builder {
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),
-              this.#loader('pages-loader'),
+              this.#loader('module-loader'),
               {
                 loader: 'babel-loader',
                 options: {
-                  presets: [
-                    '@babel/preset-typescript',
-                    '@babel/preset-react',
-                    '@babel/preset-env',
-                  ],
+                  presets: ['@babel/typescript', '@babel/react', '@babel/env'],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                 },
@@ -225,6 +258,12 @@ export class Builder {
           _path.resolve(__dirname, '..', 'loaders'),
         ],
       },
+      loader: {
+        pages: {
+          context: this.context,
+        },
+      },
+      plugins: [new ResourcesPlugin({ context: this.context })],
     };
   }
 

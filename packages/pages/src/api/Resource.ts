@@ -8,7 +8,7 @@ export interface ResourceOptions<M extends ResourceMetadata = any> {
   metadata: M;
 }
 
-export abstract class Resource<M extends ResourceMetadata = any> {
+export class Resource<M extends ResourceMetadata = any> {
   readonly path: string[];
   readonly slug: string;
   readonly metadata: M;
@@ -19,7 +19,9 @@ export abstract class Resource<M extends ResourceMetadata = any> {
     this.metadata = metadata;
   }
 
-  abstract serialize(): string;
+  serialize() {
+    return JSON.stringify(this, null, 2);
+  }
 
   toJSON() {
     return { path: this.path, slug: this.slug, metadata: this.metadata };
@@ -35,10 +37,6 @@ export class ContentResource<
   constructor({ content, ...options }: ResourceOptions<M> & { content: C }) {
     super(options);
     this.content = content;
-  }
-
-  serialize(): string {
-    return JSON.stringify(this, null, 2);
   }
 }
 

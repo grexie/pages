@@ -11,11 +11,13 @@ const globAsync = promisify(glob);
 export class Provider {
   readonly context: BuildContext;
   #sources: ResolvablePromise<Record<string, Source>>;
+  #configs: ResolvablePromise<Record<string, Source>>;
 
   constructor({ context }: ProviderOptions) {
     this.context = context;
 
     this.#sources = createResolver();
+    this.#configs = createResolver();
     this.scan();
   }
 
@@ -49,24 +51,37 @@ export class Provider {
         '.git/**',
         '.github/**',
         '.gitignore',
+        '.DS_Store',
         'yarn-error.log',
         'yarn.lock',
         'package-lock.json',
       ],
     });
 
+    const sources = await Promise.all(
+      files.map(async filename =>
+        this.create(
+          _path.resolve(this.context.rootDir, filename),
+          process.cwd()
+        )
+      )
+    );
+
     this.#sources.resolve(
       (
-        (
-          await Promise.all(
-            files.map(async filename =>
-              this.create(
-                _path.resolve(this.context.rootDir, filename),
-                process.cwd()
-              )
-            )
-          )
-        ).filter(source => !!source) as Source[]
+        sources.filter(source => !!source && !source.isPagesConfig) as Source[]
+      ).reduce(
+        (resources, resource) => ({
+          ...resources,
+          [resource.path.join('/')]: resource,
+        }),
+        {}
+      )
+    );
+
+    this.#configs.resolve(
+      (
+        sources.filter(source => !!source && source.isPagesConfig) as Source[]
       ).reduce(
         (resources, resource) => ({
           ...resources,
@@ -77,29 +92,10 @@ export class Provider {
     );
   }
 
-  async list({ type, path, slug }: ListOptions = {}): Promise<Source[]> {
+  async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
     let sourcesMap = await this.#sources;
     let sources = Object.values(sourcesMap);
 
-    // if (typeof type !== 'undefined') {
-    //   if (typeof type === 'string') {
-    //     type = [type];
-    //   }
-    //   const typeMap: Record<string, boolean> = type.reduce(
-    //     (a, b) => ({ ...a, [b]: true }),
-    //     {}
-    //   );
-    //   resources = (
-    //     await Promise.all(
-    //       resources.map(async resource => ({
-    //         resource,
-    //         metadata: await resource.metadata(),
-    //       }))
-    //     )
-    //   )
-    //     .filter(({ metadata }) => typeMap[metadata.type ?? ''])
-    //     .map(({ resource }) => resource);
-    // }
     if (typeof path !== 'undefined') {
       if (typeof path[0] === 'string') {
         path = [path as string[]];
@@ -125,6 +121,50 @@ export class Provider {
         sources = sources.filter(source => slugMap[source.slug]);
       }
     }
+
+    return sources;
+  }
+
+  async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
+    let sourcesMap = await this.#configs;
+    let sources = Object.values(sourcesMap);
+
+    if (typeof slug !== 'undefined') {
+      if (typeof slug === 'string') {
+        slug = [slug];
+      }
+
+      path = slug.map(slug => slug.split(/\//g));
+    }
+    if (typeof path !== 'undefined') {
+      if (typeof path[0] === 'string') {
+        path = [path as string[]];
+      }
+      if (path.length === 0) {
+        path = [[]];
+      }
+
+      sources = sources.filter(source => {
+        const includes = (path as string[][]).map(path => {
+          const sourcePath = source.path.slice();
+          path = path.slice();
+
+          if (sourcePath.length > path.length) {
+            return false;
+          }
+
+          for (let i = 0; i < sourcePath.length; i++) {
+            if (sourcePath[i] !== path[i]) {
+              return false;
+            }
+          }
+
+          return true;
+        });
+        return includes.reduce((a, b) => a || b, false);
+      });
+    }
+
     return sources;
   }
 

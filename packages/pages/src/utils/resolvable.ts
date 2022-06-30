@@ -5,7 +5,7 @@ export interface ResolvablePromise<T = void>
 export interface Resolver<T = void> {
   readonly resolved: boolean;
   readonly resolve: (value: T) => void;
-  readonly reject: (error: Error) => void;
+  readonly reject: (error: any) => void;
 }
 
 export const createResolver = <T = void>() => {
@@ -21,7 +21,7 @@ export const createResolver = <T = void>() => {
         resolved = true;
         resolve(value);
       },
-      reject: (err: Error) => {
+      reject: (err: any) => {
         resolved = true;
         reject(err);
       },

@@ -5,7 +5,8 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src/ -d . -x .ts,.tsx"
+    "build": "babel src/ -d . -x .ts,.tsx --ignore *.test.tsx --ignore *.test.ts",
+    "test": "jest"
   },
   "dependencies": {
     "@babel/core": "^7.18.2",
@@ -27,7 +28,8 @@
     "resolve": "^1.22.0",
     "schema-utils": "^4.0.0",
     "webpack-node-externals": "^3.0.0",
-    "whatwg-url": "^11.0.0"
+    "whatwg-url": "^11.0.0",
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
     "@types/babel__core": "^7.1.19",

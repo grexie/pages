@@ -1,14 +1,20 @@
 import { EventEmitter } from 'events';
 import { BuildContext } from './BuildContext';
-import { Cache } from '@grexie/builder';
-import type { LoaderContext, NormalModule } from 'webpack';
+import { Cache, ICache, Stats } from '@grexie/builder';
+import {
+  Compilation,
+  Module as WebpackModule,
+  dependencies as WebpackDependencies,
+} from 'webpack';
 import _Module from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
-import { realpath } from 'fs/promises';
 import { Script } from 'vm';
 import path from 'path';
-import { createResolver } from '../utils/resolvable';
-import { readFile } from 'fs/promises';
+import { createResolver, ResolvablePromise } from '../utils/resolvable';
+import { promisify } from '../utils/promisify';
+import { KeyedMutex, Lock } from '../utils/mutex';
+
+const { ModuleDependency } = WebpackDependencies;
 
 type WrappedScript = (
   exports: any,
@@ -23,7 +29,10 @@ const wrapScript = (code: string): string =>
 
 const containsPath = (root: string, p: string) => {
   const relative = path.relative(root, p);
-  return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+  return (
+    !relative ||
+    (!!relative && !relative.startsWith('..') && !path.isAbsolute(relative))
+  );
 };
 
 const cloneRequire = (
@@ -51,6 +60,9 @@ export interface ModuleOptions {
   source: string;
   loader: ModuleLoader;
   imports: Record<string, Import>;
+  stats: Stats;
+  webpackModule: WebpackModule;
+  ready: ResolvablePromise<void>;
 }
 
 export interface ModuleEvictOptions {
@@ -63,14 +75,36 @@ export class Module extends EventEmitter {
   readonly source: string;
   readonly load: ModuleLoader;
   readonly imports: Readonly<Record<string, Import>>;
+  readonly stats: Stats;
+  readonly webpackModule: WebpackModule;
   #module?: _Module;
+  #previousMtime: number | undefined;
+  readonly #previousDependencies: Set<string> = new Set();
+  readonly #currentDependencies: Set<string> = new Set();
+  readonly #dependents: Set<string> = new Set();
+  readonly #evict: ResolvablePromise<{ finish: ResolvablePromise<void> }> =
+    createResolver();
+  readonly #pending: Set<Promise<Module>> = new Set();
+
+  #persisted: boolean = false;
 
   static #id = 0;
   readonly id = ++Module.#id;
 
-  constructor({ context, filename, source, loader, imports }: ModuleOptions) {
+  constructor({
+    context,
+    filename,
+    source,
+    loader,
+    imports,
+    stats,
+    webpackModule,
+    ready,
+  }: ModuleOptions) {
     super();
     this.#context = context;
+    this.stats = stats;
+    this.webpackModule = webpackModule;
     this.filename = filename;
     this.source = source;
     this.load = (parent: _Module) => {
@@ -79,6 +113,108 @@ export class Module extends EventEmitter {
       return this.#module;
     };
     this.imports = imports;
+
+    this.#initialize().then(ready.resolve, ready.reject);
+  }
+
+  addPending(module: Promise<Module>) {
+    this.#pending.add(module);
+  }
+
+  get #metaCacheKey() {
+    return `${this.filename}.meta.json`;
+  }
+
+  async persist(shouldLock: boolean = true) {
+    if (!this.#module) {
+      throw new Error(`module not loaded ${this.filename}`);
+    }
+
+    if (this.#persisted) {
+      return;
+    }
+    this.#persisted = true;
+
+    const hasDifferences = (a: Set<string>, b: Set<string>) => {
+      for (const s of b) {
+        if (!a.has(s)) {
+          return true;
+        }
+      }
+      for (const s of a) {
+        if (!b.has(s)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    if (
+      !hasDifferences(this.#previousDependencies, this.#currentDependencies) &&
+      this.#previousMtime === this.mtime
+    ) {
+      return;
+    }
+
+    const cacheKey = this.#metaCacheKey;
+    await Promise.all([
+      this.#context.cache.lock(cacheKey, async cache => {
+        const dependencies = Array.from(this.dependencies.values());
+        const mtime = this.mtime;
+
+        await cache.set(
+          cacheKey,
+          JSON.stringify({ dependencies, mtime }, null, 2),
+          this.stats.mtime
+        );
+      }),
+      ...this.dependencies.map(async dependency => {
+        const module = await this.#context.modules[dependency];
+        if (module) {
+          module.load(this.module);
+          await module.persist();
+        }
+      }),
+    ]);
+  }
+
+  async #initialize() {
+    const cacheKey = this.#metaCacheKey;
+    await this.#context.cache
+      .lock(cacheKey, async cache => {
+        const cached = await cache.get(cacheKey);
+        const { dependencies, mtime } = JSON.parse(cached.toString()) as {
+          dependencies: string[];
+          mtime: number;
+        };
+        dependencies.forEach(dependency =>
+          this.#previousDependencies.add(dependency)
+        );
+        this.#previousMtime = mtime;
+      })
+      .catch(() => {});
+
+    this.#evict.then(({ finish }) =>
+      this.persist(false).then(finish.resolve, finish.reject)
+    );
+  }
+
+  addDependency(module: Module) {
+    this.#currentDependencies.add(module.filename);
+    module.#dependents.add(this.filename);
+    this.#persisted = false;
+  }
+
+  get mtime() {
+    return this.stats.mtimeMs;
+  }
+
+  get dependents() {
+    return Array.from(this.#dependents);
+  }
+
+  get dependencies() {
+    return Array.from(this.#currentDependencies);
   }
 
   get module() {
@@ -93,60 +229,91 @@ export class Module extends EventEmitter {
     return this.module.exports;
   }
 
-  async evict({ recompile = false }: ModuleEvictOptions) {
-    delete this.#context.loadedModules[this.filename];
-    delete this.#context.modules[this.filename];
+  async evict(
+    factory: ModuleFactory,
+    { recompile = false }: ModuleEvictOptions = {}
+  ) {
+    const resolver = createResolver<Module>();
+
+    if (this.#pending.size) {
+      //this.#context.modules[this.filename] = resolver;
+    }
 
     const promises: Promise<any>[] = [];
 
     if (recompile) {
-      promises.push(
-        this.#context.cache.lock(
-          [this.filename, `${this.filename}.imports.json`],
-          cache =>
-            Promise.all([
-              cache.remove(this.filename),
-              cache.remove(`${this.filename}.imports.json`),
-            ])
-        )
+      await this.#context.cache.lock(
+        [this.filename, `${this.filename}.imports.json`],
+        cache => {
+          delete this.#context.loadedModules[this.filename];
+          //if (!this.#pending.size) {
+          delete this.#context.modules[this.filename];
+          //}
+          return Promise.all([
+            cache.remove(this.filename),
+            cache.remove(`${this.filename}.imports.json`),
+          ]);
+        }
       );
+    } else {
+      delete this.#context.loadedModules[this.filename];
+      //if (!this.#pending.size) {
+      delete this.#context.modules[this.filename];
+      //}
     }
 
-    try {
-      delete this.module?.require.cache[this.filename];
-      promises.push(
-        ...this.module?.children.map(module => this.#context.evict(module.id))
-      );
-    } catch (err) {}
+    delete this.#module?.require.cache[this.filename];
+
+    promises.push(
+      ...this.dependents.map(dependent =>
+        this.#context.loadedModules[dependent]?.evict(factory)
+      )
+    );
 
     await Promise.all(promises);
+    const finish = createResolver();
+    this.#evict.resolve({ finish });
+    await finish;
     this.emit('evict', module);
+
+    if (this.#pending.size) {
+      this.#pending.clear();
+      // const module = await this.#context.require(
+      //   factory,
+      //   path.dirname(this.filename),
+      //   this.filename
+      // );
+      // resolver.resolve(module);
+    }
+    console.info('evict:finish', this.filename);
   }
 }
 
-export class ModuleResolver {
-  readonly context: BuildContext;
+export class ModuleFactory {
+  readonly context: ModuleContext;
   readonly #resolve;
-  readonly #loader;
-  readonly #descriptions: Record<string, any> = {};
+  readonly compilation;
 
-  constructor(context: BuildContext, loader: LoaderContext<any>) {
+  constructor(context: ModuleContext, compilation: Compilation) {
     this.context = context;
-    this.#loader = loader;
+    this.compilation = compilation;
 
-    this.#resolve = loader.getResolve({
+    const resolver = compilation.resolverFactory.get('loader', {
+      fileSystem: compilation.compiler.inputFileSystem,
       conditionNames: ['default', 'require', 'import'],
       mainFields: ['main', 'module'],
-      modules: context.modulesDirs,
+      extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
+      modules: context.build.modulesDirs,
     });
+    this.#resolve = resolver.resolve.bind(resolver);
   }
 
   async resolve(
     context: string,
     request: string
-  ): Promise<{ filename: string; descriptionFile: string }> {
+  ): Promise<{ filename: string; descriptionFile?: string }> {
     return new Promise((resolve, reject) =>
-      this.#resolve(context, request, (err, result, request) => {
+      this.#resolve({}, context, request, {}, (err, result, request) => {
         if (err) {
           reject(err);
           return;
@@ -158,7 +325,7 @@ export class ModuleResolver {
 
         resolve({
           filename: result as string,
-          descriptionFile: request?.descriptionFilePath!,
+          descriptionFile: request?.descriptionFilePath,
         });
       })
     );
@@ -166,137 +333,117 @@ export class ModuleResolver {
 
   async resolveImports(
     context: string,
-    imports: string[]
+    filename: string,
+    imports: string[],
+    resolveDescendants: boolean = false
   ): Promise<Record<string, Import>> {
     const out = await Promise.all(
-      imports.map(async request => {
-        let imp = { compile: false, request, filename: request } as any;
-
-        try {
-          Object.assign(imp, await this.resolve(context, request));
-          imp.compile = true;
-        } catch (err) {}
-
-        if (!imp.compile) {
-          return imp;
-        }
-
-        imp.filename = await realpath(imp.filename);
-
-        if (
-          !imp.filename.endsWith('.mjs') &&
-          (!containsPath(this.context.rootDir, imp.filename) ||
-            containsPath(
-              path.resolve(this.context.rootDir, 'node_modules'),
-              imp.filename
-            ))
-        ) {
-          const description =
-            this.#descriptions[imp.descriptionFile] ??
-            JSON.parse((await readFile(imp.descriptionFile)).toString());
-          this.#descriptions[imp.descriptionFile] = description;
-
-          if (description.type !== 'module') {
-            imp.compile = false;
-          }
-        }
-
-        return imp;
-      })
+      imports.map(async request =>
+        this.context.resolver.resolve(this, filename, context, request)
+      )
     );
 
-    return out.reduce(
-      (a, b) => ({
-        ...a,
-        [b.request]: { compile: b.compile, filename: b.filename },
-      }),
-      {}
-    ) as Record<string, Import>;
+    const resolved = out.reduce((a, b) => ({ ...a, ...b }), {});
+
+    if (resolveDescendants) {
+      await Promise.all(
+        Object.entries(resolved)
+          .filter(([, { compile }]) => !compile)
+          .map(async ([request, descendantResolved]) => {
+            const { filename } = descendantResolved;
+            const { source } = await this.load(filename);
+            if (!source) {
+              return;
+            }
+
+            const { imports } = await this.compile(
+              path.dirname(filename),
+              source,
+              filename,
+              filename,
+              false
+            );
+            const compile = Object.values(imports).reduce(
+              (a, b) => a || b.compile,
+              false
+            );
+            resolved[request] = {
+              ...resolved[request],
+              compile,
+            };
+          })
+      );
+    }
+
+    return resolved;
   }
 
   async load(filename: string) {
-    return new Promise<{
-      source: string;
-      sourceMap: string;
-      module: NormalModule;
-    }>((resolve, reject) => {
-      this.#loader.loadModule(filename, (err, source, sourceMap, module) => {
+    // TODO: cache me
+    const module = await new Promise<WebpackModule>((resolve, reject) =>
+      this.compilation.params.normalModuleFactory.create(
+        {
+          context: this.context.rootDir,
+          contextInfo: {
+            issuer: 'pages',
+            compiler: 'javascript/auto',
+          },
+          dependencies: [new ModuleDependency(filename)],
+        },
+        (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve(result!.module!);
+        }
+      )
+    );
+
+    module.buildInfo = {};
+    module.buildMeta = {};
+
+    await new Promise((resolve, reject) =>
+      this.compilation.buildModule(module, (err, result) => {
         if (err) {
           reject(err);
           return;
         }
 
-        resolve({ source, sourceMap, module });
-      });
-    });
-  }
-}
-export class ModuleContext {
-  readonly build: BuildContext;
-  readonly cache: Cache;
-  readonly compiler: ModuleCompiler;
-  readonly modules: Record<string, Promise<Module> | undefined> = {};
-  readonly loadedModules: Record<string, Module> = {};
+        resolve(result);
+      })
+    );
 
-  constructor(context: BuildContext) {
-    this.build = context;
-    this.cache = this.build.cache.create('modules');
-    this.compiler = new ModuleCompiler({ context: this });
-  }
+    if (module.getNumberOfErrors()) {
+      throw Array.from(module.getErrors() as any)[0];
+    }
 
-  createResolver(loader: LoaderContext<any>) {
-    return new ModuleResolver(this.build, loader);
+    const source = module.originalSource()?.buffer().toString();
+
+    if (typeof source !== 'string') {
+      throw new Error(`unable to load module ${filename}`);
+    }
+
+    return { source, module };
   }
 
-  async evict(filename: string, options: ModuleEvictOptions = {}) {
-    const module = this.loadedModules[filename];
-    await module?.evict(options);
-  }
-
-  async require(resolver: ModuleResolver, context: string, request: string) {
-    const { filename } = await resolver.resolve(context, request);
-    const { module, source } = await resolver.load(filename);
-    return this.create(resolver, module.context!, filename, source);
-  }
-
-  #createRequire(_module: _Module, _filename: string) {
-    const _require = _module.require;
-    const module = this.loadedModules[_filename];
-    _module.require = cloneRequire(_module, request => {
-      const { compile, filename } = module.imports[request] ?? {
-        compile: false,
-        filename: request,
-      };
-
-      if (!compile) {
-        return _require(filename);
-      }
-
-      if (_require.cache[filename]) {
-        return _require.cache[filename]!.exports;
-      }
-
-      const { load } = this.loadedModules[filename];
-      const m = load(_module);
-
-      return m.exports;
-    });
-
-    return _module.require;
-  }
-
-  async #compile(
-    resolver: ModuleResolver,
-    context: string,
-    _source: string,
-    filename: string,
-    sourceFilename: string
-  ) {
+  #getCacheNames(filename: string) {
     const cacheFile = filename;
     const cacheImportsFile = `${cacheFile}.imports.json`;
 
-    return this.cache.lock([cacheFile, cacheImportsFile], async cache => {
-      const stats = await this.build.fs.stat(sourceFilename);
+    return { cacheFile, cacheImportsFile };
+  }
+
+  async getCompileCache(
+    filename: string,
+    sourceFilename: string,
+    cache: ICache = this.context.cache
+  ) {
+    const { cacheFile, cacheImportsFile } = this.#getCacheNames(filename);
+
+    return cache.lock([cacheFile, cacheImportsFile], async cache => {
+      const stats = await this.context.build.fs.stat(sourceFilename);
 
       if (await cache.has(cacheFile)) {
         const cached = await cache.modified(cacheFile);
@@ -310,64 +457,363 @@ export class ModuleContext {
                 data => JSON.parse(data.toString()) as Record<string, Import>
               ),
           ]);
-          return { source, imports };
+          return { cached: true, source, imports, stats };
         }
       }
 
-      const compiled = await this.compiler.compile({
+      return { cached: false, stats };
+    });
+  }
+
+  async compile(
+    context: string,
+    _source: string,
+    filename: string,
+    sourceFilename: string,
+    resolveImportsDescendants: boolean = true,
+    cache: ICache = this.context.cache
+  ) {
+    const { cacheFile, cacheImportsFile } = this.#getCacheNames(filename);
+
+    return cache.lock([cacheFile, cacheImportsFile], async cache => {
+      const cached = await this.getCompileCache(
+        filename,
+        sourceFilename,
+        cache
+      );
+      if (cached.cached) {
+        return {
+          stats: cached.stats,
+          source: cached.source!,
+          imports: cached.imports!,
+        };
+      }
+
+      const compiled = await this.context.compiler.compile({
         source: _source,
         filename,
       });
       const source = compiled.source;
-      const imports = await resolver.resolveImports(context, compiled.imports);
+      const imports = await this.resolveImports(
+        context,
+        filename,
+        compiled.imports,
+        resolveImportsDescendants
+      );
 
       await Promise.all([
-        cache.set(cacheFile, source, stats.mtime),
-        cache.set(cacheImportsFile, JSON.stringify(imports), stats.mtime),
+        cache.set(cacheFile, source, cached.stats.mtime),
+        cache.set(
+          cacheImportsFile,
+          JSON.stringify(imports),
+          cached.stats.mtime
+        ),
       ]);
 
-      return { source, imports };
+      console.info('written', cacheFile);
+
+      return { stats: cached.stats, source, imports };
+    });
+  }
+}
+
+export interface ModuleResolverOptions {
+  extensions?: string[];
+  forceCompile?: string[];
+  forceExtensions?: string[];
+}
+
+export class ModuleResolver {
+  readonly context: ModuleContext;
+  readonly #forceCompile: string[];
+  readonly #extensions: string[];
+  readonly #forceExtensions: string[];
+  readonly #descriptions: Record<string, any> = {};
+  readonly #cache: WeakMap<ModuleFactory, Record<string, boolean>> =
+    new WeakMap();
+
+  constructor({
+    context,
+    extensions = [],
+    forceCompile = [],
+    forceExtensions = [],
+  }: ModuleResolverOptions & { context: ModuleContext }) {
+    this.context = context;
+    this.#forceCompile = Array.from(
+      new Set([this.context.rootDir, ...forceCompile])
+    );
+    this.#extensions = Array.from(
+      new Set(['.js', '.cjs', '.mjs', ...extensions])
+    );
+    this.#forceExtensions = Array.from(new Set(['.mjs', ...forceExtensions]));
+  }
+
+  #buildImport(request: string, compile: boolean, filename: string) {
+    return { [request]: { compile, filename } };
+  }
+
+  async #getDescriptionFile(
+    factory: ModuleFactory,
+    descriptionFile: string
+  ): Promise<any> {
+    if (!this.#descriptions[descriptionFile]) {
+      const fs = factory.compilation.compiler.inputFileSystem;
+      const readFile = promisify(fs, fs.readFile!);
+
+      const description =
+        this.#descriptions[descriptionFile] ??
+        JSON.parse((await readFile(descriptionFile)).toString());
+      this.#descriptions[descriptionFile] = description;
+    }
+
+    return this.#descriptions[descriptionFile];
+  }
+
+  async resolve(
+    factory: ModuleFactory,
+    filename: string,
+    context: string,
+    request: string
+  ): Promise<Record<string, Import>> {
+    if (!this.#cache.has(factory)) {
+      this.#cache.set(factory, {});
+    }
+    const cache = this.#cache.get(factory);
+
+    const fs = factory.compilation.compiler.inputFileSystem;
+    const realpath = promisify(fs, fs.realpath!);
+    const stat = promisify(fs, fs.stat);
+
+    let resolved: { filename: string; descriptionFile?: string };
+    try {
+      resolved = await factory.resolve(context, request);
+    } catch (err) {
+      return this.#buildImport(request, false, request);
+    }
+    resolved.filename = await realpath(resolved.filename);
+    if (resolved.descriptionFile) {
+      resolved.descriptionFile = await realpath(resolved.descriptionFile);
+    }
+
+    const extension = path.extname(resolved.filename);
+    if (this.#forceExtensions.includes(extension)) {
+      return this.#buildImport(request, true, resolved.filename);
+    } else if (!this.#extensions.includes(extension)) {
+      return this.#buildImport(request, false, resolved.filename);
+    }
+
+    const roots = await Promise.all(
+      this.#forceCompile.map(async module => {
+        const filename = path.resolve(context, module);
+        try {
+          await stat(filename);
+          return filename;
+        } catch (err) {
+          const resolved = await factory.resolve(context, module);
+          if (!resolved.descriptionFile) {
+            throw new Error(
+              `couldn't resolve description file for root ${module}`
+            );
+          }
+          return path.dirname(resolved.descriptionFile);
+        }
+      })
+    );
+
+    if (
+      !containsPath(
+        path.resolve(this.context.rootDir, 'node_modules'),
+        resolved.filename
+      )
+    ) {
+      if (
+        roots.reduce((a, b) => a || containsPath(b, resolved.filename), false)
+      ) {
+        return this.#buildImport(request, true, resolved.filename);
+      }
+    }
+
+    if (resolved.descriptionFile) {
+      const description = await this.#getDescriptionFile(
+        factory,
+        resolved.descriptionFile
+      );
+
+      if (description.type === 'module') {
+        return this.#buildImport(request, true, resolved.filename);
+      }
+    }
+
+    return this.#buildImport(request, false, resolved.filename);
+  }
+}
+
+export interface ModuleContextOptions {
+  context: BuildContext;
+  resolver?: ModuleResolverOptions;
+}
+
+export class ModuleContext {
+  readonly build: BuildContext;
+  readonly cache: Cache;
+  readonly compiler: ModuleCompiler;
+  readonly modules: Record<string, Promise<Module> | undefined> = {};
+  readonly loadedModules: Record<string, Module> = {};
+  readonly locks = new KeyedMutex({ watcher: true });
+  readonly resolver: ModuleResolver;
+
+  constructor({ context, resolver = {} }: ModuleContextOptions) {
+    this.build = context;
+    this.resolver = new ModuleResolver({ context: this, ...resolver });
+    this.cache = this.build.cache.create('modules');
+    this.compiler = new ModuleCompiler({ context: this });
+  }
+
+  get rootDir() {
+    return this.build.rootDir;
+  }
+
+  async meta(filename: string) {
+    if (this.modules[filename]) {
+      const { dependencies, dependents, mtime } = await this.modules[filename]!;
+      return { dependencies, dependents, mtime };
+    }
+
+    const cacheKey = `${filename}.meta.json`;
+
+    return await this.cache.lock(cacheKey, async cache => {
+      try {
+        const json = await cache.get(cacheKey);
+        return JSON.parse(json.toString()) as {
+          dependencies: string[];
+          dependents: string[];
+          mtime: number;
+        };
+      } catch (err) {
+        return undefined;
+      }
     });
   }
 
+  createModuleFactory(compilation: Compilation) {
+    return new ModuleFactory(this, compilation);
+  }
+
+  async evict(
+    factory: ModuleFactory,
+    filename: string,
+    options: ModuleEvictOptions = {}
+  ) {
+    const module = this.loadedModules[filename];
+    await module?.evict(factory, options);
+  }
+
+  async require(factory: ModuleFactory, context: string, request: string) {
+    const { filename } = await factory.resolve(context, request);
+    if (this.modules[filename]) {
+      const { cached } = await factory.getCompileCache(filename, filename);
+      const cachedModule = this.modules[filename];
+      if (cached && cachedModule) {
+        return await cachedModule;
+      }
+    }
+
+    let source: string;
+    let module: WebpackModule;
+
+    const loaded = await factory.load(filename);
+
+    if (typeof loaded.source !== 'string') {
+      throw new Error(`failed to load ${request}`);
+    }
+
+    source = loaded.source;
+    module = loaded.module;
+
+    return this.create(factory, module, filename, source);
+  }
+
+  #createRequire(_module: _Module, _filename: string) {
+    const _require = _module.require;
+    const parentModule = this.loadedModules[_filename];
+    _module.require = cloneRequire(_module, request => {
+      const { compile, filename } = parentModule.imports[request] ?? {
+        compile: false,
+        filename: request,
+      };
+
+      if (!compile) {
+        return _require(filename);
+      }
+
+      const childModule = this.loadedModules[filename];
+      parentModule.addDependency(childModule);
+      return childModule.load(_module).exports;
+    });
+
+    return _module.require;
+  }
+
   async create(
-    resolver: ModuleResolver,
-    context: string,
+    factory: ModuleFactory,
+    webpackModule: WebpackModule,
     filename: string,
     _source: string,
-    sourceFilename: string = filename
+    sourceFilename: string = filename,
+    seen: Set<string> = new Set()
   ): Promise<Module> {
-    if (this.modules[filename]) {
-      return this.modules[filename]!;
+    const loadingModule = this.modules[filename];
+    if (loadingModule) {
+      return await loadingModule;
     }
 
     const promise = createResolver<Module>();
 
     this.modules[filename] = promise;
 
-    const { source, imports } = await this.#compile(
-      resolver,
-      context,
+    const { stats, source, imports } = await factory.compile(
+      path.dirname(filename),
       _source,
       filename,
       sourceFilename
     );
 
-    await Promise.all(
-      Object.values(imports).map(async require => {
-        if (!require.compile || this.modules[require.filename]) {
-          return;
-        }
+    const next = async (require: Import): Promise<string[]> => {
+      if (seen.has(require.filename)) {
+        return [require.filename];
+      }
+      seen.add(require.filename);
 
-        const { source, module } = await resolver.load(require.filename);
-        return this.create(
-          resolver,
-          module.context!,
-          require.filename,
-          source,
-          require.filename
+      if (this.modules[require.filename]) {
+        const module = await this.modules[require.filename]!;
+        module.addPending(promise);
+        const modules = await Promise.all(
+          Object.values(module.imports).map(require => next(require))
         );
-      })
+        return [
+          require.filename,
+          ...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
+        ];
+      }
+
+      if (!require.compile) {
+        return [require.filename];
+      }
+
+      const { source, module } = await factory.load(require.filename);
+      const _module = await this.create(
+        factory,
+        module,
+        require.filename,
+        source,
+        require.filename
+      );
+      _module.addPending(promise);
+      return [require.filename];
+    };
+
+    const modules = await Promise.all(
+      Object.values(imports).map(require => next(require))
     );
 
     const script = new Script(wrapScript(source), {
@@ -397,17 +843,27 @@ export class ModuleContext {
       return _module;
     };
 
+    const ready = createResolver();
     const module = new Module({
       context: this,
       filename,
       source,
       loader,
       imports,
+      stats,
+      webpackModule,
+      ready,
     });
 
+    await ready;
     this.loadedModules[filename] = module;
 
+    await Promise.all(
+      modules
+        .reduce((a, b) => [...a, ...b], [])
+        .map(module => this.modules[module])
+    );
     promise.resolve(module);
-    return promise;
+    return module;
   }
 }

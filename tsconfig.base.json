@@ -21,5 +21,9 @@
     "incremental": true,
     "inlineSourceMap": true,
     "inlineSources": true
-  }
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+  ]
 }

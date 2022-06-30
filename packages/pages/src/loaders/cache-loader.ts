@@ -13,7 +13,7 @@ export default async function CacheLoader(
 ) {
   const { context } = this.getOptions();
   const cache = context.cache.create('webpack');
-
+  console.info('cache-loader', this.resourcePath);
   await cache.lock(
     [this.resourcePath, `${this.resourcePath}.webpack.json`],
     async cache => {
@@ -136,8 +136,6 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       if (await cache.has(this.resourcePath)) {
         if (!(await hasChanged(cache, this.resourcePath))) {
           return await cache.get(this.resourcePath);
-        } else {
-          await cache.remove(this.resourcePath);
         }
       }
     }

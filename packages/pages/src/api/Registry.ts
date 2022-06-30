@@ -6,13 +6,11 @@ import _path from 'path';
 import { Source, SourceTree } from './Source';
 
 export interface GetOptions {
-  type?: string;
   path?: string[];
   slug?: string;
 }
 
 export interface ListOptions {
-  type?: string[] | string;
   path?: string[][] | string[];
   slug?: string[] | string;
 }
@@ -65,23 +63,42 @@ export class Registry {
     'text/scss': ['scss'],
     'text/tsx': ['tsx'],
   });
+  readonly defaultConfig = new Source({
+    filename: require.resolve('../defaults.pages'),
+    path: [],
+  });
 
   constructor(context: BuildContext) {
     this.context = context;
   }
 
-  async list({ type, path, slug }: ListOptions = {}): Promise<Source[]> {
+  async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
     return Array.from(
       new Set(
         (
           await Promise.all(
-            this.providers.map(async provider =>
-              provider.list({ type, path, slug })
-            )
+            this.providers.map(async provider => provider.list({ path, slug }))
           )
         ).reduce((a, b) => [...a, ...b], [])
       )
     );
+  }
+
+  async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
+    return [
+      this.defaultConfig,
+      ...Array.from(
+        new Set(
+          (
+            await Promise.all(
+              this.providers.map(async provider =>
+                provider.listConfig({ path, slug })
+              )
+            )
+          ).reduce((a, b) => [...a, ...b], [])
+        )
+      ),
+    ];
   }
 
   async get(options: GetOptions): Promise<Source | undefined> {

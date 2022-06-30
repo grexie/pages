@@ -3,11 +3,9 @@ import { Head, HeadProvider } from './Head';
 import { createComposable } from '@grexie/compose';
 
 export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const metadata = {} as any; //useResourceMetadata();
-
   return (
     <html>
-      <Head>{metadata.title && <title>{metadata.title}</title>}</Head>
+      <Head></Head>
       <body>
         <HeadProvider>{children}</HeadProvider>
       </body>

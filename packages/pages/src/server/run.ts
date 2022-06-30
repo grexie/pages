@@ -13,7 +13,6 @@ const server = new Server({
   ],
   fs,
 });
-
 server.context.fs.add(path.resolve(server.context.rootDir, 'build'), fs, true);
 
 server.start().then(server => {
