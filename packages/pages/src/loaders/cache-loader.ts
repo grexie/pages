@@ -32,24 +32,31 @@ export default async function CacheLoader(
       );
 
       const dependencies = Array.from(new Set(this.getDependencies()));
-      const dependencyStats = await Promise.all(
-        dependencies.map(
-          filename =>
-            new Promise<any>(resolve =>
-              this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
-                if (err) {
-                  resolve({ filename, isFile: false });
-                }
+      const dependencyStats = (
+        await Promise.all(
+          dependencies.map(
+            filename =>
+              new Promise<any>(resolve =>
+                this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
+                  if (err) {
+                    resolve(undefined);
+                  }
 
-                resolve({
-                  filename,
-                  isFile: stats?.isFile(),
-                  mtime: stats?.mtime.getTime(),
-                });
-              })
-            )
+                  resolve({
+                    filename,
+                    isFile: stats!.isFile(),
+                    mtime: stats!.mtime.getTime(),
+                  });
+                })
+              )
+          )
         )
-      );
+      ).filter(x => !!x) as {
+        filename: string;
+        isFile: boolean;
+        mtime: number;
+      }[];
+
       const dependencyMap = dependencyStats
         .filter(({ isFile }) => isFile)
         .map(({ filename, mtime }) => ({ [filename]: mtime }))

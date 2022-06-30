@@ -147,6 +147,7 @@ class SourceCompiler {
       } catch (err) {
         resolver.reject(err);
       }
+
       compilation.hooks.processAssets.tapPromise('SourceCompiler', async () => {
         if (buffer) {
           compilation.emitAsset(
