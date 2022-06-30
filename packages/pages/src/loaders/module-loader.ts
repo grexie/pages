@@ -22,12 +22,12 @@ export default async function ModuleLoader(
   await context.modules.evict(factory, this.resourcePath, { recompile: true });
   const path = context.builder.filenameToPath(this.resourcePath);
 
-  // const configModule = await context.config.create(factory, path);
-  // configModule.ancestors.forEach(({ module }) => {
-  //   if (module) {
-  //     this.addDependency(module.filename);
-  //   }
-  // });
+  const configModule = await context.config.create(factory, path);
+  configModule.ancestors.forEach(({ module }) => {
+    if (module) {
+      this.addDependency(module.filename);
+    }
+  });
 
   const createHandler = async () => {
     let handlerModule: Module;

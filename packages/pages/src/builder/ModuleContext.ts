@@ -48,7 +48,8 @@ const cloneRequire = (
 };
 
 interface Import {
-  readonly compile: boolean;
+  readonly compile?: boolean;
+  readonly builtin?: boolean;
   readonly filename: string;
 }
 
@@ -285,8 +286,12 @@ export class Module extends EventEmitter {
       // );
       // resolver.resolve(module);
     }
-    console.info('evict:finish', this.filename);
   }
+}
+
+export interface CompiledModule {
+  source: string;
+  webpackModule: WebpackModule;
 }
 
 export class ModuleFactory {
@@ -333,13 +338,12 @@ export class ModuleFactory {
 
   async resolveImports(
     context: string,
-    filename: string,
     imports: string[],
     resolveDescendants: boolean = false
   ): Promise<Record<string, Import>> {
     const out = await Promise.all(
       imports.map(async request =>
-        this.context.resolver.resolve(this, filename, context, request)
+        this.context.resolver.resolve(this, context, request)
       )
     );
 
@@ -350,8 +354,14 @@ export class ModuleFactory {
         Object.entries(resolved)
           .filter(([, { compile }]) => !compile)
           .map(async ([request, descendantResolved]) => {
-            const { filename } = descendantResolved;
+            const { builtin, filename } = descendantResolved;
+
+            if (builtin) {
+              return;
+            }
+
             const { source } = await this.load(filename);
+
             if (!source) {
               return;
             }
@@ -364,7 +374,7 @@ export class ModuleFactory {
               false
             );
             const compile = Object.values(imports).reduce(
-              (a, b) => a || b.compile,
+              (a, b) => a || (b.compile ?? false),
               false
             );
             resolved[request] = {
@@ -378,54 +388,69 @@ export class ModuleFactory {
     return resolved;
   }
 
-  async load(filename: string) {
-    // TODO: cache me
-    const module = await new Promise<WebpackModule>((resolve, reject) =>
-      this.compilation.params.normalModuleFactory.create(
-        {
-          context: this.context.rootDir,
-          contextInfo: {
-            issuer: 'pages',
-            compiler: 'javascript/auto',
-          },
-          dependencies: [new ModuleDependency(filename)],
-        },
-        (err, result) => {
+  async load(filename: string): Promise<CompiledModule> {
+    if (this.context.compilations[filename]) {
+      return this.context.compilations[filename]!;
+    }
+
+    const resolver = createResolver<CompiledModule>();
+    this.context.compilations[filename] = resolver;
+
+    try {
+      const webpackModule = await new Promise<WebpackModule>(
+        (resolve, reject) =>
+          this.compilation.params.normalModuleFactory.create(
+            {
+              context: this.context.rootDir,
+              contextInfo: {
+                issuer: 'pages',
+                compiler: 'javascript/auto',
+              },
+              dependencies: [new ModuleDependency(filename)],
+            },
+            (err, result) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(result!.module!);
+            }
+          )
+      );
+
+      webpackModule.buildInfo = {};
+      webpackModule.buildMeta = {};
+
+      await new Promise((resolve, reject) =>
+        this.compilation.buildModule(webpackModule, (err, result) => {
           if (err) {
             reject(err);
             return;
           }
 
-          resolve(result!.module!);
-        }
-      )
-    );
+          resolve(result);
+        })
+      );
 
-    module.buildInfo = {};
-    module.buildMeta = {};
+      if (webpackModule.getNumberOfErrors()) {
+        throw Array.from(webpackModule.getErrors() as any)[0];
+      }
 
-    await new Promise((resolve, reject) =>
-      this.compilation.buildModule(module, (err, result) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+      const source = webpackModule.originalSource()?.buffer().toString();
 
-        resolve(result);
-      })
-    );
+      if (typeof source !== 'string') {
+        throw new Error(`unable to load module ${filename}`);
+      }
 
-    if (module.getNumberOfErrors()) {
-      throw Array.from(module.getErrors() as any)[0];
+      resolver.resolve({ source, webpackModule });
+    } catch (err) {
+      resolver.reject(err);
+    } finally {
+      delete this.context.compilations[filename];
     }
 
-    const source = module.originalSource()?.buffer().toString();
-
-    if (typeof source !== 'string') {
-      throw new Error(`unable to load module ${filename}`);
-    }
-
-    return { source, module };
+    return resolver;
   }
 
   #getCacheNames(filename: string) {
@@ -496,7 +521,6 @@ export class ModuleFactory {
       const source = compiled.source;
       const imports = await this.resolveImports(
         context,
-        filename,
         compiled.imports,
         resolveImportsDescendants
       );
@@ -509,8 +533,6 @@ export class ModuleFactory {
           cached.stats.mtime
         ),
       ]);
-
-      console.info('written', cacheFile);
 
       return { stats: cached.stats, source, imports };
     });
@@ -529,8 +551,6 @@ export class ModuleResolver {
   readonly #extensions: string[];
   readonly #forceExtensions: string[];
   readonly #descriptions: Record<string, any> = {};
-  readonly #cache: WeakMap<ModuleFactory, Record<string, boolean>> =
-    new WeakMap();
 
   constructor({
     context,
@@ -548,8 +568,22 @@ export class ModuleResolver {
     this.#forceExtensions = Array.from(new Set(['.mjs', ...forceExtensions]));
   }
 
-  #buildImport(request: string, compile: boolean, filename: string) {
-    return { [request]: { compile, filename } };
+  #buildImport(
+    request: string,
+    filename: string,
+    compile: boolean = true,
+    builtin: boolean = false
+  ) {
+    let o: Import;
+    if (compile) {
+      o = { compile, filename };
+    } else if (builtin) {
+      o = { builtin, filename };
+    } else {
+      o = { filename };
+    }
+
+    return { [request]: o };
   }
 
   async #getDescriptionFile(
@@ -571,15 +605,9 @@ export class ModuleResolver {
 
   async resolve(
     factory: ModuleFactory,
-    filename: string,
     context: string,
     request: string
   ): Promise<Record<string, Import>> {
-    if (!this.#cache.has(factory)) {
-      this.#cache.set(factory, {});
-    }
-    const cache = this.#cache.get(factory);
-
     const fs = factory.compilation.compiler.inputFileSystem;
     const realpath = promisify(fs, fs.realpath!);
     const stat = promisify(fs, fs.stat);
@@ -588,7 +616,7 @@ export class ModuleResolver {
     try {
       resolved = await factory.resolve(context, request);
     } catch (err) {
-      return this.#buildImport(request, false, request);
+      return this.#buildImport(request, request, false, true);
     }
     resolved.filename = await realpath(resolved.filename);
     if (resolved.descriptionFile) {
@@ -597,9 +625,9 @@ export class ModuleResolver {
 
     const extension = path.extname(resolved.filename);
     if (this.#forceExtensions.includes(extension)) {
-      return this.#buildImport(request, true, resolved.filename);
+      return this.#buildImport(request, resolved.filename);
     } else if (!this.#extensions.includes(extension)) {
-      return this.#buildImport(request, false, resolved.filename);
+      return this.#buildImport(request, resolved.filename, false);
     }
 
     const roots = await Promise.all(
@@ -629,7 +657,7 @@ export class ModuleResolver {
       if (
         roots.reduce((a, b) => a || containsPath(b, resolved.filename), false)
       ) {
-        return this.#buildImport(request, true, resolved.filename);
+        return this.#buildImport(request, resolved.filename);
       }
     }
 
@@ -640,11 +668,11 @@ export class ModuleResolver {
       );
 
       if (description.type === 'module') {
-        return this.#buildImport(request, true, resolved.filename);
+        return this.#buildImport(request, resolved.filename);
       }
     }
 
-    return this.#buildImport(request, false, resolved.filename);
+    return this.#buildImport(request, resolved.filename, false);
   }
 }
 
@@ -657,6 +685,8 @@ export class ModuleContext {
   readonly build: BuildContext;
   readonly cache: Cache;
   readonly compiler: ModuleCompiler;
+  readonly compilations: Record<string, Promise<CompiledModule> | undefined> =
+    {};
   readonly modules: Record<string, Promise<Module> | undefined> = {};
   readonly loadedModules: Record<string, Module> = {};
   readonly locks = new KeyedMutex({ watcher: true });
@@ -718,31 +748,21 @@ export class ModuleContext {
       }
     }
 
-    let source: string;
-    let module: WebpackModule;
-
-    const loaded = await factory.load(filename);
-
-    if (typeof loaded.source !== 'string') {
-      throw new Error(`failed to load ${request}`);
-    }
-
-    source = loaded.source;
-    module = loaded.module;
-
-    return this.create(factory, module, filename, source);
+    const { source, webpackModule } = await factory.load(filename);
+    return this.create(factory, webpackModule, filename, source);
   }
 
   #createRequire(_module: _Module, _filename: string) {
     const _require = _module.require;
     const parentModule = this.loadedModules[_filename];
     _module.require = cloneRequire(_module, request => {
-      const { compile, filename } = parentModule.imports[request] ?? {
-        compile: false,
-        filename: request,
-      };
+      const {
+        compile = false,
+        builtin = false,
+        filename = request,
+      } = parentModule.imports[request] ?? {};
 
-      if (!compile) {
+      if (builtin || !compile) {
         return _require(filename);
       }
 
@@ -800,13 +820,12 @@ export class ModuleContext {
         return [require.filename];
       }
 
-      const { source, module } = await factory.load(require.filename);
+      const { source, webpackModule } = await factory.load(require.filename);
       const _module = await this.create(
         factory,
-        module,
+        webpackModule,
         require.filename,
-        source,
-        require.filename
+        source
       );
       _module.addPending(promise);
       return [require.filename];

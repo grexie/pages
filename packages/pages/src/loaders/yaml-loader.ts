@@ -10,8 +10,6 @@ export default async function ModuleLoader(
   this: LoaderContext<YamlLoaderOptions>,
   content: Buffer
 ) {
-  console.info('yaml-loader', this.resourcePath);
-
   const documents = YAML.parseAllDocuments(content.toString());
   const document = documents[documents.length - 1];
 

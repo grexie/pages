@@ -14,15 +14,14 @@ export default async function ModuleLoader(
   const { context, ...options } = this.getOptions();
   const factory = context.modules.createModuleFactory(this._compilation!);
 
-  //await context.modules.evict(factory, this.resourcePath, { recompile: true });
-  console.info('loading page', this.resourcePath);
+  await context.modules.evict(factory, this.resourcePath, { recompile: true });
+
   const configModule = await context.modules.create(
     factory,
     this._module!,
     this.resourcePath,
     content.toString()
   );
-  console.info('loaded page', this.resourcePath);
 
   configModule.load(module);
 

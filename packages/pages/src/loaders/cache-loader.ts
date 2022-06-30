@@ -13,7 +13,7 @@ export default async function CacheLoader(
 ) {
   const { context } = this.getOptions();
   const cache = context.cache.create('webpack');
-  console.info('cache-loader', this.resourcePath);
+
   await cache.lock(
     [this.resourcePath, `${this.resourcePath}.webpack.json`],
     async cache => {
@@ -44,7 +44,7 @@ export default async function CacheLoader(
                 resolve({
                   filename,
                   isFile: stats?.isFile(),
-                  mtime: stats?.mtimeMs,
+                  mtime: stats?.mtime.getTime(),
                 });
               })
             )
