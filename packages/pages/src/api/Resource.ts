@@ -1,7 +1,8 @@
-import Module from 'module';
-import { SourceContext } from '../builder/SourceContext';
-
 export type ResourceMetadata = Record<string, any> & { type?: string };
+
+export interface ResourceSerializeOptions {
+  serializeMetadata: (source: string) => string;
+}
 
 export interface ResourceOptions<M extends ResourceMetadata = any> {
   path: string[];
@@ -19,8 +20,12 @@ export class Resource<M extends ResourceMetadata = any> {
     this.metadata = metadata;
   }
 
-  serialize() {
-    return JSON.stringify(this, null, 2);
+  serialize({ serializeMetadata }: ResourceSerializeOptions) {
+    return `{
+      path: ${JSON.stringify(this.path)},
+      slug: ${JSON.stringify(this.slug)},
+      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
+    }`;
   }
 
   toJSON() {
@@ -44,7 +49,6 @@ export interface ModuleResourceOptions<
   X = any,
   M extends ResourceMetadata = any
 > extends ResourceOptions<M> {
-  context: SourceContext;
   source: string;
   exports: X;
 }
@@ -62,7 +66,7 @@ export class ModuleResource<
     this.exports = exports;
   }
 
-  serialize(): string {
+  serialize({ serializeMetadata }: ResourceSerializeOptions): string {
     const source = `(() => {
       var module = { exports: {} };
       ((exports, module) => {
@@ -74,7 +78,7 @@ export class ModuleResource<
     return `{
       path: ${JSON.stringify(this.path)},
       slug: ${JSON.stringify(this.slug)},
-      metadata: ${JSON.stringify(this.metadata, null, 2)},
+      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
       exports: ${source},
     }`;
   }

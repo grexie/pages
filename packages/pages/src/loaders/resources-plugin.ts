@@ -128,6 +128,7 @@ class SourceCompiler {
 
         const meta = await this.context.modules.meta(this.source.filename);
         if (meta) {
+          console.info(this.source.filename, meta.dependencies);
           meta.dependencies.forEach(dependency =>
             compilation.fileDependencies.add(dependency)
           );

@@ -422,16 +422,33 @@ export class ModuleFactory {
       webpackModule.buildInfo = {};
       webpackModule.buildMeta = {};
 
+      let message: any[] = [];
+      const interval = setInterval(
+        () => console.info('still loading', ...message, filename),
+        1000
+      );
       await new Promise((resolve, reject) =>
-        this.compilation.buildModule(webpackModule, (err, result) => {
+        this.compilation.addModule(webpackModule, err => {
           if (err) {
             reject(err);
             return;
           }
 
-          resolve(result);
+          if (/main.md/.test(filename)) {
+            console.info(webpackModule);
+          }
+          this.compilation.buildModule(webpackModule, (err, result) => {
+            message = ['built', err, result];
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            resolve(result);
+          });
         })
       );
+      clearInterval(interval);
 
       if (webpackModule.getNumberOfErrors()) {
         throw Array.from(webpackModule.getErrors() as any)[0];
@@ -738,18 +755,27 @@ export class ModuleContext {
     await module?.evict(factory, options);
   }
 
-  async require(factory: ModuleFactory, context: string, request: string) {
+  async require(
+    factory: ModuleFactory,
+    context: string,
+    request: string,
+    parent?: Module
+  ) {
     const { filename } = await factory.resolve(context, request);
     if (this.modules[filename]) {
       const { cached } = await factory.getCompileCache(filename, filename);
       const cachedModule = this.modules[filename];
       if (cached && cachedModule) {
-        return await cachedModule;
+        const module = await cachedModule;
+        parent?.addDependency(module);
+        return module;
       }
     }
 
     const { source, webpackModule } = await factory.load(filename);
-    return this.create(factory, webpackModule, filename, source);
+    const module = await this.create(factory, webpackModule, filename, source);
+    parent?.addDependency(module);
+    return module;
   }
 
   #createRequire(_module: _Module, _filename: string) {
@@ -798,42 +824,57 @@ export class ModuleContext {
       sourceFilename
     );
 
+    let interval;
+
     const next = async (require: Import): Promise<string[]> => {
       if (seen.has(require.filename)) {
         return [require.filename];
       }
       seen.add(require.filename);
 
-      if (this.modules[require.filename]) {
-        const module = await this.modules[require.filename]!;
-        module.addPending(promise);
-        const modules = await Promise.all(
-          Object.values(module.imports).map(require => next(require))
-        );
-        return [
-          require.filename,
-          ...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
-        ];
-      }
-
-      if (!require.compile) {
-        return [require.filename];
-      }
-
-      const { source, webpackModule } = await factory.load(require.filename);
-      const _module = await this.create(
-        factory,
-        webpackModule,
-        require.filename,
-        source
+      const interval = setInterval(
+        () => console.info('still awaiting', require.filename),
+        1000
       );
-      _module.addPending(promise);
-      return [require.filename];
+
+      try {
+        if (this.modules[require.filename]) {
+          const module = await this.modules[require.filename]!;
+          module.addPending(promise);
+
+          const modules = await Promise.all(
+            Object.values(module.imports).map(require => next(require))
+          );
+
+          return [
+            require.filename,
+            ...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
+          ];
+        }
+
+        if (!require.compile) {
+          return [require.filename];
+        }
+
+        const { source, webpackModule } = await factory.load(require.filename);
+        const _module = await this.create(
+          factory,
+          webpackModule,
+          require.filename,
+          source
+        );
+        _module.addPending(promise);
+        return [require.filename];
+      } finally {
+        clearInterval(interval);
+      }
     };
 
     const modules = await Promise.all(
       Object.values(imports).map(require => next(require))
     );
+
+    clearInterval(interval);
 
     const script = new Script(wrapScript(source), {
       filename,

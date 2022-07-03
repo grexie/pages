@@ -79,7 +79,7 @@ export default async function CacheLoader(
 export async function pitch(this: LoaderContext<LoaderOptions>) {
   const { context } = this.getOptions();
   const cache = context.cache.create('webpack');
-
+  console.info('cache-loader:pitch', this.resourcePath);
   const hasChanged = async (
     cache: ICache,
     filename: string,

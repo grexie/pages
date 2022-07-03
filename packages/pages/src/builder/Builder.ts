@@ -190,7 +190,7 @@ export class Builder {
             ],
           },
           {
-            test: /(^\.?|\/\.?|\.)pages.ya?ml/,
+            test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),

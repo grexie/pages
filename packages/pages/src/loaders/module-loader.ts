@@ -22,13 +22,6 @@ export default async function ModuleLoader(
   await context.modules.evict(factory, this.resourcePath, { recompile: true });
   const path = context.builder.filenameToPath(this.resourcePath);
 
-  const configModule = await context.config.create(factory, path);
-  configModule.ancestors.forEach(({ module }) => {
-    if (module) {
-      this.addDependency(module.filename);
-    }
-  });
-
   const createHandler = async () => {
     let handlerModule: Module;
     if (typeof options.handler === 'string') {
@@ -50,10 +43,20 @@ export default async function ModuleLoader(
 
   let handlerModule = await createHandler();
 
+  const configModule = await context.config.create(
+    factory,
+    path,
+    handlerModule
+  );
+  configModule.ancestors.forEach(({ module }) => {
+    if (module) {
+      this.addDependency(module.filename);
+    }
+  });
+
   const handler = handlerModule.load(module).exports as Handler;
   const handlerConfig = { metadata: {} };
-  // const config = configModule.create(handlerModule.module, handlerConfig);
-  const config = handlerConfig;
+  const config = configModule.create(handlerModule.module, handlerConfig);
 
   let resource: Resource | undefined = undefined;
 
@@ -64,6 +67,7 @@ export default async function ModuleLoader(
     content,
     filename: this.resourcePath,
     path,
+    configModule,
     config,
   });
 
@@ -117,7 +121,7 @@ export default async function ModuleLoader(
     return `
       const { wrapHandler } = require("@grexie/pages");
       const { createComposable } = require("@grexie/compose");
-      const resource = ${resource.serialize()};
+      const resource = ${sourceContext.serialize(resource)};
       const handler = require(${JSON.stringify(options.handler)});
       wrapHandler(exports, resource, handler, ${composablesRequires
         .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)
@@ -131,7 +135,7 @@ export default async function ModuleLoader(
       })();
       const { wrapHandler } = require("@grexie/pages");
       const { createComposable } = require("@grexie/compose");
-      const resource = ${resource.serialize()};
+      const resource = ${sourceContext.serialize(resource)};
       wrapHandler(exports, resource, exports,
         ${composablesRequires
           .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)

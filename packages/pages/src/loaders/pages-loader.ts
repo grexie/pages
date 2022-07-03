@@ -40,8 +40,12 @@ export default async function ModuleLoader(
 
   await context.modules.evict(factory, this.resourcePath, { recompile: true });
   return `
-    exports.config = ${JSON.stringify(config, null, 2)};
+    const { ObjectProxy } = require('@grexie/pages');
 
-    exports.metadata = ${JSON.stringify(metadata, null, 2)};
+    const config = ${JSON.stringify(config, null, 2)};
+    const metadata = ${JSON.stringify(metadata, null, 2)};
+
+    exports.config = (parent) => ObjectProxy.create({ metadata, ...config }, parent);
+    exports.metadata = (parent) => ObjectProxy.create(metadata, parent);
   `;
 }
