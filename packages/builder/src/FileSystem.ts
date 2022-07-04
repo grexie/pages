@@ -132,6 +132,13 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     super();
   }
 
+  get fileSystems() {
+    return this.#fileSystems
+      .slice()
+      .sort((a, b) => b.path.length - a.path.length)
+      .map(({ path, writable }) => ({ path, writable }));
+  }
+
   add(
     path: string,
     fs: ReadableFileSystem | (ReadableFileSystem & WritableFileSystem),
@@ -200,7 +207,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
       (error as any).code = 'ENOFS';
 
       if (callback) {
-        callback(error as any, ...([] as unknown as P));
+        callback!(error as any, ...([] as unknown as P));
         return undefined as any;
       } else {
         return Promise.reject(error as any);
@@ -233,10 +240,6 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
       }
     }
 
-    if (writable) {
-      this.emit(`write:${filename}`);
-    }
-
     if (err) {
       if (callback) {
         callback(err, ...([] as unknown as P));
@@ -244,6 +247,10 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
       } else {
         return Promise.reject(err);
       }
+    }
+
+    if (writable) {
+      this.emit(`write:${filename}`);
     }
 
     if (callback) {

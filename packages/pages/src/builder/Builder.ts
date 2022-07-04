@@ -57,10 +57,7 @@ export class Builder {
 
     this.#builder.fs.add(
       this.context.rootDir,
-      new FileSystem()
-        .add('/', this.defaultFiles)
-        .add(this.context.rootDir, fs),
-      true
+      new FileSystem().add('/', this.defaultFiles).add(this.context.rootDir, fs)
     );
 
     fsOptions.forEach(options =>

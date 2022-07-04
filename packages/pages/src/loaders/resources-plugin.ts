@@ -129,6 +129,7 @@ class SourceCompiler {
       let buffer: Buffer | undefined;
       try {
         compilation.fileDependencies.add(this.source.filename);
+
         const changed = await this.hasChanged(
           compilation.compiler,
           this.source.filename
@@ -154,6 +155,7 @@ class SourceCompiler {
         resolver.resolve();
       } catch (err) {
         resolver.reject(err);
+        throw err;
       }
 
       compilation.hooks.processAssets.tap('SourceCompiler', () => {
@@ -189,7 +191,7 @@ export class ResourcesPlugin {
           const child = compilation.createChildCompiler(
             'SourceCompiler',
             {
-              clean: true,
+              clean: false,
             },
             [new SourceCompiler(context, source)]
           );

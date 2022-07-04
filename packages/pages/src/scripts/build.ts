@@ -1,4 +1,3 @@
-import path from 'path';
 import fs from 'fs';
 import { Provider } from '../api';
 import { BuildContext } from '../builder';

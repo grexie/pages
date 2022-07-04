@@ -1,7 +1,7 @@
 import { BuildContext } from './BuildContext';
 import { Provider, ResourceMetadata } from '../api';
-import { vol, Volume } from 'memfs';
-import { FileSystem, WritableFileSystem } from '@grexie/builder';
+import { Volume } from 'memfs';
+import { WritableFileSystem } from '@grexie/builder';
 import path from 'path';
 import { Config } from './ConfigContext';
 import YAML from 'yaml';
