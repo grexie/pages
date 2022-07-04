@@ -12,7 +12,7 @@ export default async () => {
     ],
     fs,
   });
-  context.fs.add(path.resolve(context.rootDir, 'build'), fs, true);
+  context.fs.add(context.outputDir, fs, true);
 
   let sources = await context.registry.list();
   const stats = await context.builder.build(sources);

@@ -2,6 +2,7 @@ import type { LoaderContext } from 'webpack';
 import { BuildContext } from '../builder';
 import path from 'path';
 import { ICache } from '@grexie/builder';
+import { createResolver } from '../utils/resolvable';
 
 interface LoaderOptions {
   context: BuildContext;
@@ -12,74 +13,97 @@ export default async function CacheLoader(
   content: Buffer
 ) {
   const { context } = this.getOptions();
-  const cache = context.cache.create('webpack');
+  const resolver = createResolver();
+  context.modules.addBuild(this.resourcePath, resolver);
 
-  await cache.lock(
-    [this.resourcePath, `${this.resourcePath}.webpack.json`],
-    async cache => {
-      const stats = await new Promise<any>((resolve, reject) =>
-        this._compiler?.inputFileSystem.stat(
-          this.resourcePath,
-          (err, stats) => {
-            if (err) {
-              reject(err);
-              return;
-            }
+  try {
+    const cache = context.cache.create('webpack');
 
-            resolve(stats);
-          }
-        )
-      );
-
-      const dependencies = Array.from(new Set(this.getDependencies()));
-      const dependencyStats = (
-        await Promise.all(
-          dependencies.map(
-            filename =>
-              new Promise<any>(resolve =>
-                this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
-                  if (err) {
-                    resolve(undefined);
-                  }
-
-                  resolve({
-                    filename,
-                    isFile: stats!.isFile(),
-                    mtime: stats!.mtime.getTime(),
-                  });
-                })
-              )
-          )
-        )
-      ).filter(x => !!x) as {
-        filename: string;
-        isFile: boolean;
-        mtime: number;
-      }[];
-
-      const dependencyMap = dependencyStats
-        .filter(({ isFile }) => isFile)
-        .map(({ filename, mtime }) => ({ [filename]: mtime }))
-        .reduce((a, b) => ({ ...a, ...b }), {});
-
-      await Promise.all([
-        cache.set(this.resourcePath, content, stats.mtime),
-        cache.set(
-          `${this.resourcePath}.webpack.json`,
-          JSON.stringify({ dependencies: dependencyMap }, null, 2),
-          stats.mtime
-        ),
-      ]);
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('cache-loader', this.resourcePath);
     }
-  );
 
-  return content;
+    await cache.lock(
+      [this.resourcePath, `${this.resourcePath}.webpack.json`],
+      async cache => {
+        const stats = await new Promise<any>((resolve, reject) =>
+          this._compiler?.inputFileSystem.stat(
+            this.resourcePath,
+            (err, stats) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(stats);
+            }
+          )
+        );
+
+        const dependencies = Array.from(new Set(this.getDependencies()));
+        const dependencyStats = (
+          await Promise.all(
+            dependencies.map(
+              filename =>
+                new Promise<any>(resolve =>
+                  this._compiler?.inputFileSystem.stat(
+                    filename,
+                    (err, stats) => {
+                      if (err) {
+                        resolve(undefined);
+                      }
+
+                      resolve({
+                        filename,
+                        isFile: stats!.isFile(),
+                        mtime: stats!.mtime.getTime(),
+                      });
+                    }
+                  )
+                )
+            )
+          )
+        ).filter(x => !!x) as {
+          filename: string;
+          isFile: boolean;
+          mtime: number;
+        }[];
+
+        const dependencyMap = dependencyStats
+          .filter(({ isFile }) => isFile)
+          .map(({ filename, mtime }) => ({ [filename]: mtime }))
+          .reduce((a, b) => ({ ...a, ...b }), {});
+
+        await Promise.all([
+          cache.set(this.resourcePath, content, stats.mtime),
+          cache.set(
+            `${this.resourcePath}.webpack.json`,
+            JSON.stringify({ dependencies: dependencyMap }, null, 2),
+            stats.mtime
+          ),
+        ]);
+      }
+    );
+
+    return content;
+  } catch (err) {
+    resolver.reject(err);
+  } finally {
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('cache-loader:complete', this.resourcePath);
+    }
+    resolver.resolve();
+  }
 }
 
 export async function pitch(this: LoaderContext<LoaderOptions>) {
   const { context } = this.getOptions();
   const cache = context.cache.create('webpack');
-  console.info('cache-loader:pitch', this.resourcePath);
+
+  if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+    console.info('cache-loader:pitch', this.resourcePath);
+  }
+
   const hasChanged = async (
     cache: ICache,
     filename: string,

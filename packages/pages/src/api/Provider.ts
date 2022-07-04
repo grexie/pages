@@ -10,15 +10,17 @@ const globAsync = promisify(glob);
 
 export class Provider {
   readonly context: BuildContext;
+  readonly #exclude: string[];
+  #scanning: boolean = false;
   #sources: ResolvablePromise<Record<string, Source>>;
   #configs: ResolvablePromise<Record<string, Source>>;
 
-  constructor({ context }: ProviderOptions) {
+  constructor({ context, exclude = [] }: ProviderOptions) {
     this.context = context;
 
     this.#sources = createResolver();
     this.#configs = createResolver();
-    this.scan();
+    this.#exclude = exclude;
   }
 
   private async create(
@@ -34,10 +36,16 @@ export class Provider {
   }
 
   private async scan(): Promise<void> {
+    if (this.#scanning) {
+      return;
+    }
+    this.#scanning = true;
+
     const files = await globAsync('**/*', {
       cwd: this.context.rootDir,
       nodir: true,
       dot: true,
+      fs: this.context.fs as any,
       ignore: [
         _path.relative(
           this.context.rootDir,
@@ -50,11 +58,13 @@ export class Provider {
         'node_modules/**',
         '.git/**',
         '.github/**',
+        'package.json',
         '.gitignore',
         '.DS_Store',
         'yarn-error.log',
         'yarn.lock',
         'package-lock.json',
+        ...this.#exclude,
       ],
     });
 
@@ -62,7 +72,7 @@ export class Provider {
       files.map(async filename =>
         this.create(
           _path.resolve(this.context.rootDir, filename),
-          process.cwd()
+          this.context.rootDir
         )
       )
     );
@@ -93,6 +103,8 @@ export class Provider {
   }
 
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
+    this.scan();
+
     let sourcesMap = await this.#sources;
     let sources = Object.values(sourcesMap);
 
@@ -126,6 +138,8 @@ export class Provider {
   }
 
   async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
+    this.scan();
+
     let sourcesMap = await this.#configs;
     let sources = Object.values(sourcesMap);
 
@@ -169,6 +183,8 @@ export class Provider {
   }
 
   async has(path: string[]): Promise<boolean> {
+    this.scan();
+
     const filepath = path.join('/');
     const resources = await this.#sources;
     return filepath in resources;

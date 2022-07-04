@@ -219,7 +219,7 @@ export class Cache implements ICache {
       new Promise<void>((resolve, reject) => {
         this.#fs.unlink!(`${key}.stats`, err => {
           if (err) {
-            resolve();
+            reject(err);
             return;
           }
 
@@ -229,7 +229,7 @@ export class Cache implements ICache {
       new Promise<void>((resolve, reject) => {
         this.#fs.unlink!(key, err => {
           if (err) {
-            resolve();
+            reject(err);
             return;
           }
 

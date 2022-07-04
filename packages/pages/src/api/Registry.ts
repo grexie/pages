@@ -4,6 +4,7 @@ import Mime from 'mime/Mime.js';
 import mimetypes from 'mime/types/standard.js';
 import _path from 'path';
 import { Source, SourceTree } from './Source';
+import path from 'path';
 
 export interface GetOptions {
   path?: string[];
@@ -17,6 +18,7 @@ export interface ListOptions {
 
 export interface ProviderOptions {
   context: BuildContext;
+  exclude?: string[];
 }
 
 export type ProviderConstructor<O extends ProviderOptions> = new (
@@ -63,13 +65,14 @@ export class Registry {
     'text/scss': ['scss'],
     'text/tsx': ['tsx'],
   });
-  readonly defaultConfig = new Source({
-    filename: require.resolve('../defaults.pages'),
-    path: [],
-  });
+  readonly defaultConfig: Source;
 
   constructor(context: BuildContext) {
     this.context = context;
+    this.defaultConfig = new Source({
+      filename: path.resolve(context.pagesDir, 'defaults.pages.js'),
+      path: [],
+    });
   }
 
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {

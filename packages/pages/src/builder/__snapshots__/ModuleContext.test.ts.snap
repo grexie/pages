@@ -1,0 +1,145 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ModuleContext build cache should build multiple times 1`] = `
+Array [
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 1 | Test Site</title></head><body><h1>Test 1</h1>Test1<!-- -->Test2<!-- --></body></html>",
+    "filename": "test1/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 2 | Test Site</title></head><body><h1>Test 2</h1>Test2<!-- --></body></html>",
+    "filename": "test2/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/></head><body>Test3<!-- --></body></html>",
+    "filename": "test3/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title> | Test Site</title></head><body><h1></h1></body></html>",
+    "filename": "layout/index.html",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should build once 1`] = `
+Array [
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 1 | Test Site</title></head><body><h1>Test 1</h1>Test1<!-- -->Test2<!-- --></body></html>",
+    "filename": "test1/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 2 | Test Site</title></head><body><h1>Test 2</h1>Test2<!-- --></body></html>",
+    "filename": "test2/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/></head><body>Test3<!-- --></body></html>",
+    "filename": "test3/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title> | Test Site</title></head><body><h1></h1></body></html>",
+    "filename": "layout/index.html",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should enumerate all sources 1`] = `
+Array [
+  Object {
+    "path": Array [
+      "layout",
+    ],
+    "slug": "layout",
+  },
+  Object {
+    "path": Array [
+      "test1",
+    ],
+    "slug": "test1",
+  },
+  Object {
+    "path": Array [
+      "test2",
+    ],
+    "slug": "test2",
+  },
+  Object {
+    "path": Array [
+      "test3",
+    ],
+    "slug": "test3",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should enumerate all sources 2`] = `
+Array [
+  Object {
+    "path": Array [],
+    "slug": "",
+  },
+  Object {
+    "path": Array [],
+    "slug": "",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should only rebuild files which have changed 1`] = `
+Array [
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 1 | Test Site</title></head><body><h1>Test 1</h1>Test1<!-- -->Test2<!-- --></body></html>",
+    "filename": "test1/index.html",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should rebuild dependent resources 1`] = `
+Array [
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 1 | Test Site</title></head><body><h1>Test 1</h1>Test1<!-- -->Test2<!-- --></body></html>",
+    "filename": "test1/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 2 | Test Site</title></head><body><h1>Test 2</h1>Test2<!-- --></body></html>",
+    "filename": "test2/index.html",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should rebuild dependent resources from a layout change 1`] = `
+Array [
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 1 | Test Site</title></head><body><h1>Test 1</h1>Test1<!-- -->Test2<!-- --></body></html>",
+    "filename": "test1/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 2 | Test Site</title></head><body><h1>Test 2</h1>Test2<!-- --></body></html>",
+    "filename": "test2/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title> | Test Site</title></head><body><h1></h1></body></html>",
+    "filename": "layout/index.html",
+  },
+]
+`;
+
+exports[`ModuleContext build cache should rebuild from config change 1`] = `
+Array [
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 1 | Test Site</title></head><body><h1>Test 1</h1>Test1<!-- -->Test2<!-- --></body></html>",
+    "filename": "test1/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title>Test 2 | Test Site</title></head><body><h1>Test 2</h1>Test2<!-- --></body></html>",
+    "filename": "test2/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/></head><body>Test3<!-- --></body></html>",
+    "filename": "test3/index.html",
+  },
+  Object {
+    "data": "<!DOCTYPE html><html><head><meta charSet=\\"utf-8\\"/><title> | Test Site</title></head><body><h1></h1></body></html>",
+    "filename": "layout/index.html",
+  },
+]
+`;

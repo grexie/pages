@@ -67,7 +67,6 @@ export default {
   // moduleNameMapper: {},
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
-  // modulePathIgnorePatterns: [],
 
   // Activates notifications for test results
   // notify: false,
@@ -79,7 +78,7 @@ export default {
   // preset: undefined,
 
   // Run tests from one or more projects
-  // projects: undefined,
+  projects: ['packages/*'],
 
   // Use this configuration option to add custom reporters to Jest
   // reporters: undefined,
@@ -100,9 +99,7 @@ export default {
   // rootDir: undefined,
 
   // A list of paths to directories that Jest should use to search for files in
-  // roots: [
-  //   "<rootDir>"
-  // ],
+  //roots: ['packages/pages'],
 
   // Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
@@ -129,15 +126,10 @@ export default {
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  // testMatch: [
-  //   "**/__tests__/**/*.[jt]s?(x)",
-  //   "**/?(*.)+(spec|test).[tj]s?(x)"
-  // ],
+  testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  // testPathIgnorePatterns: [
-  //   "/node_modules/"
-  // ],
+  testPathIgnorePatterns: ['/node_modules/', '/.test/'],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],

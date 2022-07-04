@@ -6,6 +6,7 @@ export interface ModuleCompilerOptions {
 }
 
 export interface ModuleCompileOptions {
+  presets?: any[];
   source: string;
   filename: string;
 }
@@ -23,10 +24,11 @@ export class ModuleCompiler {
     this.context = context;
   }
 
-  async compile({ source, filename }: ModuleCompileOptions) {
+  async compile({ source, filename, presets = [] }: ModuleCompileOptions) {
     const transpiled = await transformAsync(source, {
       ast: true,
       presets: [
+        ...presets,
         [
           require('@babel/preset-env'),
           {

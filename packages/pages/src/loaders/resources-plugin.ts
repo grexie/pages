@@ -4,7 +4,7 @@ import { Compiler, Compilation, sources as WebpackSources } from 'webpack';
 import path from 'path';
 import { WritableBuffer } from '../utils/stream';
 import { ResourceContext } from '../hooks';
-import { createResolver, ResolvablePromise } from '../utils/resolvable';
+import { createResolver } from '../utils/resolvable';
 import { promisify } from '../utils/promisify';
 
 const { RawSource } = WebpackSources;
@@ -50,11 +50,17 @@ class SourceCompiler {
   async render(compilation: Compilation) {
     const factory = this.context.modules.createModuleFactory(compilation);
 
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('render', this.source.filename);
+    }
     const handlerModule = await this.context.modules.require(
       factory,
       path.dirname(this.source.filename),
       this.source.filename
     );
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('render:handler', this.source.filename);
+    }
 
     const { exports } = handlerModule.load(module);
 
@@ -117,6 +123,8 @@ class SourceCompiler {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('SourceCompiler', async compilation => {
       const resolver = createResolver();
+      this.context.build.modules.addBuild(this.source.filename, resolver);
+
       this.context.promises[this.source.filename] = resolver;
       let buffer: Buffer | undefined;
       try {
@@ -128,7 +136,6 @@ class SourceCompiler {
 
         const meta = await this.context.modules.meta(this.source.filename);
         if (meta) {
-          console.info(this.source.filename, meta.dependencies);
           meta.dependencies.forEach(dependency =>
             compilation.fileDependencies.add(dependency)
           );
@@ -149,7 +156,7 @@ class SourceCompiler {
         resolver.reject(err);
       }
 
-      compilation.hooks.processAssets.tapPromise('SourceCompiler', async () => {
+      compilation.hooks.processAssets.tap('SourceCompiler', () => {
         if (buffer) {
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
@@ -168,10 +175,10 @@ export class ResourcesPlugin {
     this.context = context;
   }
 
-  async apply(compiler: Compiler) {
-    let sources = await this.context.registry.list();
-
+  apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
+      let sources = await this.context.registry.list();
+
       const context = new CompilationContext({
         build: this.context,
         compilation,

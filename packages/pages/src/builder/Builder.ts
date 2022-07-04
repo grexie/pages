@@ -31,28 +31,35 @@ export class Builder {
   constructor(
     context: BuildContext,
     fs: WritableFileSystem,
+    defaultFiles: WritableFileSystem,
     fsOptions: FileSystemOptions[]
   ) {
     this.context = context;
     this.#builder = new BuilderBase();
-    const { defaultFiles, cache } = this.#createFileSystem(fs, fsOptions);
     this.defaultFiles = defaultFiles;
+    const { cache } = this.#createFileSystem(fs, fsOptions);
     this.cache = cache;
   }
 
   #createFileSystem(fs: WritableFileSystem, fsOptions: FileSystemOptions[]) {
-    this.#builder.fs.add(_path.resolve(this.context.pagesDir, '..', '..'), fs);
+    if ((process.env.NODE_ENV ?? 'development') === 'development') {
+      this.#builder.fs.add(
+        _path.resolve(this.context.pagesDir, '..', '..'),
+        fs
+      );
+    }
 
-    const defaultFiles = new Volume() as WritableFileSystem;
-    defaultFiles.mkdirSync(this.context.rootDir, { recursive: true });
-    defaultFiles.writeFileSync(
+    this.defaultFiles.mkdirSync(this.context.rootDir, { recursive: true });
+    this.defaultFiles.writeFileSync(
       _path.resolve(this.context.rootDir, 'package.json'),
       '{}'
     );
 
     this.#builder.fs.add(
       this.context.rootDir,
-      new FileSystem().add('/', defaultFiles).add(this.context.rootDir, fs),
+      new FileSystem()
+        .add('/', this.defaultFiles)
+        .add(this.context.rootDir, fs),
       true
     );
 
@@ -74,7 +81,7 @@ export class Builder {
       cacheDir: this.context.cacheDir,
     });
 
-    return { defaultFiles, cache };
+    return { cache };
   }
 
   filenameToPath(
@@ -135,10 +142,7 @@ export class Builder {
     const slug = [...path, 'index'].join('/');
     return {
       // [slug]: {
-      //   import: `resource-loader!./${_path.relative(
-      //     this.context.rootDir,
-      //     source.filename
-      //   )}`,
+      //   import: `./${_path.relative(this.context.rootDir, source.filename)}`,
       // },
     };
   }
@@ -161,10 +165,10 @@ export class Builder {
           .map(source => this.entry(source))
           .reduce((a, b) => ({ ...a, ...b }), {}),
       },
-      mode: 'production',
+      mode: 'development',
       output: {
         path: this.context.outputDir,
-        filename: `[name].html`,
+        filename: `[name].js`,
       },
       externals: [
         nodeExternals({
@@ -175,7 +179,9 @@ export class Builder {
       module: {
         rules: [
           {
-            test: require.resolve('../defaults.pages'),
+            test: require.resolve(
+              path.resolve(this.context.pagesDir, 'defaults.pages')
+            ),
             use: [
               this.#loader('cache-loader'),
               this.#loader('pages-loader'),
@@ -195,13 +201,8 @@ export class Builder {
             use: [
               this.#loader('cache-loader'),
               this.#loader('pages-loader'),
-              'yaml-loader',
+              this.#loader('yaml-loader'),
             ],
-          },
-          {
-            test: /\.(html)$/,
-            exclude: /(node_modules|bower_components)/,
-            use: [this.#loader('cache-loader'), this.#loader('html-loader')],
           },
           {
             test: /\.(md|mdx)$/,
@@ -214,8 +215,9 @@ export class Builder {
             ],
           },
           {
-            test: /\.(js|jsx|mjs|cjs)$/,
-            include: [/node_modules\/@mdx-js/],
+            test: /\.(jsx?|mjs|cjs)$/,
+            include: [this.context.rootDir],
+            //include: [/node_modules\/@mdx-js/],
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),
@@ -232,6 +234,7 @@ export class Builder {
           },
           {
             test: /\.(ts|tsx)$/,
+            include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
             use: [
               this.#loader('cache-loader'),
@@ -246,16 +249,35 @@ export class Builder {
               },
             ],
           },
+          // {
+          //   // INCLUDED for TESTS
+          //   // TODO: move out to plugins / config on context
+          //   test: /\.(ts|tsx)$/,
+          //   exclude: /(node_modules|bower_components)/,
+          //   use: [
+          //     {
+          //       loader: 'babel-loader',
+          //       options: {
+          //         cwd: this.context.pagesDir,
+          //         root: this.context.pagesDir,
+          //       },
+          //     },
+          //   ],
+          // },
         ],
       },
       resolve: {
+        alias: {
+          '@grexie/pages': path.resolve(__dirname, '..'),
+        },
         extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
         modules: this.context.modulesDirs,
       },
       resolveLoader: {
+        extensions: ['.js', '.ts'],
         modules: [
+          path.resolve(__dirname, '..', 'loaders'),
           ...this.context.modulesDirs,
-          _path.resolve(__dirname, '..', 'loaders'),
         ],
       },
       loader: {
@@ -268,17 +290,11 @@ export class Builder {
   }
 
   async build(sources: Source[]): Promise<WebpackStats> {
-    sources = sources.filter(source =>
-      /\.(js|jsx|tsx|ts|md)$/.test(source.filename)
-    );
     const config = await this.config(sources);
     return this.#builder.build({ config });
   }
 
   async watch(sources: Source[]): Promise<Watcher> {
-    sources = sources.filter(source =>
-      /\.(js|jsx|tsx|ts|md)$/.test(source.filename)
-    );
     const config = await this.config(sources);
     return this.#builder.watch({ config });
   }
