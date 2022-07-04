@@ -7,4 +7,6 @@ export default {
     '\\.tsx?$': 'babel-jest',
   },
   projects: ['packages/*'],
+  testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
+  testPathIgnorePatterns: ['/node_modules/', '/.test/'],
 };
