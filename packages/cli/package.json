@@ -8,7 +8,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src/ -d . -x .ts,.tsx --ignore *.test.tsx --ignore *.test.ts"
+    "build": "babel src/ -d . -x .ts,.tsx --ignore **/*.test.tsx --ignore **/*.test.ts"
   },
   "dependencies": {
     "resolve": "^1.22.0",

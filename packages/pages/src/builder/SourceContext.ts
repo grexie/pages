@@ -6,7 +6,9 @@ import {
   SourceOptions,
 } from '../api';
 import type { BuildContext, ModuleFactory, Module } from '../builder';
-import { Config } from './ConfigContext';
+import { Config, ConfigModule } from './ConfigContext';
+import path from 'path';
+import { ObjectProxy } from '../utils/proxy';
 
 export interface CreateContentOptions<C = any> {
   content: C;
@@ -20,6 +22,7 @@ export interface SourceContextOptions extends SourceOptions {
   module: Module;
   content: Buffer;
   config: Config;
+  configModule: ConfigModule;
 }
 
 export class SourceContext extends Source {
@@ -28,6 +31,7 @@ export class SourceContext extends Source {
   readonly module: Module;
   readonly content: Buffer;
   readonly config: Config;
+  readonly configModule: ConfigModule;
 
   #index = 0;
 
@@ -37,6 +41,7 @@ export class SourceContext extends Source {
     module,
     content,
     config,
+    configModule,
     ...options
   }: SourceContextOptions) {
     super(options);
@@ -45,6 +50,7 @@ export class SourceContext extends Source {
     this.module = module;
     this.content = content;
     this.config = config;
+    this.configModule = configModule;
   }
 
   get metadata() {
@@ -92,11 +98,23 @@ export class SourceContext extends Source {
     const { exports } = module.load(this.module.module);
 
     return new ModuleResource({
-      context: this,
       path: this.path,
       metadata: this.metadata,
       source: module.source,
       exports,
+    });
+  }
+
+  serialize(resource: Resource) {
+    const serializeMetadata = (source: string) =>
+      `require('@grexie/pages').ObjectProxy.create(${JSON.stringify(
+        ObjectProxy.get(resource.metadata as any),
+        null,
+        2
+      )}, ${this.configModule.serialize(path.dirname(this.filename))})`;
+
+    return resource.serialize({
+      serializeMetadata,
     });
   }
 }

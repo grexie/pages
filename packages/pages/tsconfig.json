@@ -10,5 +10,8 @@
     "src/**/*.tsx",
     "src/plugins/module/Handler.ts.bak"
   ],
-  "exclude": []
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

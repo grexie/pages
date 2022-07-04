@@ -2,6 +2,7 @@ import { BuildContext } from './BuildContext';
 import { ResourceMetadata, Source } from '../api';
 import { Module, ModuleFactory } from './ModuleContext';
 import { ObjectProxy } from '../utils/proxy';
+import path from 'path';
 
 export interface ConfigOptions {
   parent?: ConfigModule;
@@ -36,18 +37,23 @@ export class ConfigModule {
 
   create(module: NodeModule, extra?: Config): Config {
     const parent = this.parent?.create(module);
-    const exports = this.module.load(module).exports;
-    let config = ObjectProxy.create<Config>(
-      {
-        ...exports.config,
-        metadata: exports.metadata,
-      },
-      parent
-    );
+    const { config: configFactory } = this.module.load(module).exports;
+    let config = configFactory(parent);
     if (extra) {
       config = ObjectProxy.create<Config>(extra, config);
     }
     return config;
+  }
+
+  serialize(context: string): string {
+    const metadataFactory = `require(${JSON.stringify(
+      `./${path.relative(context, this.module.filename)}`
+    )}).metadata`;
+    if (this.parent) {
+      return `${metadataFactory}(${this.parent.serialize(context)})`;
+    } else {
+      return `${metadataFactory}()`;
+    }
   }
 }
 
@@ -61,17 +67,23 @@ export class ConfigContext {
   async #createConfigModule(
     factory: ModuleFactory,
     parent: ConfigModule | undefined,
-    source: Source
+    source: Source,
+    parentModule: Module
   ): Promise<ConfigModule> {
     const _module = await this.context.modules.require(
       factory,
       source.dirname,
-      source.filename
+      source.filename,
+      parentModule
     );
     return new ConfigModule({ parent, module: _module });
   }
 
-  async create(factory: ModuleFactory, path: string[]): Promise<ConfigModule> {
+  async create(
+    factory: ModuleFactory,
+    path: string[],
+    parent: Module
+  ): Promise<ConfigModule> {
     const sources = await this.context.registry.listConfig({ path });
     sources.sort((a, b) => a.path.length - b.path.length);
     let configModule: ConfigModule | undefined;
@@ -79,7 +91,8 @@ export class ConfigContext {
       configModule = await this.#createConfigModule(
         factory,
         configModule,
-        source
+        source,
+        parent
       );
     }
     if (!configModule) {

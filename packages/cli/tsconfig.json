@@ -10,6 +10,8 @@
     "src/**/*.tsx"
   ],
   "exclude": [
-    "bin/**/*.js"
+    "bin/**/*.js",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

@@ -56,23 +56,3 @@ export class Renderer {
     return Promise.resolve(writable);
   }
 }
-
-export const wrapHandler = (
-  exports: any,
-  resource: Resource,
-  handler: Handler,
-  ...composables: any[]
-) => {
-  if (typeof handler.default === 'function') {
-    const Component = compose(
-      ...composables,
-      withResource({ resource }),
-      handler.default as any
-    );
-    exports.default = Component;
-    exports.resource = resource;
-    if (!exports.__esModule) {
-      exports.__esModule = true;
-    }
-  }
-};

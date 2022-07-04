@@ -10,7 +10,11 @@ import _Module from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
 import { Script } from 'vm';
 import path from 'path';
-import { createResolver, ResolvablePromise } from '../utils/resolvable';
+import {
+  createResolver,
+  PromiseQueue,
+  ResolvablePromise,
+} from '../utils/resolvable';
 import { promisify } from '../utils/promisify';
 import { KeyedMutex, Lock } from '../utils/mutex';
 
@@ -68,6 +72,7 @@ export interface ModuleOptions {
 
 export interface ModuleEvictOptions {
   recompile?: boolean;
+  fail?: boolean;
 }
 
 export class Module extends EventEmitter {
@@ -85,7 +90,6 @@ export class Module extends EventEmitter {
   readonly #dependents: Set<string> = new Set();
   readonly #evict: ResolvablePromise<{ finish: ResolvablePromise<void> }> =
     createResolver();
-  readonly #pending: Set<Promise<Module>> = new Set();
 
   #persisted: boolean = false;
 
@@ -118,15 +122,11 @@ export class Module extends EventEmitter {
     this.#initialize().then(ready.resolve, ready.reject);
   }
 
-  addPending(module: Promise<Module>) {
-    this.#pending.add(module);
-  }
-
   get #metaCacheKey() {
     return `${this.filename}.meta.json`;
   }
 
-  async persist(shouldLock: boolean = true) {
+  async persist() {
     if (!this.#module) {
       throw new Error(`module not loaded ${this.filename}`);
     }
@@ -196,7 +196,7 @@ export class Module extends EventEmitter {
       .catch(() => {});
 
     this.#evict.then(({ finish }) =>
-      this.persist(false).then(finish.resolve, finish.reject)
+      this.persist().then(finish.resolve, finish.reject)
     );
   }
 
@@ -230,39 +230,36 @@ export class Module extends EventEmitter {
     return this.module.exports;
   }
 
+  static async evict(
+    factory: ModuleFactory,
+    filename: string,
+    { recompile = false }: ModuleEvictOptions
+  ) {
+    if (recompile) {
+      await factory.context.cache
+        .lock([filename, `${filename}.imports.json`], cache => {
+          delete factory.context.loadedModules[filename];
+          delete factory.context.modules[filename];
+
+          return Promise.all([
+            cache.remove(filename),
+            cache.remove(`${filename}.imports.json`),
+          ]);
+        })
+        .catch(() => {});
+    } else {
+      delete factory.context.loadedModules[filename];
+      delete factory.context.modules[filename];
+    }
+  }
+
   async evict(
     factory: ModuleFactory,
     { recompile = false }: ModuleEvictOptions = {}
   ) {
-    const resolver = createResolver<Module>();
-
-    if (this.#pending.size) {
-      //this.#context.modules[this.filename] = resolver;
-    }
-
     const promises: Promise<any>[] = [];
 
-    if (recompile) {
-      await this.#context.cache.lock(
-        [this.filename, `${this.filename}.imports.json`],
-        cache => {
-          delete this.#context.loadedModules[this.filename];
-          //if (!this.#pending.size) {
-          delete this.#context.modules[this.filename];
-          //}
-          return Promise.all([
-            cache.remove(this.filename),
-            cache.remove(`${this.filename}.imports.json`),
-          ]);
-        }
-      );
-    } else {
-      delete this.#context.loadedModules[this.filename];
-      //if (!this.#pending.size) {
-      delete this.#context.modules[this.filename];
-      //}
-    }
-
+    await Module.evict(factory, this.filename, { recompile });
     delete this.#module?.require.cache[this.filename];
 
     promises.push(
@@ -276,16 +273,6 @@ export class Module extends EventEmitter {
     this.#evict.resolve({ finish });
     await finish;
     this.emit('evict', module);
-
-    if (this.#pending.size) {
-      this.#pending.clear();
-      // const module = await this.#context.require(
-      //   factory,
-      //   path.dirname(this.filename),
-      //   this.filename
-      // );
-      // resolver.resolve(module);
-    }
   }
 }
 
@@ -308,6 +295,9 @@ export class ModuleFactory {
       conditionNames: ['default', 'require', 'import'],
       mainFields: ['main', 'module'],
       extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
+      alias: {
+        '@grexie/pages': path.resolve(__dirname, '..'),
+      },
       modules: context.build.modulesDirs,
     });
     this.#resolve = resolver.resolve.bind(resolver);
@@ -519,6 +509,7 @@ export class ModuleFactory {
         filename,
       });
       const source = compiled.source;
+
       const imports = await this.resolveImports(
         context,
         compiled.imports,
@@ -623,6 +614,19 @@ export class ModuleResolver {
       resolved.descriptionFile = await realpath(resolved.descriptionFile);
     }
 
+    if (
+      resolved.filename ===
+      require.resolve(
+        path.resolve(this.context.build.pagesDir, 'defaults.pages')
+      )
+    ) {
+      return this.#buildImport(request, resolved.filename, true);
+    }
+
+    if (containsPath(path.resolve(__dirname, '..'), resolved.filename)) {
+      return this.#buildImport(request, resolved.filename, false);
+    }
+
     const extension = path.extname(resolved.filename);
     if (this.#forceExtensions.includes(extension)) {
       return this.#buildImport(request, resolved.filename);
@@ -691,6 +695,7 @@ export class ModuleContext {
   readonly loadedModules: Record<string, Module> = {};
   readonly locks = new KeyedMutex({ watcher: true });
   readonly resolver: ModuleResolver;
+  readonly #builds: Record<string, PromiseQueue> = {};
 
   constructor({ context, resolver = {} }: ModuleContextOptions) {
     this.build = context;
@@ -725,6 +730,23 @@ export class ModuleContext {
     });
   }
 
+  addBuild(filename: string, promise: Promise<void>) {
+    if (!this.#builds[filename]) {
+      if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+        console.info('build', filename);
+      }
+      this.#builds[filename] = new PromiseQueue();
+      this.#builds[filename].finally(() => {
+        if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+          console.info('build:finished', filename);
+        }
+        delete this.#builds[filename];
+      });
+    }
+
+    this.#builds[filename].add(promise);
+  }
+
   createModuleFactory(compilation: Compilation) {
     return new ModuleFactory(this, compilation);
   }
@@ -732,24 +754,41 @@ export class ModuleContext {
   async evict(
     factory: ModuleFactory,
     filename: string,
-    options: ModuleEvictOptions = {}
+    { recompile = false, fail = true }: ModuleEvictOptions = {}
   ) {
     const module = this.loadedModules[filename];
-    await module?.evict(factory, options);
+    if (fail && !module) {
+      throw new Error(`failed to evict ${filename}: not loaded`);
+    }
+    if (!module) {
+      Module.evict(factory, filename, { recompile, fail });
+    }
+    await module?.evict(factory, { recompile, fail });
   }
 
-  async require(factory: ModuleFactory, context: string, request: string) {
+  async require(
+    factory: ModuleFactory,
+    context: string,
+    request: string,
+    parent?: Module
+  ) {
     const { filename } = await factory.resolve(context, request);
+
     if (this.modules[filename]) {
       const { cached } = await factory.getCompileCache(filename, filename);
       const cachedModule = this.modules[filename];
       if (cached && cachedModule) {
-        return await cachedModule;
+        const module = await cachedModule;
+        parent?.addDependency(module);
+        return module;
       }
     }
 
     const { source, webpackModule } = await factory.load(filename);
-    return this.create(factory, webpackModule, filename, source);
+
+    const module = await this.create(factory, webpackModule, filename, source);
+    parent?.addDependency(module);
+    return module;
   }
 
   #createRequire(_module: _Module, _filename: string) {
@@ -763,12 +802,14 @@ export class ModuleContext {
       } = parentModule.imports[request] ?? {};
 
       if (builtin || !compile) {
-        return _require(filename);
+        const exports = _require(filename);
+        return exports;
       }
 
       const childModule = this.loadedModules[filename];
       parentModule.addDependency(childModule);
-      return childModule.load(_module).exports;
+      const { exports } = childModule.load(_module);
+      return exports;
     });
 
     return _module.require;
@@ -799,17 +840,23 @@ export class ModuleContext {
     );
 
     const next = async (require: Import): Promise<string[]> => {
+      if (require.filename === filename) {
+        return [];
+      }
       if (seen.has(require.filename)) {
         return [require.filename];
       }
       seen.add(require.filename);
 
+      await this.#builds[require.filename];
+
       if (this.modules[require.filename]) {
         const module = await this.modules[require.filename]!;
-        module.addPending(promise);
+
         const modules = await Promise.all(
           Object.values(module.imports).map(require => next(require))
         );
+
         return [
           require.filename,
           ...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
@@ -821,19 +868,11 @@ export class ModuleContext {
       }
 
       const { source, webpackModule } = await factory.load(require.filename);
-      const _module = await this.create(
-        factory,
-        webpackModule,
-        require.filename,
-        source
-      );
-      _module.addPending(promise);
+      await this.create(factory, webpackModule, require.filename, source);
       return [require.filename];
     };
 
-    const modules = await Promise.all(
-      Object.values(imports).map(require => next(require))
-    );
+    const modules = await Promise.all(Object.values(imports).map(next));
 
     const script = new Script(wrapScript(source), {
       filename,
