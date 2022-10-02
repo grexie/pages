@@ -15,8 +15,11 @@ import { Source } from '../api';
 import nodeExternals from 'webpack-node-externals';
 import _path from 'path';
 import { Volume } from 'memfs';
-import { ResourcesPlugin } from '../loaders/resources-plugin';
+import { ResourcesPlugin } from './plugins/resources-plugin';
+import { ModuleContext } from './ModuleContext.new';
+import { Compilation } from 'webpack';
 import path from 'path';
+import webpack from 'webpack';
 
 export class Builder {
   readonly context: BuildContext;
@@ -144,14 +147,14 @@ export class Builder {
     };
   }
 
-  #loader(loader: string, options: any = {}) {
+  #loader(loader: string, options: any = {}): webpack.RuleSetUseItem {
     return {
-      loader,
+      loader: loader,
       options: {
         context: this.context,
         ...options,
       },
-    };
+    } as any;
   }
 
   async config(sources: Source[]): Promise<Configuration> {
@@ -176,6 +179,7 @@ export class Builder {
       module: {
         rules: [
           {
+            type: 'javascript/esm',
             test: require.resolve(
               path.resolve(this.context.pagesDir, 'defaults.pages')
             ),
@@ -193,6 +197,7 @@ export class Builder {
             ],
           },
           {
+            type: 'javascript/esm',
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -202,6 +207,7 @@ export class Builder {
             ],
           },
           {
+            type: 'javascript/esm',
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -212,6 +218,7 @@ export class Builder {
             ],
           },
           {
+            type: 'javascript/esm',
             test: /\.(jsx?|mjs|cjs)$/,
             include: [this.context.rootDir],
             //include: [/node_modules\/@mdx-js/],
@@ -230,6 +237,7 @@ export class Builder {
             ],
           },
           {
+            type: 'javascript/esm',
             test: /\.(ts|tsx)$/,
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
@@ -265,7 +273,7 @@ export class Builder {
       },
       resolve: {
         alias: {
-          '@grexie/pages': path.resolve(__dirname, '..'),
+          '@grexie/pages': this.context.pagesDir,
         },
         extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
         modules: this.context.modulesDirs,
@@ -273,7 +281,7 @@ export class Builder {
       resolveLoader: {
         extensions: ['.js', '.ts'],
         modules: [
-          path.resolve(__dirname, '..', 'loaders'),
+          path.resolve(__dirname, 'loaders'),
           ...this.context.modulesDirs,
         ],
       },
@@ -294,5 +302,9 @@ export class Builder {
   async watch(sources: Source[]): Promise<Watcher> {
     const config = await this.config(sources);
     return this.#builder.watch({ config });
+  }
+
+  createModuleContext(compilation: Compilation) {
+    return new ModuleContext({ context: this.context, compilation });
   }
 }

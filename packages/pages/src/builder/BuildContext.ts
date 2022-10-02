@@ -8,6 +8,7 @@ import { ModuleContext, ModuleResolverOptions } from './ModuleContext';
 import os from 'os';
 import { ConfigContext } from './ConfigContext';
 import { Volume } from 'memfs';
+import { ModuleDependencies } from './ModuleDependencies';
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -44,6 +45,7 @@ export class BuildContext extends Context {
   readonly renderer: Renderer;
   readonly modules: ModuleContext;
   readonly config: ConfigContext;
+  readonly dependencies: ModuleDependencies;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
@@ -79,6 +81,10 @@ export class BuildContext extends Context {
 
     this.registry = new Registry(this);
     this.builder = new Builder(this, fs, defaultFiles, fsOptions);
+    this.dependencies = new ModuleDependencies({
+      cache: this.cache.create('modules'),
+      fs: this.fs,
+    });
     this.renderer = new Renderer(this);
     this.modules = new ModuleContext({
       context: this,

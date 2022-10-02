@@ -1,5 +1,7 @@
 import type { ModuleContext } from './ModuleContext';
-import { transformAsync, traverse, types as t } from '@babel/core';
+import { transformAsync } from '@babel/core';
+import traverse from '@babel/traverse';
+import * as t from '@babel/types';
 
 export interface ModuleCompilerOptions {
   context: ModuleContext;

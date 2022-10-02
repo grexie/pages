@@ -16,7 +16,6 @@
     "@grexie/compose": "^0.1.8",
     "@grexie/pages-cli": "^0.0.3",
     "@mdx-js/mdx": "^2.1.1",
-    "@types/mime": "^2.0.3",
     "babel-loader": "^8.2.5",
     "es-main": "^1.0.2",
     "gray-matter": "^4.0.3",
@@ -40,7 +39,6 @@
     "@types/resolve": "^1.20.2",
     "@types/schema-utils": "^2.4.0",
     "@types/webpack-node-externals": "^2.5.3",
-    "@types/whatwg-url": "^8.2.1",
-    "mime": "^3.0.0"
+    "@types/whatwg-url": "^8.2.1"
   }
 }

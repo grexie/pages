@@ -1,4 +1,4 @@
 #!/usr/bin/env node
 
 require('source-map-support/register');
-require('../index').default();
+require('../index')();

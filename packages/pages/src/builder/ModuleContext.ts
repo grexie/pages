@@ -1,11 +1,7 @@
 import { EventEmitter } from 'events';
 import { BuildContext } from './BuildContext';
 import { Cache, ICache, Stats } from '@grexie/builder';
-import {
-  Compilation,
-  Module as WebpackModule,
-  dependencies as WebpackDependencies,
-} from 'webpack';
+import webpack, { Compilation, Module as WebpackModule } from 'webpack';
 import _Module from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
 import { Script } from 'vm';
@@ -18,7 +14,7 @@ import {
 import { promisify } from '../utils/promisify';
 import { KeyedMutex, Lock } from '../utils/mutex';
 
-const { ModuleDependency } = WebpackDependencies;
+const { ModuleDependency } = webpack.dependencies;
 
 type WrappedScript = (
   exports: any,
@@ -296,7 +292,7 @@ export class ModuleFactory {
       mainFields: ['main', 'module'],
       extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
       alias: {
-        '@grexie/pages': path.resolve(__dirname, '..'),
+        '@grexie/pages': this.context.build.pagesDir,
       },
       modules: context.build.modulesDirs,
     });

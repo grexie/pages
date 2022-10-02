@@ -1,13 +1,13 @@
-import { Source } from '../api';
-import { BuildContext } from '../builder';
-import { Compiler, Compilation, sources as WebpackSources } from 'webpack';
+import { Source } from '../../api';
+import { BuildContext } from '../BuildContext';
+import webpack, { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { WritableBuffer } from '../utils/stream';
-import { ResourceContext } from '../hooks';
-import { createResolver } from '../utils/resolvable';
-import { promisify } from '../utils/promisify';
+import { WritableBuffer } from '../../utils/stream';
+import { ResourceContext } from '../../hooks';
+import { createResolver } from '../../utils/resolvable';
+import { promisify } from '../../utils/promisify';
 
-const { RawSource } = WebpackSources;
+const { RawSource } = webpack.sources;
 
 export interface ResourcesPluginOptions {
   context: BuildContext;

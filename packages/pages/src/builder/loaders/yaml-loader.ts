@@ -1,5 +1,5 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '../builder';
+import { BuildContext } from '../BuildContext';
 import YAML from 'yaml';
 
 interface YamlLoaderOptions {

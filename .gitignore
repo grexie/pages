@@ -2,6 +2,7 @@
 tsconfig.tsbuildinfo
 yarn-error.log
 node_modules/
+/packages/*/*.mjs
 /packages/*/*.js
 /packages/*/*.ts
 /packages/*/*/

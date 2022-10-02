@@ -1,7 +1,6 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '../builder';
-import path from 'path';
-import { createResolver } from '../utils/resolvable';
+import { BuildContext } from '../BuildContext';
+import { createResolver } from '../../utils/resolvable';
 
 interface PagesLoaderOptions {
   context: BuildContext;

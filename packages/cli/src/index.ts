@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import resolve from 'resolve';
 import chalk from 'chalk';
+import { createRequire } from 'module';
 
 type Script = (...args: string[]) => Promise<void>;
 
@@ -9,24 +9,22 @@ const domains = [
   { domain: '@grexie/pages/scripts' },
   {
     domain: '@grexie/pages/scripts',
-    basedir: __dirname,
+    parent: __dirname,
   },
   {
     domain: path.resolve(__dirname, './scripts/'),
-    basedir: __dirname,
+    parent: __dirname,
   },
 ];
 
 const importScript = async (name: string): Promise<Script> => {
   let module: string | null = null;
 
-  for (const { domain, ...options } of domains) {
+  for (const { domain, parent } of domains) {
     try {
-      const modulePath = path.join(domain, name.replace(/:/g, '/'));
-      module = resolve.sync(modulePath, {
-        basedir: process.cwd(),
-        ...options,
-      });
+      const modulePath = path.join(domain, name.replace(/:/g, '/')) + '.js';
+      const require = createRequire(parent ?? process.cwd());
+      module = require.resolve(modulePath);
       break;
     } catch (err) {
       continue;
@@ -37,7 +35,7 @@ const importScript = async (name: string): Promise<Script> => {
     throw new Error();
   }
 
-  const { default: script } = await import(module);
+  const { default: script } = require(module);
   return script;
 };
 
@@ -48,12 +46,11 @@ usage: ${chalk.bold('pages COMMAND')}`;
 const main = async (name: string, ...args: string[]) => {
   if (fs.existsSync('node_modules')) {
     try {
-      const localModule = resolve.sync('@grexie/pages-cli', {
-        basedir: process.cwd(),
-      });
+      const require = createRequire(process.cwd());
+      const localModule = require.resolve('@grexie/pages-cli');
       if (fs.realpathSync(localModule) !== __filename) {
-        const localPages = require(localModule).default;
-        localPages();
+        const localPages = require(localModule);
+        localPages.default();
         return;
       }
     } catch (err) {}

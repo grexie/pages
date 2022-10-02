@@ -2,12 +2,10 @@
   "presets": [
     "@babel/typescript",
     "@babel/react",
-    ["@babel/preset-env", {
-        "modules": "commonjs",
-        "exclude": [
-          "proposal-dynamic-import"
-        ]
-      }]
+    ["@babel/env", {
+      "targets": "node 16",
+      "modules": "commonjs"
+    }]
   ],
-  "sourceMaps": "inline",
+  "sourceMaps": "inline"
 }

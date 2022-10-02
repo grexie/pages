@@ -1,11 +1,10 @@
-import { LoaderContext, Dependency } from 'webpack';
-import { BuildContext, Module } from '../builder';
+import { LoaderContext } from 'webpack';
+import { BuildContext, Module } from '..';
 import _path from 'path';
-import { Resource, Handler, Source } from '../api';
-import { SourceContext } from '../builder/SourceContext';
+import { Resource, Handler, Source } from '../../api';
+import { SourceContext } from '../SourceContext';
 import { createComposable } from '@grexie/compose';
-import { createResolver } from '../utils/resolvable';
-import assert from 'assert';
+import { createResolver } from '../../utils/resolvable';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
