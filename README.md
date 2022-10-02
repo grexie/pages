@@ -16,13 +16,13 @@ Then run the following commands:
 yarn pages build
 ```
 
-or 
+or
 
 ```
 yarn pages serve
 ```
 
-Create markdown files, javascript / typescript React components in various folders, SASS/CSS modules named `myname.module.scss` or `myname.global.scss` and off you go! ☺️ 
+Create markdown files, javascript / typescript React components in various folders, SASS/CSS modules named `myname.module.scss` or `myname.global.scss` and off you go! ☺️
 
 ## Development on Grexie Pages
 
