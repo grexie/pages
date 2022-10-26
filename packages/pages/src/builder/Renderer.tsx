@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import React, { createElement } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
 import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
@@ -9,14 +9,10 @@ import {
   ResourceContext,
   withResourceContext,
 } from '../hooks';
-import { Handler, Resource } from '../api';
-import { BuildContext } from '../builder';
-import {
-  withResource,
-  withLazy,
-  withErrorManager,
-  ErrorManager,
-} from '../hooks';
+import { Resource } from '../api';
+import { BuildContext } from '.';
+import { withLazy, withErrorManager, ErrorManager } from '../hooks';
+import { withStyles, StylesContext } from '../hooks/useStyles';
 
 export class Renderer {
   readonly context: BuildContext;
@@ -33,11 +29,14 @@ export class Renderer {
   ): Promise<T> {
     const errorManager = new ErrorManager();
 
+    const styles = new StylesContext();
+
     const component = compose(
       withErrorManager({ errorManager }),
       withLazy({ errorManager }),
       withContext({ context: this.context }),
       withResourceContext({ resourceContext }),
+      withStyles({ styles }),
       withDocument({ resourceContext, resource }),
       withDocumentComponent,
       ...composables

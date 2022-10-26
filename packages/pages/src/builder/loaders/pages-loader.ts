@@ -6,7 +6,7 @@ interface PagesLoaderOptions {
   context: BuildContext;
 }
 
-export default async function ModuleLoader(
+export default async function PagesLoader(
   this: LoaderContext<PagesLoaderOptions>,
   content: Buffer
 ) {

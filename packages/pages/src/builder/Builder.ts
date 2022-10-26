@@ -179,6 +179,54 @@ export class Builder {
       module: {
         rules: [
           {
+            test: /\.scss$/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('style-loader'),
+              'css-loader',
+              'sass-loader',
+            ],
+            include: /\.global\.scss$/,
+          },
+          {
+            test: /\.scss$/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('style-loader'),
+              {
+                loader: 'css-loader',
+                options: {
+                  modules: true,
+                },
+              },
+              'sass-loader',
+            ],
+            include: /\.module\.scss$/,
+          },
+          {
+            test: /\.css$/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('style-loader'),
+              {
+                loader: 'css-loader',
+                options: {
+                  modules: true,
+                },
+              },
+            ],
+            include: /\.module\.css$/,
+          },
+          {
+            test: /\.css$/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('style-loader'),
+              'css-loader',
+            ],
+            include: /\.global\.css$/,
+          },
+          {
             type: 'javascript/esm',
             test: require.resolve(
               path.resolve(this.context.pagesDir, 'defaults.pages')

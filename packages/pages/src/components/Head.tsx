@@ -62,13 +62,16 @@ const processElement = (element: ReactElement, props: DocumentProps) => {
       props.title = nodeToString(element.props.children);
       break;
     }
+    default: {
+      props.children.push(element);
+    }
   }
 };
 
 export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
   const renderHead = useHead();
   const props = useMemo(() => {
-    const props = {};
+    const props = { children: [] };
     processChildren(children, props);
     return props;
   }, [renderHead, children]);
@@ -85,6 +88,7 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
         <head>
           <meta charSet="utf-8" />
           {document.props.title && <title>{document.props.title}</title>}
+          {document.props.children}
         </head>
       );
     };

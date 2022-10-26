@@ -1,16 +1,11 @@
 import { Compilation } from 'webpack';
 import { BuildContext } from './BuildContext';
 import { ModuleResolver } from './ModuleResolver';
-import {
-  CommonJsModuleLoader,
-  EsmModuleLoader,
-  ModuleLoader,
-} from './ModuleLoader';
+import { CommonJsModuleLoader, ModuleLoader } from './ModuleLoader';
 import { Module } from 'vm';
 
 export enum ModuleLoaderType {
   commonjs = 'commonjs',
-  esm = 'esm',
 }
 
 export interface ModuleContextOptions {
@@ -27,7 +22,7 @@ export class ModuleContext {
   constructor({
     context,
     compilation,
-    loader = Module ? ModuleLoaderType.esm : ModuleLoaderType.commonjs,
+    loader = ModuleLoaderType.commonjs,
   }: ModuleContextOptions) {
     this.compilation = compilation;
     this.resolver = new ModuleResolver({ context, compilation });
@@ -35,12 +30,6 @@ export class ModuleContext {
     switch (loader) {
       case ModuleLoaderType.commonjs:
         this.loader = new CommonJsModuleLoader({
-          resolver: this.resolver,
-          compilation,
-        });
-        break;
-      case ModuleLoaderType.esm:
-        this.loader = new EsmModuleLoader({
           resolver: this.resolver,
           compilation,
         });

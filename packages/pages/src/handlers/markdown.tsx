@@ -6,7 +6,8 @@ import { Resource } from '../api';
 import { SourceContext } from '../builder/SourceContext';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const { default: Component } = useModule({ resource: true });
+  const { default: Component, styles: Record<string, StyleSheet> } = useModule({ resource: true });
+
   return <Component components={{ Block: () => <>{children}</> }} />;
 };
 
@@ -18,11 +19,26 @@ export const resource = async (
   const { content, data: metadata } = grayMatter(context.content.toString());
   Object.assign(context.metadata, metadata);
 
+  const stylesheets =
+    'const styles = {' +
+    (
+      Object.entries(context.metadata.styles ?? {}) as unknown as [
+        string,
+        string
+      ][]
+    )
+      .map(
+        ([name, stylesheet]) =>
+          `${name}: require(${JSON.stringify(stylesheet)}).default`
+      )
+      .join(', ') +
+    '};\nexports.styles = styles;\n\n';
+
   const source = await compile(content, {
     outputFormat: 'program',
   });
 
   return context.createModule({
-    source: source.toString(),
+    source: stylesheets + source.toString(),
   });
 };

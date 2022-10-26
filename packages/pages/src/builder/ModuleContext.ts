@@ -12,7 +12,7 @@ import {
   ResolvablePromise,
 } from '../utils/resolvable';
 import { promisify } from '../utils/promisify';
-import { KeyedMutex, Lock } from '../utils/mutex';
+import { KeyedMutex } from '../utils/mutex';
 
 const { ModuleDependency } = webpack.dependencies;
 
@@ -322,6 +322,14 @@ export class ModuleFactory {
     );
   }
 
+  filename(request: string): string {
+    return request.replace(/.*\!/g, '');
+  }
+
+  dirname(request: string): string {
+    return path.dirname(this.filename(request));
+  }
+
   async resolveImports(
     context: string,
     imports: string[],
@@ -346,7 +354,7 @@ export class ModuleFactory {
               return;
             }
 
-            const { source } = await this.load(filename);
+            const { source } = await this.load(context, filename);
 
             if (!source) {
               return;
@@ -374,7 +382,7 @@ export class ModuleFactory {
     return resolved;
   }
 
-  async load(filename: string): Promise<CompiledModule> {
+  async load(context: string, filename: string): Promise<CompiledModule> {
     if (this.context.compilations[filename]) {
       return this.context.compilations[filename]!;
     }
@@ -387,7 +395,7 @@ export class ModuleFactory {
         (resolve, reject) =>
           this.compilation.params.normalModuleFactory.create(
             {
-              context: this.context.rootDir,
+              context,
               contextInfo: {
                 issuer: 'pages',
                 compiler: 'javascript/auto',
@@ -453,26 +461,49 @@ export class ModuleFactory {
   ) {
     const { cacheFile, cacheImportsFile } = this.#getCacheNames(filename);
 
-    return cache.lock([cacheFile, cacheImportsFile], async cache => {
-      const stats = await this.context.build.fs.stat(sourceFilename);
+    return cache.lock([cacheFile, cacheImportsFile], async (cache: ICache) => {
+      let stats;
+      if (/!/.test(filename)) {
+        stats = await Promise.all(
+          filename
+            .split(/\!/g)
+            .filter(x => !!x)
+            .map(loader =>
+              this.context.build.fs.stat(loader.replace(/\?.*/, ''))
+            )
+        );
+      } else {
+        stats = [await this.context.build.fs.stat(sourceFilename)];
+      }
 
       if (await cache.has(cacheFile)) {
         const cached = await cache.modified(cacheFile);
 
-        if (stats.mtime.getTime() <= cached.getTime()) {
+        if (
+          stats.reduce(
+            (a, b) => a || b.mtime.getTime() <= cached.getTime(),
+            false
+          )
+        ) {
           const [source, imports] = await Promise.all([
-            cache.get(cacheFile).then(data => data.toString()),
+            cache.get(cacheFile).then((data: Buffer) => data.toString()),
             cache
               .get(cacheImportsFile)
               .then(
-                data => JSON.parse(data.toString()) as Record<string, Import>
+                (data: Buffer) =>
+                  JSON.parse(data.toString()) as Record<string, Import>
               ),
           ]);
-          return { cached: true, source, imports, stats };
+          return {
+            cached: true,
+            source,
+            imports,
+            stats: stats[stats.length - 1],
+          };
         }
       }
 
-      return { cached: false, stats };
+      return { cached: false, stats: stats[stats.length - 1] };
     });
   }
 
@@ -486,7 +517,7 @@ export class ModuleFactory {
   ) {
     const { cacheFile, cacheImportsFile } = this.#getCacheNames(filename);
 
-    return cache.lock([cacheFile, cacheImportsFile], async cache => {
+    return cache.lock([cacheFile, cacheImportsFile], async (cache: ICache) => {
       const cached = await this.getCompileCache(
         filename,
         sourceFilename,
@@ -598,6 +629,36 @@ export class ModuleResolver {
     const fs = factory.compilation.compiler.inputFileSystem;
     const realpath = promisify(fs, fs.realpath!);
     const stat = promisify(fs, fs.stat);
+
+    if (/\!/.test(request)) {
+      const requests = request.split(/\!/g);
+      const result = (
+        await Promise.all(
+          requests.map(async requestParams => {
+            const [requestPart, query] = requestParams.split('?', 2);
+            if (requestPart) {
+              return {
+                ...(await this.resolve(factory, context, requestPart))[
+                  requestPart
+                ],
+                query,
+              };
+            } else {
+              return { filename: '', query };
+            }
+          })
+        )
+      )
+        .map(
+          result =>
+            `${result.filename ? result.filename : ''}${
+              result.query ? '?' : ''
+            }${result.query ? result.query : ''}`
+        )
+        .join('!');
+
+      return this.#buildImport(request, result, true, false);
+    }
 
     let resolved: { filename: string; descriptionFile?: string };
     try {
@@ -768,7 +829,9 @@ export class ModuleContext {
     request: string,
     parent?: Module
   ) {
-    const { filename } = await factory.resolve(context, request);
+    const {
+      [request]: { filename },
+    } = await this.resolver.resolve(factory, context, request);
 
     if (this.modules[filename]) {
       const { cached } = await factory.getCompileCache(filename, filename);
@@ -780,7 +843,7 @@ export class ModuleContext {
       }
     }
 
-    const { source, webpackModule } = await factory.load(filename);
+    const { source, webpackModule } = await factory.load(context, filename);
 
     const module = await this.create(factory, webpackModule, filename, source);
     parent?.addDependency(module);
@@ -790,14 +853,15 @@ export class ModuleContext {
   #createRequire(_module: _Module, _filename: string) {
     const _require = _module.require;
     const parentModule = this.loadedModules[_filename];
+
     _module.require = cloneRequire(_module, request => {
       const {
         compile = false,
         builtin = false,
         filename = request,
-      } = parentModule.imports[request] ?? {};
+      } = parentModule?.imports[request] ?? {};
 
-      if (builtin || !compile) {
+      if (!parentModule || builtin || !compile) {
         const exports = _require(filename);
         return exports;
       }
@@ -824,15 +888,18 @@ export class ModuleContext {
       return await loadingModule;
     }
 
+    const context = path.dirname(filename);
     const promise = createResolver<Module>();
 
     this.modules[filename] = promise;
 
     const { stats, source, imports } = await factory.compile(
-      path.dirname(filename),
+      context,
       _source,
       filename,
-      sourceFilename
+      sourceFilename,
+      true,
+      this.cache
     );
 
     const next = async (require: Import): Promise<string[]> => {
@@ -863,8 +930,18 @@ export class ModuleContext {
         return [require.filename];
       }
 
-      const { source, webpackModule } = await factory.load(require.filename);
-      await this.create(factory, webpackModule, require.filename, source);
+      const { source, webpackModule } = await factory.load(
+        context,
+        require.filename
+      );
+      await this.create(
+        factory,
+        webpackModule,
+        require.filename,
+        source,
+        factory.filename(require.filename),
+        new Set()
+      );
       return [require.filename];
     };
 
@@ -881,17 +958,20 @@ export class ModuleContext {
         return _module;
       }
 
-      _module = new _Module(filename, parent);
-      _module.require = _Module.createRequire(filename);
-      _module.require = this.#createRequire(_module, filename);
-      _module.require.cache[filename] = _module;
+      const __filename = factory.filename(filename);
+      const __dirname = factory.dirname(filename);
+
+      _module = new _Module(__filename, parent);
+      _module.require = _Module.createRequire(__filename);
+      _module.require = this.#createRequire(_module, __filename);
+      _module.require.cache[__filename] = _module;
 
       script(
         _module.exports,
         _module.require,
         _module,
-        filename,
-        path.dirname(filename)
+        __filename,
+        factory.dirname(__filename)
       );
 
       return _module;

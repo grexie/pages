@@ -55,6 +55,8 @@ export class Provider {
           this.context.rootDir,
           _path.join(this.context.cacheDir, '**')
         ),
+        '**/*.scss',
+        '**/*.css',
         'node_modules/**',
         '.git/**',
         '.github/**',

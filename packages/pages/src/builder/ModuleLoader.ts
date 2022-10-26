@@ -27,26 +27,36 @@ export abstract class ModuleLoader {
     this.compilation = compilation;
   }
 
+  /**
+   * Loads a module from the filesystem
+   * @param filename
+   */
   async load(filename: string): Promise<Module> {
     throw new Error('not implemented');
   }
 
   abstract instantiate(module: Module): Promise<any>;
 
+  /**
+   * Parses a module source file
+   * @param context the context of the request
+   * @param source the source code
+   */
   async parse(context: string, source: string): Promise<ModuleReference[]> {
     throw new Error('not implemented');
   }
 
+  /**
+   * Resolves modules
+   * @param context the context of the requests
+   * @param requests an array of requests
+   */
   async resolve(
     context: string,
     ...requests: string[]
   ): Promise<ModuleReference[]> {
     throw new Error('not implemented');
   }
-}
-
-export class EsmModuleLoader extends ModuleLoader {
-  async instantiate(module: Module): Promise<any> {}
 }
 
 export class CommonJsModuleLoader extends ModuleLoader {

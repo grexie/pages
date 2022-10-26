@@ -6,7 +6,7 @@ interface YamlLoaderOptions {
   context: BuildContext;
 }
 
-export default async function ModuleLoader(
+export default async function YamlLoader(
   this: LoaderContext<YamlLoaderOptions>,
   content: Buffer
 ) {
