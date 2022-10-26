@@ -4,10 +4,13 @@ import grayMatter from 'gray-matter';
 import { useModule } from '../hooks';
 import { Resource } from '../api';
 import { SourceContext } from '../builder/SourceContext';
+import { StyleSheet } from '../utils/styles';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const { default: Component, styles: Record<string, StyleSheet> } = useModule({ resource: true });
-
+  const { default: Component, styles } = useModule({ resource: true });
+  Object.values(styles).forEach((styles: StyleSheet) => {
+    styles.use();
+  });
   return <Component components={{ Block: () => <>{children}</> }} />;
 };
 
