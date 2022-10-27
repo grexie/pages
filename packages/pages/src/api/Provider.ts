@@ -41,7 +41,7 @@ export class Provider {
     }
     this.#scanning = true;
 
-    const files = await globAsync('**/*', {
+    const files = await globAsync(`**/*.{ts,tsx,js,jsx,md,pages.yml}`, {
       cwd: this.context.rootDir,
       nodir: true,
       dot: true,

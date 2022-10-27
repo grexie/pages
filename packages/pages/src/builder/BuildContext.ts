@@ -101,7 +101,17 @@ export class BuildContext extends Context {
           ])
         ),
         forceExtensions: Array.from(
-          new Set([...(resolver.forceExtensions ?? ['.scss', '.css'])])
+          new Set([
+            ...(resolver.forceExtensions ?? [
+              '.scss',
+              '.css',
+              '.jpeg',
+              '.jpg',
+              '.png',
+              '.webp',
+              '.gif',
+            ]),
+          ])
         ),
         forceCompile: Array.from(
           new Set([...(resolver.forceCompile ?? []), '@mdx-js/mdx'])

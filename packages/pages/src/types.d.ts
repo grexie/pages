@@ -1,5 +1,7 @@
 declare module 'es-main';
 
+declare module '*.css';
+
 declare module 'vm' {
   export * from 'node:vm';
   export enum ModuleStatus {

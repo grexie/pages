@@ -2,14 +2,16 @@ import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext';
 import path from 'path';
 import { createHash } from 'crypto';
+import webpack from 'webpack';
+import sharp from 'sharp';
 
+const { RawSource } = webpack.sources;
 interface ImageLoaderOptions {
   context: BuildContext;
 }
 
 export default async function ImageLoader(
-  this: LoaderContext<ImageLoaderOptions>,
-  content: Buffer
+  this: LoaderContext<ImageLoaderOptions>
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('image-loader', this.resourcePath);
@@ -24,19 +26,19 @@ export default async function ImageLoader(
       .update(path.relative(context.rootDir, this.resourcePath))
       .digest('hex')
       .substring(0, 6);
-    const filename = path.resolve(
-      this._compiler!.outputPath,
-      'images',
-      `${basename}-${hash}.${extname}`
-    );
+    const filename = path.join('images', `${basename}-${hash}${extname}`);
 
-    this.emitFile(filename, content);
+    const content = await context.fs.readFile(this.resourcePath);
+    const image = await sharp(content);
+    const metadata = await image.metadata();
+
+    this._compilation?.emitAsset(filename, new RawSource(content, false));
 
     return `
     const { wrapImage } = require('@grexie/pages/utils/image');
-    module.exports = wrapImage(${JSON.stringify(filename)}, ${JSON.stringify(
-      extname
-    )});
+    module.exports = wrapImage(${JSON.stringify(
+      path.resolve('/', filename)
+    )}, ${JSON.stringify(metadata)});
   `;
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {

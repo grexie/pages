@@ -208,6 +208,15 @@ export class Builder {
             use: [
               this.#loader('cache-loader'),
               this.#loader('style-loader'),
+              'css-loader',
+            ],
+            include: /\.global\.css$/,
+          },
+          {
+            test: /\.css$/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('style-loader'),
               {
                 loader: 'css-loader',
                 options: {
@@ -218,17 +227,8 @@ export class Builder {
             include: /\.module\.css$/,
           },
           {
-            test: /\.css$/,
-            use: [
-              this.#loader('cache-loader'),
-              this.#loader('style-loader'),
-              'css-loader',
-            ],
-            include: /\.global\.css$/,
-          },
-          {
             test: /\.(png|jpe?g|gif|webp)$/,
-            use: [this.#loader('image-loader')],
+            use: [this.#loader('image-loader'), 'raw-loader'],
           },
           {
             type: 'javascript/esm',

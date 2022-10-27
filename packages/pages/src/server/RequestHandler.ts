@@ -4,6 +4,15 @@ import { Renderer } from '../builder/Renderer';
 import { ServerContext } from './Server';
 import _path from 'path';
 
+const mimetypes: Record<string, string> = {
+  html: 'text/html; encoding=utf8',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+};
+
 export class RequestHandler {
   readonly context: ServerContext;
   renderer: Renderer;
@@ -28,8 +37,11 @@ export class RequestHandler {
       path.push('index.html');
     }
 
+    const extname = _path.extname(_path.join(...path));
+    const mimetype = mimetypes[extname.substring(1)] ?? 'text/plain';
+
     try {
-      res.setHeader('Content-Type', 'text/html; encoding=utf8');
+      res.setHeader('Content-Type', mimetype);
       const buffer = await this.context.builder.output({
         filename: _path.join(...path),
       });
