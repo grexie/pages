@@ -390,7 +390,15 @@ export class ModuleFactory {
     const resolver = createResolver<CompiledModule>();
     this.context.compilations[filename] = resolver;
 
+    let phase = '';
+    const interval = setInterval(() => {
+      if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+        console.info('module-context:loading', phase, filename);
+      }
+    }, 5000);
+
     try {
+      phase = 'create-module';
       const webpackModule = await new Promise<WebpackModule>(
         (resolve, reject) =>
           this.compilation.params.normalModuleFactory.create(
@@ -416,6 +424,7 @@ export class ModuleFactory {
       webpackModule.buildInfo = {};
       webpackModule.buildMeta = {};
 
+      phase = 'build-module';
       await new Promise((resolve, reject) =>
         this.compilation.buildModule(webpackModule, (err, result) => {
           if (err) {
@@ -426,6 +435,7 @@ export class ModuleFactory {
           resolve(result);
         })
       );
+      phase = '';
 
       if (webpackModule.getNumberOfErrors()) {
         throw Array.from(webpackModule.getErrors() as any)[0];
@@ -441,7 +451,8 @@ export class ModuleFactory {
     } catch (err) {
       resolver.reject(err);
     } finally {
-      delete this.context.compilations[filename];
+      //delete this.context.compilations[filename];
+      clearInterval(interval);
     }
 
     return resolver;

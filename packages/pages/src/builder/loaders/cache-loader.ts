@@ -103,71 +103,77 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
     console.info('cache-loader:pitch', this.resourcePath);
   }
 
-  const hasChanged = async (
-    cache: ICache,
-    filename: string,
-    mtime: number = Number.MAX_VALUE
-  ): Promise<boolean> => {
-    if (!(await cache.has(filename))) {
-      return false;
-    }
+  try {
+    const hasChanged = async (
+      cache: ICache,
+      filename: string,
+      mtime: number = Number.MAX_VALUE
+    ): Promise<boolean> => {
+      if (!(await cache.has(filename))) {
+        return false;
+      }
 
-    const [cached, stats] = await Promise.all([
-      cache.modified(filename),
-      new Promise<any>(resolve =>
-        this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
-          if (err) {
-            resolve(null);
-            return;
-          }
+      const [cached, stats] = await Promise.all([
+        cache.modified(filename),
+        new Promise<any>(resolve =>
+          this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
+            if (err) {
+              resolve(null);
+              return;
+            }
 
-          resolve(stats);
-        })
-      ),
-    ]);
-
-    if (
-      !stats ||
-      cached.getTime() > mtime ||
-      stats.mtime.getTime() > cached.getTime()
-    ) {
-      return true;
-    }
-
-    const { dependencies } = JSON.parse(
-      (await cache.get(`${filename}.webpack.json`)).toString()
-    ) as { dependencies: Record<string, number> };
-
-    if (dependencies[filename]) {
-      delete dependencies[filename];
-    }
-
-    const results = await cache.lock(
-      [
-        ...Object.keys(dependencies),
-        ...Object.keys(dependencies).map(
-          filename => `${filename}.webpack.json`
+            resolve(stats);
+          })
         ),
-      ],
-      async cache =>
-        Promise.all(
-          Object.entries(dependencies).map(([filename, mtime]) =>
-            hasChanged(cache, filename, mtime)
+      ]);
+
+      if (
+        !stats ||
+        cached.getTime() > mtime ||
+        stats.mtime.getTime() > cached.getTime()
+      ) {
+        return true;
+      }
+
+      const { dependencies } = JSON.parse(
+        (await cache.get(`${filename}.webpack.json`)).toString()
+      ) as { dependencies: Record<string, number> };
+
+      if (dependencies[filename]) {
+        delete dependencies[filename];
+      }
+
+      const results = await cache.lock(
+        [
+          ...Object.keys(dependencies),
+          ...Object.keys(dependencies).map(
+            filename => `${filename}.webpack.json`
+          ),
+        ],
+        async cache =>
+          Promise.all(
+            Object.entries(dependencies).map(([filename, mtime]) =>
+              hasChanged(cache, filename, mtime)
+            )
           )
-        )
-    );
+      );
 
-    return results.reduce((a, b) => a || b, false);
-  };
+      return results.reduce((a, b) => a || b, false);
+    };
 
-  return cache.lock(
-    [this.resourcePath, `${this.resourcePath}.webpack.json`],
-    async cache => {
-      if (await cache.has(this.resourcePath)) {
-        if (!(await hasChanged(cache, this.resourcePath))) {
-          return await cache.get(this.resourcePath);
+    return cache.lock(
+      [this.resourcePath, `${this.resourcePath}.webpack.json`],
+      async cache => {
+        if (await cache.has(this.resourcePath)) {
+          if (!(await hasChanged(cache, this.resourcePath))) {
+            return await cache.get(this.resourcePath);
+          }
         }
       }
+    );
+  } finally {
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('cache-loader:pitch-complete', this.resourcePath);
     }
-  );
+  }
 }

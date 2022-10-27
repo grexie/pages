@@ -247,12 +247,9 @@ class AssetCompiler {
 
         if (changed) {
           const factory = this.context.modules.createModuleFactory(compilation);
-          await this.context.build.modules.evict(factory, this.resourcePath);
-          // this.context.build.modules.require(
-          //   factory,
-          //   path.dirname(this.resourcePath),
-          //   this.resourcePath
-          // );
+          await this.context.build.modules.evict(factory, this.resourcePath, {
+            fail: false,
+          });
         }
 
         resolver.resolve();
