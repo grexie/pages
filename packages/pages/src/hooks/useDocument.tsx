@@ -19,7 +19,9 @@ export const useDocument = (props?: DocumentProps) => {
 
   useMemo(() => {
     if (props) {
-      Object.assign(document.props, props);
+      const { children, ..._props } = props;
+      Object.assign(document.props, _props);
+      document.props.children = [...document.props.children, ...children];
     }
   }, [document, JSON.stringify(props)]);
 

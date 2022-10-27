@@ -3,13 +3,26 @@ import { BuildContext } from '../BuildContext';
 import path from 'path';
 import { createHash } from 'crypto';
 import webpack from 'webpack';
-import sharp from 'sharp';
+import sharp, { Metadata } from 'sharp';
 import { transform } from '@svgr/core';
+import { transform as babelTransform } from '@babel/core';
 
 const { RawSource } = webpack.sources;
 interface ImageLoaderOptions {
   context: BuildContext;
 }
+
+const SvgrTemplate =
+  (metadata: Metadata) =>
+  ({ imports, props, jsx }: any, { tpl }: any) => {
+    return tpl`
+    ${imports}
+    import { wrapImageComponent } from '@grexie/pages/runtime/image' ;
+    export default wrapImageComponent((${props}) => ${jsx}, ${JSON.stringify(
+      metadata
+    )});
+  `;
+  };
 
 export default async function ImageLoader(
   this: LoaderContext<ImageLoaderOptions>
@@ -45,22 +58,25 @@ export default async function ImageLoader(
         content.toString(),
         {
           icon: true,
-          jsx: {
-            babelConfig: {
-              presets: [
-                require('@babel/preset-react'),
-                [require('@babel/preset-env'), { modules: 'commonjs' }],
-              ],
-            },
+          template: SvgrTemplate(metadata),
+          expandProps: 'end',
+          replaceAttrValues: {
+            '#000': 'currentColor',
+            '#000000': 'currentColor',
+            '#558eff': 'currentColor',
           },
         },
-        { filePath: path.relative(context.rootDir, this.resourcePath) }
+        {
+          filePath: path.relative(context.rootDir, this.resourcePath),
+        }
       );
-      jsCode = `
-        const { wrapImageComponent } = require('@grexie/pages/runtime/image');
-        module.exports = wrapImage(${JSON.stringify(
-          path.resolve('/', filename)
-        )}, ${JSON.stringify(metadata)});`;
+
+      jsCode = babelTransform(jsCode, {
+        presets: [
+          require('@babel/preset-react'),
+          [require('@babel/preset-env'), { modules: 'commonjs' }],
+        ],
+      })?.code!;
     } else {
       this._compilation?.emitAsset(filename, new RawSource(content, false));
     }
