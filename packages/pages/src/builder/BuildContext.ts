@@ -114,10 +114,15 @@ export class BuildContext extends Context {
           ])
         ),
         forceCompile: Array.from(
-          new Set([...(resolver.forceCompile ?? []), '@mdx-js/mdx'])
+          new Set([
+            ...(resolver.forceCompile ?? []),
+            '@mdx-js/mdx',
+            path.resolve(__dirname, '..', 'runtime'),
+          ])
         ),
       },
     });
+
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
         new provider({

@@ -30,7 +30,7 @@ export default async function StyleLoader(
     const hash = createHash('md5').update(css).digest('hex').substring(0, 8);
 
     return `
-    const { wrapStyles } = require('@grexie/pages/utils/styles');
+    const { wrapStyles } = require('@grexie/pages/runtime/styles');
     module.exports = wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
       css
     )}, ${JSON.stringify(locals, null, 2)}); 

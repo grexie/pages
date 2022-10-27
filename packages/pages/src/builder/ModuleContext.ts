@@ -680,10 +680,6 @@ export class ModuleResolver {
       return this.#buildImport(request, resolved.filename, true);
     }
 
-    if (containsPath(path.resolve(__dirname, '..'), resolved.filename)) {
-      return this.#buildImport(request, resolved.filename, false);
-    }
-
     const extension = path.extname(resolved.filename);
     if (this.#forceExtensions.includes(extension)) {
       return this.#buildImport(request, resolved.filename);
@@ -720,6 +716,10 @@ export class ModuleResolver {
       ) {
         return this.#buildImport(request, resolved.filename);
       }
+    }
+
+    if (containsPath(path.resolve(__dirname, '..'), resolved.filename)) {
+      return this.#buildImport(request, resolved.filename, false);
     }
 
     if (resolved.descriptionFile) {

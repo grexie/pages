@@ -211,6 +211,7 @@ export class Builder {
               'css-loader',
             ],
             include: /\.global\.css$/,
+            type: 'javascript/auto',
           },
           {
             test: /\.css$/,

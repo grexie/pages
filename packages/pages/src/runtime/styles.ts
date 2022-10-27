@@ -57,7 +57,11 @@ export class StyleSheet {
   }
 }
 
-export const wrapStyles = (hash: string, css: string, locals: Record<string, string>) => {
+export const wrapStyles = (
+  hash: string,
+  css: string,
+  locals: Record<string, string> = {}
+) => {
   const styles = new StyleSheet(hash, css, locals);
 
   const out = styles.classes.bind(styles) as StyleFunction;

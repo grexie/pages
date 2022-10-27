@@ -35,7 +35,7 @@ export default async function ImageLoader(
     this._compilation?.emitAsset(filename, new RawSource(content, false));
 
     return `
-    const { wrapImage } = require('@grexie/pages/utils/image');
+    const { wrapImage } = require('@grexie/pages/runtime/image');
     module.exports = wrapImage(${JSON.stringify(
       path.resolve('/', filename)
     )}, ${JSON.stringify(metadata)});

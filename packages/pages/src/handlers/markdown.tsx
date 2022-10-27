@@ -4,7 +4,7 @@ import grayMatter from 'gray-matter';
 import { useModule } from '../hooks';
 import { Resource } from '../api';
 import { SourceContext } from '../builder/SourceContext';
-import { StyleSheet } from '../utils/styles';
+import { StyleSheet } from '../runtime/styles';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
   const { default: Component, styles } = useModule({ resource: true });
