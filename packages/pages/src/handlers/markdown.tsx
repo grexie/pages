@@ -8,9 +8,15 @@ import { StyleSheet } from '../utils/styles';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
   const { default: Component, styles } = useModule({ resource: true });
-  Object.values(styles).forEach((styles: StyleSheet) => {
+
+  if (typeof styles === 'object') {
+    Object.values(styles as Record<string, StyleSheet>).forEach(styles => {
+      styles.use();
+    });
+  } else if (typeof styles?.use === 'function') {
     styles.use();
-  });
+  }
+
   return <Component components={{ Block: () => <>{children}</> }} />;
 };
 
@@ -22,20 +28,27 @@ export const resource = async (
   const { content, data: metadata } = grayMatter(context.content.toString());
   Object.assign(context.metadata, metadata);
 
-  const stylesheets =
-    'const styles = {' +
-    (
-      Object.entries(context.metadata.styles ?? {}) as unknown as [
-        string,
-        string
-      ][]
-    )
-      .map(
-        ([name, stylesheet]) =>
-          `${name}: require(${JSON.stringify(stylesheet)}).default`
+  let stylesheets = '';
+  if (typeof context.metadata.styles === 'object') {
+    stylesheets =
+      'const styles = {' +
+      (
+        Object.entries(context.metadata.styles ?? {}) as unknown as [
+          string,
+          string
+        ][]
       )
-      .join(', ') +
-    '};\nexports.styles = styles;\n\n';
+        .map(
+          ([name, stylesheet]) =>
+            `${name}: require(${JSON.stringify(stylesheet)})`
+        )
+        .join(', ') +
+      '};\nexports.styles = styles;\n\n';
+  } else if (typeof context.metadata.styles === 'string') {
+    stylesheets = `const styles = require(${JSON.stringify(
+      context.metadata.styles
+    )});\nexports.styles = styles;\n\n`;
+  }
 
   const source = await compile(content, {
     outputFormat: 'program',

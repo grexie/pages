@@ -2,27 +2,36 @@ import { useEffect, useMemo } from 'react';
 import { useStyles } from '../hooks/useStyles';
 
 export type Class = string | Record<string, any> | null | undefined;
+export type StyleUnuseFunction = () => void;
+export type StyleUseFunction = () => StyleUnuseFunction;
+export type StyleFunction = ((...classList: Class[]) => string) & {
+  use: StyleUseFunction;
+  resolve: (cls: string) => string;
+  styleSheet: StyleSheet;
+};
 
 export class StyleSheet {
-  #css: string;
-  #locals: Record<string, string>;
+  readonly hash: string;
+  readonly css: string;
+  readonly locals: Record<string, string>;
 
-  constructor(css: string, locals: Record<string, string>) {
-    this.#css = css;
-    this.#locals = locals;
+  constructor(hash: string, css: string, locals: Record<string, string>) {
+    this.hash = hash;
+    this.css = css;
+    this.locals = locals;
   }
 
   use() {
     const styles = useStyles();
 
     return useMemo(() => {
-      return styles.add(this.#css);
+      return styles.add(this.hash, this.css);
     }, []);
   }
 
   resolve(cls: string) {
-    if (this.#locals[cls]) {
-      return this.#locals[cls];
+    if (this.locals[cls]) {
+      return this.locals[cls];
     } else {
       return cls;
     }
@@ -48,5 +57,13 @@ export class StyleSheet {
   }
 }
 
-export const wrapStyles = (css: string, locals: Record<string, string>) =>
-  new StyleSheet(css, locals);
+export const wrapStyles = (hash: string, css: string, locals: Record<string, string>) => {
+  const styles = new StyleSheet(hash, css, locals);
+
+  const out = styles.classes.bind(styles) as StyleFunction;
+  out.use = styles.use.bind(styles);
+  out.resolve = styles.resolve.bind(styles);
+  out.styleSheet = styles;
+
+  return out;
+};

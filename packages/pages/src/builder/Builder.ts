@@ -227,6 +227,10 @@ export class Builder {
             include: /\.global\.css$/,
           },
           {
+            test: /\.(png|jpe?g|gif|webp)$/,
+            use: [this.#loader('image-loader')],
+          },
+          {
             type: 'javascript/esm',
             test: require.resolve(
               path.resolve(this.context.pagesDir, 'defaults.pages')

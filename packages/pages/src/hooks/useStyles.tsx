@@ -7,10 +7,10 @@ export interface StylesProviderProps {
 }
 
 export class StylesContext extends EventEmitter {
-  #styles = new Set<{ css: string }>();
+  #styles = new Set<{ hash: string; css: string }>();
 
-  add(css: string) {
-    const entry = { css } as { css: string };
+  add(hash: string, css: string) {
+    const entry = { hash, css } as { hash: string; css: string };
     this.#styles.add(entry);
     this.emit('update');
     return () => {
@@ -19,10 +19,19 @@ export class StylesContext extends EventEmitter {
     };
   }
 
-  [Symbol.iterator](): Iterator<string> {
-    return [...new Set<string>([...this.#styles].map(({ css }) => css))][
-      Symbol.iterator
-    ]();
+  [Symbol.iterator](): Iterator<{ hash: string; css: string }> {
+    const stylesMap = [...this.#styles].reduce((a, { hash, css }) => {
+      if (hash in a) {
+        return a;
+      } else {
+        return { ...a, [hash]: css };
+      }
+    }, {}) as Record<string, string>;
+    const styles = Object.keys(stylesMap).map(hash => ({
+      hash,
+      css: stylesMap[hash],
+    }));
+    return styles[Symbol.iterator]();
   }
 }
 
@@ -42,4 +51,16 @@ export const useStyles = () => {
   }, []);
 
   return styles;
+};
+
+export const Styles = () => {
+  const styles = useStyles();
+
+  return (
+    <>
+      {[...styles].map(({ hash, css }) => (
+        <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
+      ))}
+    </>
+  );
 };

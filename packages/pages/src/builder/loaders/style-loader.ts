@@ -1,5 +1,6 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext';
+import { createHash } from 'crypto';
 
 interface StyleLoaderOptions {
   context: BuildContext;
@@ -10,7 +11,7 @@ export default async function StyleLoader(
   content: Buffer
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-    console.info('style-loader', this.resourcePath, this.request);
+    console.info('style-loader', this.resourcePath);
   }
   const { context } = this.getOptions();
   const factory = context.modules.createModuleFactory(this._compilation!);
@@ -26,13 +27,13 @@ export default async function StyleLoader(
     const styles = stylesModule.load(module).exports.default;
     const css = styles.toString();
     const { locals } = styles;
+    const hash = createHash('md5').update(css).digest('hex').substring(0, 8);
+
     return `
     const { wrapStyles } = require('@grexie/pages/utils/styles');
-    module.exports = wrapStyles(${JSON.stringify(css)}, ${JSON.stringify(
-      locals,
-      null,
-      2
-    )}); 
+    module.exports = wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
+      css
+    )}, ${JSON.stringify(locals, null, 2)}); 
   `;
   } finally {
     await context.modules.evict(factory, this.resourcePath, {
