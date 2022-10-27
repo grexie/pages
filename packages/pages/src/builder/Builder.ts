@@ -228,8 +228,12 @@ export class Builder {
             include: /\.module\.css$/,
           },
           {
-            test: /\.(png|jpe?g|gif|webp)$/,
-            use: [this.#loader('image-loader'), 'raw-loader'],
+            test: /\.(png|jpe?g|gif|webp|svg)$/,
+            use: [
+              this.#loader('cache-loader'),
+              this.#loader('image-loader'),
+              'raw-loader',
+            ],
           },
           {
             type: 'javascript/esm',

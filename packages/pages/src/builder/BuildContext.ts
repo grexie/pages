@@ -110,6 +110,7 @@ export class BuildContext extends Context {
               '.png',
               '.webp',
               '.gif',
+              '.svg',
             ]),
           ])
         ),

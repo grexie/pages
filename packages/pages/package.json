@@ -16,6 +16,7 @@
     "@grexie/compose": "^0.1.8",
     "@grexie/pages-cli": "^0.0.3",
     "@mdx-js/mdx": "^2.1.1",
+    "@svgr/core": "^6.5.0",
     "babel-loader": "^8.2.5",
     "classnames": "^2.3.2",
     "css-loader": "^6.7.1",
