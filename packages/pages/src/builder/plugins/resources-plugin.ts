@@ -170,11 +170,148 @@ class SourceCompiler {
   }
 }
 
+class AssetCompiler {
+  readonly context: CompilationContext;
+  readonly resourcePath: string;
+
+  constructor(context: CompilationContext, resourcePath: string) {
+    this.context = context;
+    this.resourcePath = resourcePath;
+  }
+
+  async hasChanged(
+    compiler: Compiler,
+    filename: string,
+    seen: Record<string, boolean> = {},
+    defaultForNoMeta: boolean = true
+  ): Promise<boolean> {
+    if (seen[filename]) {
+      return false;
+    }
+
+    seen[filename] = true;
+
+    const meta = await this.context.modules.meta(filename);
+    if (!meta) {
+      return defaultForNoMeta;
+    }
+
+    const stat = promisify(
+      compiler.inputFileSystem,
+      compiler.inputFileSystem.stat
+    );
+    try {
+      const stats = await stat(filename);
+      if (stats.mtimeMs > meta.mtime) {
+        return true;
+      }
+    } catch (err) {
+      return false;
+    }
+
+    const results = await Promise.all(
+      meta.dependencies.map(dependency =>
+        this.hasChanged(compiler, dependency, seen, false)
+      )
+    );
+    return results.reduce((a, b) => a || b, false);
+  }
+
+  apply(compiler: Compiler) {
+    compiler.hooks.make.tapPromise('AssetCompiler', async compilation => {
+      const resolver = createResolver();
+      this.context.build.modules.addBuild(this.resourcePath, resolver);
+
+      this.context.promises[this.resourcePath] = resolver;
+      let buffer: Buffer | undefined;
+      try {
+        compilation.fileDependencies.add(this.resourcePath);
+
+        const changed = await this.hasChanged(
+          compilation.compiler,
+          this.resourcePath
+        );
+
+        const meta = await this.context.modules.meta(this.resourcePath);
+        if (meta) {
+          meta.dependencies.forEach(dependency =>
+            compilation.fileDependencies.add(dependency)
+          );
+
+          await Promise.all(
+            meta.dependencies.map(
+              dependency => this.context.promises[dependency]
+            )
+          );
+        }
+
+        if (changed) {
+          const factory = this.context.modules.createModuleFactory(compilation);
+          await this.context.build.modules.evict(factory, this.resourcePath);
+          // this.context.build.modules.require(
+          //   factory,
+          //   path.dirname(this.resourcePath),
+          //   this.resourcePath
+          // );
+        }
+
+        resolver.resolve();
+      } catch (err) {
+        resolver.reject(err);
+        throw err;
+      }
+    });
+  }
+}
+
 export class ResourcesPlugin {
   readonly context: BuildContext;
 
   constructor({ context }: ResourcesPluginOptions) {
     this.context = context;
+  }
+
+  processDependencies(
+    context: CompilationContext,
+    compiler: Compiler,
+    compilation: Compilation,
+    sources: Source[],
+    seen: Set<string>,
+    _dependencies: Set<string>
+  ) {
+    const resolver = createResolver();
+    const process = async () => {
+      const dependencies = [..._dependencies];
+      _dependencies.clear();
+
+      await Promise.all(
+        dependencies.map(async dependency => {
+          const child = compilation.createChildCompiler(
+            'AssetCompiler',
+            {
+              clean: false,
+            },
+            [new AssetCompiler(context, dependency)]
+          );
+
+          const promise = (context.promises[dependency] = new Promise<void>(
+            (resolve, reject) =>
+              child.runAsChild(err => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+
+                resolve();
+              })
+          ));
+
+          await promise;
+        })
+      );
+    };
+
+    return { resolver, process };
   }
 
   apply(compiler: Compiler) {
@@ -186,8 +323,23 @@ export class ResourcesPlugin {
         compilation,
       });
 
-      await Promise.all(
-        sources.map(async source => {
+      const seen = new Set<string>([...sources].map(source => source.filename));
+      const dependenciesToProcess = new Set<string>();
+      const { resolver: dependencyResolver, process: processDependencies } =
+        this.processDependencies(
+          context,
+          compiler,
+          compilation,
+          sources,
+          seen,
+          dependenciesToProcess
+        );
+
+      let sourceCount = sources.length;
+
+      await Promise.all([
+        dependencyResolver,
+        ...sources.map(async source => {
           const child = compilation.createChildCompiler(
             'SourceCompiler',
             {
@@ -196,6 +348,21 @@ export class ResourcesPlugin {
             [new SourceCompiler(context, source)]
           );
           context.compilers[source.filename] = child;
+
+          const meta = await this.context.modules.meta(source.filename);
+          meta?.dependencies.forEach(dependency => {
+            if (!seen.has(dependency)) {
+              seen.add(dependency);
+              dependenciesToProcess.add(dependency);
+            }
+          });
+          processDependencies();
+          if (--sourceCount === 0) {
+            dependencyResolver.resolve();
+          }
+
+          await dependencyResolver;
+
           await new Promise<void>((resolve, reject) =>
             child.runAsChild(err => {
               if (err) {
@@ -206,8 +373,8 @@ export class ResourcesPlugin {
               resolve();
             })
           );
-        })
-      );
+        }),
+      ]);
     });
   }
 }
