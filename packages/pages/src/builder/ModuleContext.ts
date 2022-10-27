@@ -124,7 +124,7 @@ export class Module extends EventEmitter {
 
   async persist() {
     if (!this.#module) {
-      throw new Error(`module not loaded ${this.filename}`);
+      this.load(module);
     }
 
     if (this.#persisted) {
@@ -254,7 +254,7 @@ export class Module extends EventEmitter {
     { recompile = false }: ModuleEvictOptions = {}
   ) {
     const promises: Promise<any>[] = [];
-
+    await this.persist();
     await Module.evict(factory, this.filename, { recompile });
     delete this.#module?.require.cache[this.filename];
 
@@ -451,7 +451,7 @@ export class ModuleFactory {
     } catch (err) {
       resolver.reject(err);
     } finally {
-      //delete this.context.compilations[filename];
+      delete this.context.compilations[filename];
       clearInterval(interval);
     }
 

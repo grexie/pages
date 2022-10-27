@@ -143,6 +143,7 @@ export default async function ModuleLoader(
     } else {
       await context.modules.evict(factory, this.resourcePath, {
         recompile: true,
+        fail: false,
       });
       resolver.resolve();
       return `

@@ -79,6 +79,8 @@ class SourceCompiler {
       compilation.fileDependencies.add(filename)
     );
 
+    await handlerModule.persist();
+
     return buffer;
   }
 
@@ -154,6 +156,7 @@ class SourceCompiler {
 
         resolver.resolve();
       } catch (err) {
+        console.error(err);
         resolver.reject(err);
         throw err;
       }

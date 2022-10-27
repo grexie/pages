@@ -92,6 +92,7 @@ export class SourceContext extends Source {
     this.once('end', () =>
       this.context.modules.evict(this.factory, module.filename, {
         recompile: true,
+        fail: false,
       })
     );
 

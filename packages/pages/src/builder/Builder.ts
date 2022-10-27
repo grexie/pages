@@ -141,9 +141,7 @@ export class Builder {
     let path = source.path.slice();
     const slug = [...path, 'index'].join('/');
     return {
-      // [slug]: {
-      //   import: `./${_path.relative(this.context.rootDir, source.filename)}`,
-      // },
+      [slug]: `./${_path.relative(this.context.rootDir, source.filename)}`,
     };
   }
 
@@ -170,12 +168,12 @@ export class Builder {
         path: this.context.outputDir,
         filename: `[name].js`,
       },
-      externals: [
-        nodeExternals({
-          modulesDir: this.context.modulesDirs[0],
-          additionalModuleDirs: this.context.modulesDirs.slice(1),
-        }),
-      ],
+      // externals: [
+      //   nodeExternals({
+      //     modulesDir: this.context.modulesDirs[0],
+      //     additionalModuleDirs: this.context.modulesDirs.slice(1),
+      //   }),
+      // ],
       module: {
         rules: [
           {
@@ -236,7 +234,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: require.resolve(
               path.resolve(this.context.pagesDir, 'defaults.pages')
             ),
@@ -254,7 +252,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -264,7 +262,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -275,7 +273,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(jsx?|mjs|cjs)$/,
             include: [this.context.rootDir],
             //include: [/node_modules\/@mdx-js/],
@@ -294,7 +292,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(ts|tsx)$/,
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
@@ -331,6 +329,11 @@ export class Builder {
       resolve: {
         alias: {
           '@grexie/pages': this.context.pagesDir,
+          glob: false,
+        },
+        fallback: {
+          util: false,
+          path: require.resolve('path-browserify'),
         },
         extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
         modules: this.context.modulesDirs,
