@@ -23,7 +23,7 @@ export default async function ModuleLoader(
 
   const { context, ...options } = this.getOptions();
   const resolver = createResolver();
-  context.modules.addBuild(this.resourcePath, resolver);
+  await context.modules.addBuild(this.resourcePath, resolver);
 
   try {
     const factory = context.modules.createModuleFactory(this._compilation!);
@@ -139,7 +139,11 @@ export default async function ModuleLoader(
 
       const source = `
       import { wrapHandler } from '@grexie/pages/api/Handler';
-      import { createComposable } from '@grexie/compose';
+      ${
+        composablesRequires.length
+          ? 'import { createComposable } from "@grexie/compose";'
+          : ''
+      }
       import handler from ${JSON.stringify(options.handler)};
       ${serializedResource}
       export default wrapHandler(resource, handler, ${composablesRequires
@@ -152,7 +156,6 @@ export default async function ModuleLoader(
     } else {
       await context.modules.evict(factory, this.resourcePath, {
         recompile: true,
-        fail: false,
       });
 
       const compiled = await transformAsync(handlerModule.source, {

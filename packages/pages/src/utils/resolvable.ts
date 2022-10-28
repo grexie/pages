@@ -34,8 +34,12 @@ export const createResolver = <T = void>() => {
 export class PromiseQueue implements PromiseLike<void> {
   readonly #promises: Promise<any>[] = [];
 
-  add(promise: Promise<any>) {
+  async add(promise: Promise<any>) {
+    const previousPromises = [...this.#promises];
+
     this.#promises.push(promise);
+    console.info('awaiting', previousPromises.length, 'promises');
+    await Promise.all(previousPromises);
   }
 
   then<TResult1 = void, TResult2 = never>(

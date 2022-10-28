@@ -12,8 +12,6 @@ export default async function CacheLoader(
   content: Buffer
 ) {
   const { context } = this.getOptions();
-  const resolver = createResolver();
-  context.modules.addBuild(this.resourcePath, resolver);
 
   try {
     const cache = context.cache.create('webpack');
@@ -85,13 +83,10 @@ export default async function CacheLoader(
     );
 
     return content;
-  } catch (err) {
-    resolver.reject(err);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('cache-loader:complete', this.resourcePath);
     }
-    resolver.resolve();
   }
 }
 

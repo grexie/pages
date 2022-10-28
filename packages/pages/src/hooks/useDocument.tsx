@@ -17,6 +17,10 @@ const {
 export const useDocument = (props?: DocumentProps) => {
   const document = useDocumentContext();
 
+  if (!document) {
+    throw new Error('document context not found');
+  }
+
   useMemo(() => {
     if (props) {
       const { children, ..._props } = props;

@@ -73,6 +73,10 @@ class SourceCompiler {
       exports.default
     );
 
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('render:rendered', this.source.filename);
+    }
+
     compilation.fileDependencies.add(this.source.filename);
 
     handlerModule.dependencies.forEach(filename =>
@@ -125,7 +129,6 @@ class SourceCompiler {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('SourceCompiler', async compilation => {
       const resolver = createResolver();
-      this.context.build.modules.addBuild(this.source.filename, resolver);
 
       this.context.promises[this.source.filename] = resolver;
       let buffer: Buffer | undefined;
@@ -223,7 +226,7 @@ class AssetCompiler {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('AssetCompiler', async compilation => {
       const resolver = createResolver();
-      this.context.build.modules.addBuild(this.resourcePath, resolver);
+      await this.context.build.modules.addBuild(this.resourcePath, resolver);
 
       this.context.promises[this.resourcePath] = resolver;
       let buffer: Buffer | undefined;

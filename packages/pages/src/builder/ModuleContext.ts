@@ -218,10 +218,10 @@ export class Module extends EventEmitter {
 
   get module() {
     if (!this.#module) {
-      throw new Error(`module ${this.filename} not loaded, did you call load?`);
+      this.load(null as any);
     }
 
-    return this.#module;
+    return this.#module!;
   }
 
   get exports() {
@@ -803,7 +803,7 @@ export class ModuleContext {
     });
   }
 
-  addBuild(filename: string, promise: Promise<void>) {
+  async addBuild(filename: string, promise: Promise<void>) {
     if (!this.#builds[filename]) {
       if (process.env.PAGES_DEBUG_LOADERS === 'true') {
         console.info('build', filename);
@@ -817,7 +817,7 @@ export class ModuleContext {
       });
     }
 
-    this.#builds[filename].add(promise);
+    await this.#builds[filename].add(promise);
   }
 
   createModuleFactory(compilation: Compilation) {
