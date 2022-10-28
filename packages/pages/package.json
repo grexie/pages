@@ -2,6 +2,7 @@
   "name": "@grexie/pages",
   "version": "0.0.3",
   "license": "MIT",
+  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
@@ -50,5 +51,6 @@
     "@types/sharp": "^0.31.0",
     "@types/webpack-node-externals": "^2.5.3",
     "@types/whatwg-url": "^8.2.1"
-  }
+  },
+  "sideEffects": false
 }

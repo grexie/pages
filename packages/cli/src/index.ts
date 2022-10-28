@@ -3,6 +3,8 @@ import path from 'path';
 import chalk from 'chalk';
 import { createRequire } from 'module';
 
+const __dirname = path.dirname(import.meta.url);
+
 type Script = (...args: string[]) => Promise<void>;
 
 const domains = [
@@ -18,13 +20,12 @@ const domains = [
 ];
 
 const importScript = async (name: string): Promise<Script> => {
-  let module: string | null = null;
+  let module: string | undefined;
 
   for (const { domain, parent } of domains) {
     try {
-      const modulePath = path.join(domain, name.replace(/:/g, '/')) + '.js';
-      const require = createRequire(parent ?? process.cwd());
-      module = require.resolve(modulePath);
+      const modulePath = path.join(domain, name.replace(/:/g, '/'));
+      module = await import.meta.resolve?.(modulePath, parent ?? process.cwd());
       break;
     } catch (err) {
       continue;
@@ -35,7 +36,7 @@ const importScript = async (name: string): Promise<Script> => {
     throw new Error();
   }
 
-  const { default: script } = require(module);
+  const { default: script } = await import(module);
   return script;
 };
 
@@ -66,10 +67,11 @@ const main = async (name: string, ...args: string[]) => {
   try {
     script = await importScript(name);
   } catch (err) {
-    console.info(err);
+    console.error();
     console.error(chalk.red(`command ${chalk.bold(name)} not found`));
     console.error();
     console.error(await usage());
+    console.error();
     process.exit(1);
   }
 

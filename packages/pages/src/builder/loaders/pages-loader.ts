@@ -13,7 +13,7 @@ export default async function PagesLoader(
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('pages-loader', this.resourcePath);
   }
-  const { context, ...options } = this.getOptions();
+  const { context } = this.getOptions();
 
   const resolver = createResolver();
   context.modules.addBuild(this.resourcePath, resolver);

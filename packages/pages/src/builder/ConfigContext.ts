@@ -37,9 +37,11 @@ export class ConfigModule {
 
   create(module: NodeModule, extra?: Config): Config {
     const parent = this.parent?.create(module);
-    const { exports } = this.module.load(module);
+    const m = this.module.load(module);
+    const { exports } = m;
     if (!exports.config) {
-      console.info(exports);
+      console.info(this.module.exports);
+      console.info(this.module.vmSource);
       throw new Error(`${this.module.filename} has no config export`);
     }
     const { config: configFactory } = exports;

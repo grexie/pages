@@ -197,29 +197,29 @@ const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
         ])
       );
     },
-    ExportNamedDeclaration(path, node) {
-      if (node.declaration) {
-        if (t.isVariableDeclaration(node.declaration)) {
-          for (const declaration of node.declaration.declarations) {
-            if (t.isVariableDeclaration(declaration)) {
+    ExportNamedDeclaration(path) {
+      if (path.node.declaration) {
+        if (t.isVariableDeclaration(path.node.declaration)) {
+          for (const declaration of path.node.declaration.declarations) {
+            if (t.isVariableDeclarator(declaration)) {
               if (t.isIdentifier((declaration as any).id)) {
                 const { name } = (declaration as any).id;
                 if (name === 'resource') {
                   const index =
-                    node.declaration.declarations.indexOf(declaration);
-                  node.declaration.declarations.splice(index, 1);
+                    path.node.declaration.declarations.indexOf(declaration);
+                  path.node.declaration.declarations.splice(index, 1);
                 }
               }
             }
           }
-          if (node.declaration.declarations.length) {
-            path.replaceWith(node as any);
+          if (path.node.declaration.declarations.length) {
+            path.replaceWith(path.node);
           } else {
             path.remove();
           }
-        } else if (t.isFunctionDeclaration(node.declaration)) {
-          if (t.isIdentifier((node.declaration as any).id)) {
-            const { name } = (node.declaration as any).id;
+        } else if (t.isFunctionDeclaration(path.node.declaration)) {
+          if (t.isIdentifier((path.node.declaration as any).id)) {
+            const { name } = (path.node.declaration as any).id;
             if (name === 'resource') {
               path.remove();
             }

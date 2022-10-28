@@ -1,4 +1,6 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --no-warnings --experimental-specifier-resolution=node --experimental-import-meta-resolve
 
-require('source-map-support/register');
-require('../index').default();
+import 'source-map-support/register.js';
+import run from '../index.js';
+
+run();

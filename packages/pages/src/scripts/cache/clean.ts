@@ -6,6 +6,5 @@ export default async () => {
     fs,
   });
 
-  //await new Promise(() => {});
   await context.cache.clean();
 };

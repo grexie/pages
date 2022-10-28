@@ -20,6 +20,9 @@ import { ModuleContext } from './ModuleContext.new';
 import { Compilation } from 'webpack';
 import path from 'path';
 import webpack from 'webpack';
+import { createRequire } from 'module';
+
+const __dirname = path.dirname();
 
 export class Builder {
   readonly context: BuildContext;
@@ -156,6 +159,8 @@ export class Builder {
   }
 
   async config(sources: Source[]): Promise<Configuration> {
+    const require = createRequire(import.meta.url);
+
     return {
       context: this.context.rootDir,
       entry: {

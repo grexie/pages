@@ -5,6 +5,7 @@
   "bin": {
     "pages": "bin/index.js"
   },
+  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {

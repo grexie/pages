@@ -59,6 +59,7 @@ export interface ModuleOptions {
   context: ModuleContext;
   filename: string;
   source: string;
+  vmSource: string;
   loader: ModuleLoader;
   imports: Record<string, Import>;
   stats: Stats;
@@ -75,6 +76,7 @@ export class Module extends EventEmitter {
   readonly #context: ModuleContext;
   readonly filename: string;
   readonly source: string;
+  readonly vmSource: string;
   readonly load: ModuleLoader;
   readonly imports: Readonly<Record<string, Import>>;
   readonly stats: Stats;
@@ -96,6 +98,7 @@ export class Module extends EventEmitter {
     context,
     filename,
     source,
+    vmSource,
     loader,
     imports,
     stats,
@@ -108,6 +111,7 @@ export class Module extends EventEmitter {
     this.webpackModule = webpackModule;
     this.filename = filename;
     this.source = source;
+    this.vmSource = vmSource;
     this.load = (parent: _Module) => {
       this.#module = loader(parent);
       (this.#module! as any).moduleInfo = this;
@@ -496,10 +500,8 @@ export class ModuleFactory {
             false
           )
         ) {
-          const [{ source, vmSource }, imports] = await Promise.all([
-            cache
-              .get(cacheFile)
-              .then((data: Buffer) => JSON.parse(data.toString())),
+          const [vmSource, imports] = await Promise.all([
+            cache.get(cacheFile).then((data: Buffer) => data.toString()),
             cache
               .get(cacheImportsFile)
               .then(
@@ -507,9 +509,9 @@ export class ModuleFactory {
                   JSON.parse(data.toString()) as Record<string, Import>
               ),
           ]);
+
           return {
             cached: true,
-            source,
             vmSource,
             imports,
             stats: stats[stats.length - 1],
@@ -540,7 +542,6 @@ export class ModuleFactory {
       if (cached.cached) {
         return {
           stats: cached.stats,
-          source: cached.source!,
           vmSource: cached.vmSource!,
           imports: cached.imports!,
         };
@@ -559,11 +560,7 @@ export class ModuleFactory {
       );
 
       await Promise.all([
-        cache.set(
-          cacheFile,
-          JSON.stringify({ source, vmSource }),
-          cached.stats.mtime
-        ),
+        cache.set(cacheFile, vmSource, cached.stats.mtime),
         cache.set(
           cacheImportsFile,
           JSON.stringify(imports),
@@ -571,7 +568,7 @@ export class ModuleFactory {
         ),
       ]);
 
-      return { stats: cached.stats, source, imports };
+      return { stats: cached.stats, vmSource, imports };
     });
   }
 }
@@ -985,13 +982,7 @@ export class ModuleContext {
       _module.require = this.#createRequire(_module, __filename);
       _module.require.cache[__filename] = _module;
 
-      script(
-        _module.exports,
-        _module.require,
-        _module,
-        __filename,
-        factory.dirname(__filename)
-      );
+      script(_module.exports, _module.require, _module, __filename, __dirname);
 
       return _module;
     };
@@ -1001,6 +992,7 @@ export class ModuleContext {
       context: this,
       filename,
       source,
+      vmSource,
       loader,
       imports,
       stats,

@@ -9,6 +9,9 @@ import os from 'os';
 import { ConfigContext } from './ConfigContext';
 import { Volume } from 'memfs';
 import { ModuleDependencies } from './ModuleDependencies';
+import { createRequire } from 'module';
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -60,6 +63,8 @@ export class BuildContext extends Context {
       ...opts
     } = Object.assign(defaultOptions(), options);
     super({ isBuild: true, ...opts });
+
+    const require = createRequire(import.meta.url);
 
     this.rootDir = rootDir;
     this.cacheDir = cacheDir;

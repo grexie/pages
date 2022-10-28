@@ -66,7 +66,8 @@ export class ModuleResource<
       plugins: [handlerResourcePlugin],
     });
 
-    return `${compiled!.code}\nexport const resource = {
+    return `const __handler_exports = {};
+      ${compiled!.code}\nexport const resource = {
       path: ${JSON.stringify(this.path)},
       slug: ${JSON.stringify(this.slug)},
       metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},

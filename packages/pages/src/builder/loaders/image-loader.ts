@@ -74,7 +74,7 @@ export default async function ImageLoader(
       jsCode = babelTransform(jsCode, {
         presets: [
           require('@babel/preset-react'),
-          [require('@babel/preset-env'), { modules: 'commonjs' }],
+          [require('@babel/preset-env'), { modules: false }],
         ],
       })?.code!;
     } else {
