@@ -22,7 +22,7 @@ import path from 'path';
 import webpack from 'webpack';
 import { createRequire } from 'module';
 
-const __dirname = path.dirname();
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export class Builder {
   readonly context: BuildContext;
@@ -244,9 +244,7 @@ export class Builder {
           },
           {
             type: 'javascript/esm',
-            test: require.resolve(
-              path.resolve(this.context.pagesDir, 'defaults.pages')
-            ),
+            test: /\.pages\.([mc]?js|ts)$/,
             use: [
               this.#loader('cache-loader'),
               this.#loader('pages-loader'),
@@ -359,7 +357,7 @@ export class Builder {
         modules: this.context.modulesDirs,
       },
       resolveLoader: {
-        extensions: ['.js', '.ts'],
+        extensions: ['.mjs', '.js', '.ts'],
         modules: [
           path.resolve(__dirname, 'loaders'),
           ...this.context.modulesDirs,

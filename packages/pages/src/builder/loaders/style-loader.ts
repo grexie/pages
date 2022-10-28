@@ -24,7 +24,7 @@ export default async function StyleLoader(
       content.toString()
     );
 
-    const styles = stylesModule.load(module).exports.default;
+    const styles = stylesModule.load(null as any).exports.default;
     const css = styles.toString();
     const { locals } = styles;
     const hash = createHash('md5').update(css).digest('hex').substring(0, 8);

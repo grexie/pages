@@ -1,4 +1,6 @@
 declare module 'es-main';
+declare module '@babel/preset-env';
+declare module '@babel/preset-react';
 
 declare module '*.css';
 

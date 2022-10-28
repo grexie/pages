@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { BuildContext } from './BuildContext';
 import { Cache, ICache, Stats } from '@grexie/builder';
 import webpack, { Compilation, Module as WebpackModule } from 'webpack';
-import _Module from 'module';
+import _Module, { createRequire } from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
 import { Script } from 'vm';
 import path from 'path';
@@ -13,6 +13,8 @@ import {
 } from '../utils/resolvable';
 import { promisify } from '../utils/promisify';
 import { KeyedMutex } from '../utils/mutex';
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 const { ModuleDependency } = webpack.dependencies;
 
@@ -127,10 +129,6 @@ export class Module extends EventEmitter {
   }
 
   async persist() {
-    if (!this.#module) {
-      this.load(module);
-    }
-
     if (this.#persisted) {
       return;
     }
@@ -272,7 +270,7 @@ export class Module extends EventEmitter {
     const finish = createResolver();
     this.#evict.resolve({ finish });
     await finish;
-    this.emit('evict', module);
+    this.emit('evict', this);
   }
 }
 
@@ -585,6 +583,7 @@ export class ModuleResolver {
   readonly #extensions: string[];
   readonly #forceExtensions: string[];
   readonly #descriptions: Record<string, any> = {};
+  readonly #require: NodeRequire;
 
   constructor({
     context,
@@ -592,6 +591,7 @@ export class ModuleResolver {
     forceCompile = [],
     forceExtensions = [],
   }: ModuleResolverOptions & { context: ModuleContext }) {
+    this.#require = createRequire(import.meta.url);
     this.context = context;
     this.#forceCompile = Array.from(
       new Set([this.context.rootDir, ...forceCompile])
@@ -689,8 +689,8 @@ export class ModuleResolver {
 
     if (
       resolved.filename ===
-      require.resolve(
-        path.resolve(this.context.build.pagesDir, 'defaults.pages')
+      this.#require.resolve(
+        path.resolve(this.context.build.pagesDir, 'defaults.pages.mjs')
       )
     ) {
       return this.#buildImport(request, resolved.filename, true);

@@ -1,7 +1,12 @@
 import type { ModuleContext } from './ModuleContext';
 import { transformAsync } from '@babel/core';
-import traverse from '@babel/traverse';
+import _traverse from '@babel/traverse';
 import * as t from '@babel/types';
+import babelPresetEnv from '@babel/preset-env';
+
+type Traverse = typeof _traverse;
+
+const { default: traverse } = _traverse as unknown as { default: Traverse };
 
 export interface ModuleCompilerOptions {
   context: ModuleContext;
@@ -32,7 +37,7 @@ export class ModuleCompiler {
       presets: [
         ...presets,
         [
-          require('@babel/preset-env'),
+          babelPresetEnv,
           {
             modules: 'commonjs',
           },

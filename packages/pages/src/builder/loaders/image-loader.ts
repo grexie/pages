@@ -6,6 +6,8 @@ import webpack from 'webpack';
 import sharp, { Metadata } from 'sharp';
 import { transform } from '@svgr/core';
 import { transform as babelTransform } from '@babel/core';
+import babelPresetReact from '@babel/preset-react';
+import babelPresetEnv from '@babel/preset-env';
 
 const { RawSource } = webpack.sources;
 interface ImageLoaderOptions {
@@ -72,10 +74,7 @@ export default async function ImageLoader(
       );
 
       jsCode = babelTransform(jsCode, {
-        presets: [
-          require('@babel/preset-react'),
-          [require('@babel/preset-env'), { modules: false }],
-        ],
+        presets: [babelPresetReact, [babelPresetEnv, { modules: false }]],
       })?.code!;
     } else {
       this._compilation?.emitAsset(filename, new RawSource(content, false));

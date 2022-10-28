@@ -62,7 +62,7 @@ class SourceCompiler {
       console.info('render:handler', this.source.filename);
     }
 
-    const { exports } = handlerModule.load(module);
+    const { exports } = handlerModule.load(null as any);
 
     const resourceContext = new ResourceContext();
 
