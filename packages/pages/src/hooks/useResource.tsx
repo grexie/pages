@@ -84,6 +84,7 @@ const {
   Provider =>
     ({ resource, children }) => {
       const parentResourceContext = useResourceContext();
+
       const resourceContext = useMemo(() => {
         let resourceContext = parentResourceContext;
         if (resourceContext.resource) {

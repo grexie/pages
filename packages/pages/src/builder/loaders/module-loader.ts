@@ -55,20 +55,17 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
-    const configModule = await context.config.create(
-      factory,
-      path,
-      handlerModule
-    );
+    const configModule = await context.config.create(factory, path);
     configModule.ancestors.forEach(({ module }) => {
       if (module) {
         this.addDependency(module.filename);
       }
     });
+    await handlerModule.load();
 
-    const handler = handlerModule.load(null as any).exports as Handler;
+    const handler = handlerModule.exports as Handler;
     const handlerConfig = { metadata: {} };
-    const config = configModule.create(handlerModule.module, handlerConfig);
+    const config = await configModule.create(handlerConfig);
 
     let resource: Resource | undefined = undefined;
 
@@ -123,11 +120,8 @@ export default async function ModuleLoader(
 
       this.addDependency(layoutModule.filename);
 
-      composables.push(
-        createComposable(
-          layoutModule.load(handlerModule.module!).exports.default
-        )
-      );
+      await layoutModule.load();
+      composables.push(createComposable(layoutModule.exports.default));
     }
 
     sourceContext.emit('end');

@@ -1,6 +1,7 @@
 import { BuildContext } from './BuildContext';
 import { ResourceMetadata, Source } from '../api';
 import { Module, ModuleFactory } from './ModuleContext';
+import { Module as VMModule } from 'vm';
 import { ObjectProxy } from '../utils/proxy';
 import path from 'path';
 
@@ -35,13 +36,11 @@ export class ConfigModule {
     return out;
   }
 
-  create(module: NodeModule, extra?: Config): Config {
-    const parent = this.parent?.create(module);
-    const m = this.module.load(module);
-    const { exports } = m;
+  async create(extra?: Config): Promise<Config> {
+    const parent = this.parent?.create();
+    await this.module.load();
+    const { exports } = this.module;
     if (!exports.config) {
-      console.info(this.module.exports);
-      console.info(this.module.vmSource);
       throw new Error(`${this.module.filename} has no config export`);
     }
     const { config: configFactory } = exports;
@@ -74,23 +73,17 @@ export class ConfigContext {
   async #createConfigModule(
     factory: ModuleFactory,
     parent: ConfigModule | undefined,
-    source: Source,
-    parentModule: Module
+    source: Source
   ): Promise<ConfigModule> {
     const _module = await this.context.modules.require(
       factory,
       source.dirname,
-      source.filename,
-      parentModule
+      source.filename
     );
     return new ConfigModule({ parent, module: _module });
   }
 
-  async create(
-    factory: ModuleFactory,
-    path: string[],
-    parent: Module
-  ): Promise<ConfigModule> {
+  async create(factory: ModuleFactory, path: string[]): Promise<ConfigModule> {
     const sources = await this.context.registry.listConfig({ path });
     sources.sort((a, b) => a.path.length - b.path.length);
     let configModule: ConfigModule | undefined;
@@ -98,8 +91,7 @@ export class ConfigContext {
       configModule = await this.#createConfigModule(
         factory,
         configModule,
-        source,
-        parent
+        source
       );
     }
     if (!configModule) {

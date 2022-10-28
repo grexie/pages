@@ -2,9 +2,9 @@ import { EventEmitter } from 'events';
 import { BuildContext } from './BuildContext';
 import { Cache, ICache, Stats } from '@grexie/builder';
 import webpack, { Compilation, Module as WebpackModule } from 'webpack';
-import _Module, { createRequire } from 'module';
+import { createRequire } from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
-import { Script } from 'vm';
+import { Module as _Module, createContext, SourceTextModule } from 'vm';
 import path from 'path';
 import {
   createResolver,
@@ -37,25 +37,13 @@ const containsPath = (root: string, p: string) => {
   );
 };
 
-const cloneRequire = (
-  original: _Module,
-  fn: (request: string) => any
-): NodeRequire => {
-  const require = fn as NodeRequire;
-  require.resolve = original.require.resolve;
-  require.main = original.require.main;
-  require.cache = original.require.cache;
-  require.extensions = original.require.extensions;
-  return require;
-};
-
 interface Import {
   readonly compile?: boolean;
   readonly builtin?: boolean;
   readonly filename: string;
 }
 
-type ModuleLoader = (parent: _Module) => _Module;
+type ModuleLoader = () => Promise<_Module>;
 
 export interface ModuleOptions {
   context: ModuleContext;
@@ -114,9 +102,9 @@ export class Module extends EventEmitter {
     this.filename = filename;
     this.source = source;
     this.vmSource = vmSource;
-    this.load = (parent: _Module) => {
-      this.#module = loader(parent);
-      (this.#module! as any).moduleInfo = this;
+    this.load = async () => {
+      this.#module = await loader();
+      (this.#module as any).moduleInfo = this;
       return this.#module;
     };
     this.imports = imports;
@@ -170,7 +158,7 @@ export class Module extends EventEmitter {
       ...this.dependencies.map(async dependency => {
         const module = await this.#context.modules[dependency];
         if (module) {
-          module.load(this.module);
+          await module.load();
           await module.persist();
         }
       }),
@@ -218,14 +206,14 @@ export class Module extends EventEmitter {
 
   get module() {
     if (!this.#module) {
-      this.load(null as any);
+      this.load();
     }
 
     return this.#module!;
   }
 
-  get exports() {
-    return this.module.exports;
+  get exports(): any {
+    return this.module.namespace;
   }
 
   static async evict(
@@ -258,7 +246,6 @@ export class Module extends EventEmitter {
     const promises: Promise<any>[] = [];
     await this.persist();
     await Module.evict(factory, this.filename, { recompile });
-    delete this.#module?.require.cache[this.filename];
 
     promises.push(
       ...this.dependents.map(dependent =>
@@ -866,31 +853,6 @@ export class ModuleContext {
     return module;
   }
 
-  #createRequire(_module: _Module, _filename: string) {
-    const _require = _module.require;
-    const parentModule = this.loadedModules[_filename];
-
-    _module.require = cloneRequire(_module, request => {
-      const {
-        compile = false,
-        builtin = false,
-        filename = request,
-      } = parentModule?.imports[request] ?? {};
-
-      if (!parentModule || builtin || !compile) {
-        const exports = _require(filename);
-        return exports;
-      }
-
-      const childModule = this.loadedModules[filename];
-      parentModule.addDependency(childModule);
-      const { exports } = childModule.load(_module);
-      return exports;
-    });
-
-    return _module.require;
-  }
-
   async create(
     factory: ModuleFactory,
     webpackModule: WebpackModule,
@@ -963,26 +925,36 @@ export class ModuleContext {
 
     const modules = await Promise.all(Object.values(imports).map(next));
 
-    const script = new Script(wrapScript(vmSource), {
-      filename,
-      displayErrors: true,
-    }).runInThisContext() as WrappedScript;
+    const vmContext = createContext(global);
+    const sourceTextModule = new SourceTextModule(source, {
+      context: vmContext,
+      initializeImportMeta: (meta, module) => {},
+      identifier: filename,
+      importModuleDynamically: async (
+        specified,
+        parentModule,
+        importAssertions
+      ) => {
+        const m = await this.require(factory, context, specified, module);
+        await m.load();
+        return m.module;
+      },
+    });
 
-    let _module: _Module;
-    const loader = (parent: _Module) => {
-      if (_module) {
-        return _module;
+    let _module = await sourceTextModule.link((async (specifier: string) => {
+      const require = imports[specifier];
+      let module = await this.modules[require.filename];
+
+      if (!module) {
+        module = await this.require(factory, context, specifier);
       }
 
-      const __filename = factory.filename(filename);
-      const __dirname = factory.dirname(filename);
+      await module.load();
+      return module.module;
+    }) as any);
 
-      _module = new _Module(__filename, parent);
-      _module.require = _Module.createRequire(__filename);
-      _module.require = this.#createRequire(_module, __filename);
-      _module.require.cache[__filename] = _module;
-
-      script(_module.exports, _module.require, _module, __filename, __dirname);
+    const loader = async (): Promise<_Module> => {
+      await sourceTextModule.evaluate({});
 
       return _module;
     };

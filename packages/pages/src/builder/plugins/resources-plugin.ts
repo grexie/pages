@@ -2,8 +2,8 @@ import { Source } from '../../api';
 import { BuildContext } from '../BuildContext';
 import webpack, { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { WritableBuffer } from '../../utils/stream';
 import { ResourceContext } from '../../hooks';
+import { WritableBuffer } from '../../utils/stream';
 import { createResolver } from '../../utils/resolvable';
 import { promisify } from '../../utils/promisify';
 
@@ -62,9 +62,22 @@ class SourceCompiler {
       console.info('render:handler', this.source.filename);
     }
 
-    const { exports } = handlerModule.load(null as any);
+    await handlerModule.load();
+    const { exports } = handlerModule;
+
+    // const pagesModule = await this.context.modules.require(
+    //   factory,
+    //   path.dirname(this.source.filename),
+    //   '@grexie/pages'
+    // );
+
+    // const { ResourceContext } = pagesModule.load(null as any).exports;
 
     const resourceContext = new ResourceContext();
+
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('render:rendering', this.source.filename);
+    }
 
     const buffer = await this.context.renderer.render(
       new WritableBuffer(),
