@@ -20,8 +20,8 @@ export class Resource<M extends ResourceMetadata = any> {
     this.metadata = metadata;
   }
 
-  serialize({ serializeMetadata }: ResourceSerializeOptions) {
-    return `{
+  async serialize({ serializeMetadata }: ResourceSerializeOptions) {
+    return `export const resource = {
       path: ${JSON.stringify(this.path)},
       slug: ${JSON.stringify(this.slug)},
       metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
@@ -42,44 +42,5 @@ export class ContentResource<
   constructor({ content, ...options }: ResourceOptions<M> & { content: C }) {
     super(options);
     this.content = content;
-  }
-}
-
-export interface ModuleResourceOptions<
-  X = any,
-  M extends ResourceMetadata = any
-> extends ResourceOptions<M> {
-  source: string;
-  exports: X;
-}
-
-export class ModuleResource<
-  X = any,
-  M extends ResourceMetadata = any
-> extends Resource<M> {
-  readonly #source: string;
-  readonly exports: X;
-
-  constructor({ source, exports, ...options }: ModuleResourceOptions<X, M>) {
-    super(options);
-    this.#source = source;
-    this.exports = exports;
-  }
-
-  serialize({ serializeMetadata }: ResourceSerializeOptions): string {
-    const source = `(() => {
-      var module = { exports: {} };
-      ((exports, module) => {
-        ${this.#source}
-      })(module.exports, module);
-      return module.exports;
-    })()`;
-
-    return `{
-      path: ${JSON.stringify(this.path)},
-      slug: ${JSON.stringify(this.slug)},
-      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
-      exports: ${source},
-    }`;
   }
 }

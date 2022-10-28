@@ -24,14 +24,14 @@ export default async function StyleLoader(
       content.toString()
     );
 
-    const styles = stylesModule.load(module).exports.default;
+    const styles = stylesModule.load(module).exports;
     const css = styles.toString();
     const { locals } = styles;
     const hash = createHash('md5').update(css).digest('hex').substring(0, 8);
 
     return `
-    const { wrapStyles } = require('@grexie/pages/runtime/styles');
-    module.exports = wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
+    import { wrapStyles } from '@grexie/pages/runtime/styles';
+    export default wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
       css
     )}, ${JSON.stringify(locals, null, 2)}); 
   `;

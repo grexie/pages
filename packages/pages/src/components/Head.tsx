@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { useDocument } from '../hooks/useDocument';
 import type { DocumentProps } from '../api/Document';
-import { useLazyComplete } from '../hooks';
+import { useLazyComplete } from '../hooks/useLazy';
 
 const HeadContext = createContext<boolean>(true);
 

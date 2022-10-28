@@ -1,6 +1,6 @@
 import React from 'react';
 import { createContextWithProps } from '../utils/context';
-import { Context } from '../api';
+import { Context } from '../api/Context';
 
 interface ContextProviderProps {
   context: Context;

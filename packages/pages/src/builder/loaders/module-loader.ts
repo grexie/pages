@@ -1,10 +1,12 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext, Module } from '..';
 import _path from 'path';
-import { Resource, Handler, Source } from '../../api';
+import { Resource, Handler } from '../../api';
 import { SourceContext } from '../SourceContext';
 import { createComposable } from '@grexie/compose';
 import { createResolver } from '../../utils/resolvable';
+import babel, { PluginObj, PluginPass, transformAsync } from '@babel/core';
+import types from '@babel/types';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
@@ -89,6 +91,8 @@ export default async function ModuleLoader(
       resource = sourceContext.create();
     }
 
+    console.info(this.resourcePath, resource);
+
     const composables = [];
     const composablesRequires = [];
     let layouts = sourceContext.metadata.layout ?? [];
@@ -128,40 +132,100 @@ export default async function ModuleLoader(
 
     sourceContext.emit('end');
 
+    const serializedResource = await sourceContext.serialize(resource);
+
     if (options.handler) {
       resolver.resolve();
-      return `
-      const { wrapHandler } = require("@grexie/pages");
-      const { createComposable } = require("@grexie/compose");
-      const resource = ${sourceContext.serialize(resource)};
-      const handler = require(${JSON.stringify(options.handler)});
-      wrapHandler(exports, resource, handler, ${composablesRequires
+
+      const source = `
+      import { wrapHandler } from '@grexie/pages/api/Handler';
+      import { createComposable } from '@grexie/compose';
+      import handler from ${JSON.stringify(options.handler)};
+      ${serializedResource}
+      export default wrapHandler(resource, handler, ${composablesRequires
         .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)
         .join(',\n')}
       );
     `;
+      console.info(source);
+      return source;
     } else {
       await context.modules.evict(factory, this.resourcePath, {
         recompile: true,
         fail: false,
       });
+
+      const compiled = await transformAsync(handlerModule.source, {
+        plugins: [handlerModulePlugin],
+      });
+
       resolver.resolve();
-      return `
-      (() => {
-        ${handlerModule.source}
-      })();
-      const { wrapHandler } = require("@grexie/pages");
-      const { createComposable } = require("@grexie/compose");
-      const resource = ${sourceContext.serialize(resource)};
-      wrapHandler(exports, resource, exports,
-        ${composablesRequires
-          .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)
-          .join(',\n')}
-      );
+
+      const source = `
+      ${compiled!.code}
+      import { wrapHandler } from "@grexie/pages/api/Handler";
+      ${
+        composablesRequires.length
+          ? 'import { createComposable } from "@grexie/compose";'
+          : ''
+      }
+      ${serializedResource};
+      export default wrapHandler(resource, __handler_component, ${composablesRequires
+        .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)
+        .join(',\n')});
     `;
+      console.info(source);
+      return source;
     }
   } catch (err) {
     resolver.reject(err);
     throw err;
   }
 }
+
+const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
+  types: t,
+}) => ({
+  visitor: {
+    ExportDefaultDeclaration(path) {
+      path.replaceWith(
+        t.variableDeclaration('const', [
+          t.variableDeclarator(
+            t.identifier('__handler_component'),
+            path.node.declaration as any
+          ),
+        ])
+      );
+    },
+    ExportNamedDeclaration(path, node) {
+      if (node.declaration) {
+        if (t.isVariableDeclaration(node.declaration)) {
+          for (const declaration of node.declaration.declarations) {
+            if (t.isVariableDeclaration(declaration)) {
+              if (t.isIdentifier((declaration as any).id)) {
+                const { name } = (declaration as any).id;
+                if (name === 'resource') {
+                  const index =
+                    node.declaration.declarations.indexOf(declaration);
+                  node.declaration.declarations.splice(index, 1);
+                }
+              }
+            }
+          }
+          if (node.declaration.declarations.length) {
+            path.replaceWith(node as any);
+          } else {
+            path.remove();
+          }
+        } else if (t.isFunctionDeclaration(node.declaration)) {
+          if (t.isIdentifier((node.declaration as any).id)) {
+            const { name } = (node.declaration as any).id;
+            if (name === 'resource') {
+              path.remove();
+            }
+          }
+        }
+      }
+    },
+  },
+});

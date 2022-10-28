@@ -1,11 +1,6 @@
-import {
-  ContentResource,
-  ModuleResource,
-  Resource,
-  Source,
-  SourceOptions,
-} from '../api';
+import { ContentResource, Resource, Source, SourceOptions } from '../api';
 import type { BuildContext, ModuleFactory, Module } from '../builder';
+import { ModuleResource } from './ModuleResource';
 import { Config, ConfigModule } from './ConfigContext';
 import path from 'path';
 import { ObjectProxy } from '../utils/proxy';

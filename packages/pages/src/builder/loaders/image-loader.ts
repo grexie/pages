@@ -47,8 +47,8 @@ export default async function ImageLoader(
     const metadata = await image.metadata();
 
     let jsCode = `
-      const { wrapImage } = require('@grexie/pages/runtime/image');
-      module.exports = wrapImage(${JSON.stringify(
+      import { wrapImage } from '@grexie/pages/runtime/image';
+      export default wrapImage(${JSON.stringify(
         path.resolve('/', filename)
       )}, ${JSON.stringify(metadata)});
     `;

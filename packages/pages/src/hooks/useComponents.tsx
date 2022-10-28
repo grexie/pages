@@ -1,5 +1,5 @@
 import { ComponentType, useMemo } from 'react';
-import { SourceTree } from '../api';
+import { SourceTree } from '../api/Source';
 import { usePath } from './useResource';
 import _path from 'path';
 

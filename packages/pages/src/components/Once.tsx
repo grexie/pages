@@ -9,7 +9,7 @@ import React, {
   FunctionComponent,
   ReactNode,
 } from 'react';
-import { useResource } from '../hooks';
+import { useResource } from '../hooks/useResource';
 
 const DefaultKey = Symbol.for('default');
 
@@ -28,7 +28,7 @@ export const Once: FC<PropsWithChildren<OnceProps>> = ({
   children,
 }) => {
   const resource = useResource({ resource: true });
-
+  
   let ancestorContext = useContext(OnceContext);
 
   const context = useMemo(() => {

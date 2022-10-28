@@ -13,5 +13,5 @@ export default async function YamlLoader(
   const documents = YAML.parseAllDocuments(content.toString());
   const document = documents[documents.length - 1];
 
-  return `module.exports = ${JSON.stringify(document, null, 2)};`;
+  return `export default ${JSON.stringify(document, null, 2)};`;
 }

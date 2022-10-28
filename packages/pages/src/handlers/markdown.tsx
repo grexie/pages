@@ -3,7 +3,7 @@ import { compile } from '@mdx-js/mdx';
 import grayMatter from 'gray-matter';
 import { useModule } from '../hooks';
 import { Resource } from '../api';
-import { SourceContext } from '../builder/SourceContext';
+import type { SourceContext } from '../builder/SourceContext';
 import { StyleSheet } from '../runtime/styles';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {

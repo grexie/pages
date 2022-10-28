@@ -53,13 +53,15 @@ export default async function PagesLoader(
     });
 
     return `
-      const { ObjectProxy } = require('@grexie/pages');
+      import { ObjectProxy } from '@grexie/pages';
 
-      const config = ${JSON.stringify(config, null, 2)};
-      const metadata = ${JSON.stringify(metadata, null, 2)};
+      const _metadata = ${JSON.stringify(metadata, null, 2)};
 
-      exports.config = (parent) => ObjectProxy.create({ metadata, ...config }, parent);
-      exports.metadata = (parent) => ObjectProxy.create(metadata, parent);
+      export const config = (parent) => ObjectProxy.create({
+        metadata: ${JSON.stringify(metadata, null, 2)},
+        ...${JSON.stringify(config, null, 2)}
+      }, parent);
+      export const metadata = (parent) => ObjectProxy.create(_metadata, parent);
     `;
   } catch (err) {
     resolver.reject(err);

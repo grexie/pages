@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { createContextWithProps } from '../utils/context';
-import { ContentResource, ModuleResource, Resource } from '../api';
+import { ContentResource, Resource, ResourceMetadata } from '../api/Resource';
+import type { ModuleResource } from '../builder/ModuleResource';
 import { useDocument } from './useDocument';
 
 const ResourceContextSet = Symbol();
@@ -104,9 +105,10 @@ export interface ResourceQueryOptions {
   resource?: boolean;
 }
 
-export const useResource = <M = any, T extends Resource<M> = Resource<M>>({
-  resource = false,
-}: ResourceQueryOptions = {}) => {
+export const useResource = <
+  M extends ResourceMetadata = any,
+  T extends Resource<M> = Resource<M>
+>({ resource = false }: ResourceQueryOptions = {}) => {
   const parentResource = useResourceUntyped() as T;
   const document = useDocument();
 
@@ -117,8 +119,9 @@ export const useResource = <M = any, T extends Resource<M> = Resource<M>>({
   }
 };
 
-export const useMetadata = <M = any,>(options?: ResourceQueryOptions) =>
-  useResource<M>(options).metadata;
+export const useMetadata = <M extends ResourceMetadata = any>(
+  options?: ResourceQueryOptions
+) => useResource<M>(options).metadata;
 export const useContent = <C = any,>(options?: ResourceQueryOptions) =>
   useResource<any, ContentResource<C>>(options).content;
 export const useModule = <X = any,>(options?: ResourceQueryOptions) =>

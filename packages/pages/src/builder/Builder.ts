@@ -177,6 +177,7 @@ export class Builder {
       module: {
         rules: [
           {
+            type: 'javascript/esm',
             test: /\.scss$/,
             use: [
               this.#loader('cache-loader'),
@@ -187,6 +188,7 @@ export class Builder {
             include: /\.global\.scss$/,
           },
           {
+            type: 'javascript/esm',
             test: /\.scss$/,
             use: [
               this.#loader('cache-loader'),
@@ -202,6 +204,7 @@ export class Builder {
             include: /\.module\.scss$/,
           },
           {
+            type: 'javascript/esm',
             test: /\.css$/,
             use: [
               this.#loader('cache-loader'),
@@ -209,9 +212,9 @@ export class Builder {
               'css-loader',
             ],
             include: /\.global\.css$/,
-            type: 'javascript/auto',
           },
           {
+            type: 'javascript/esm',
             test: /\.css$/,
             use: [
               this.#loader('cache-loader'),
@@ -226,6 +229,7 @@ export class Builder {
             include: /\.module\.css$/,
           },
           {
+            type: 'javascript/esm',
             test: /\.(png|jpe?g|gif|webp|svg)$/,
             use: [
               this.#loader('cache-loader'),
@@ -234,7 +238,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: require.resolve(
               path.resolve(this.context.pagesDir, 'defaults.pages')
             ),
@@ -244,7 +248,10 @@ export class Builder {
               {
                 loader: 'babel-loader',
                 options: {
-                  presets: ['@babel/typescript', '@babel/env'],
+                  presets: [
+                    '@babel/typescript',
+                    ['@babel/env', { loose: true, modules: false }],
+                  ],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                 },
@@ -252,7 +259,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -262,7 +269,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -273,7 +280,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(jsx?|mjs|cjs)$/,
             include: [this.context.rootDir],
             //include: [/node_modules\/@mdx-js/],
@@ -284,7 +291,10 @@ export class Builder {
               {
                 loader: 'babel-loader',
                 options: {
-                  presets: ['@babel/react', '@babel/env'],
+                  presets: [
+                    '@babel/react',
+                    ['@babel/env', { loose: true, modules: false }],
+                  ],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                 },
@@ -292,7 +302,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(ts|tsx)$/,
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
@@ -302,7 +312,11 @@ export class Builder {
               {
                 loader: 'babel-loader',
                 options: {
-                  presets: ['@babel/typescript', '@babel/react', '@babel/env'],
+                  presets: [
+                    '@babel/typescript',
+                    '@babel/react',
+                    ['@babel/env', { loose: true, modules: false }],
+                  ],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                 },
@@ -333,6 +347,7 @@ export class Builder {
         },
         fallback: {
           util: false,
+          fs: false,
           path: require.resolve('path-browserify'),
         },
         extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
@@ -349,6 +364,9 @@ export class Builder {
         pages: {
           context: this.context,
         },
+      },
+      optimization: {
+        usedExports: true,
       },
       plugins: [new ResourcesPlugin({ context: this.context })],
     };

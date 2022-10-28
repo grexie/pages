@@ -496,8 +496,10 @@ export class ModuleFactory {
             false
           )
         ) {
-          const [source, imports] = await Promise.all([
-            cache.get(cacheFile).then((data: Buffer) => data.toString()),
+          const [{ source, vmSource }, imports] = await Promise.all([
+            cache
+              .get(cacheFile)
+              .then((data: Buffer) => JSON.parse(data.toString())),
             cache
               .get(cacheImportsFile)
               .then(
@@ -508,6 +510,7 @@ export class ModuleFactory {
           return {
             cached: true,
             source,
+            vmSource,
             imports,
             stats: stats[stats.length - 1],
           };
@@ -520,7 +523,7 @@ export class ModuleFactory {
 
   async compile(
     context: string,
-    _source: string,
+    source: string,
     filename: string,
     sourceFilename: string,
     resolveImportsDescendants: boolean = true,
@@ -538,15 +541,16 @@ export class ModuleFactory {
         return {
           stats: cached.stats,
           source: cached.source!,
+          vmSource: cached.vmSource!,
           imports: cached.imports!,
         };
       }
 
       const compiled = await this.context.compiler.compile({
-        source: _source,
+        source: source,
         filename,
       });
-      const source = compiled.source;
+      const vmSource = compiled.source;
 
       const imports = await this.resolveImports(
         context,
@@ -555,7 +559,11 @@ export class ModuleFactory {
       );
 
       await Promise.all([
-        cache.set(cacheFile, source, cached.stats.mtime),
+        cache.set(
+          cacheFile,
+          JSON.stringify({ source, vmSource }),
+          cached.stats.mtime
+        ),
         cache.set(
           cacheImportsFile,
           JSON.stringify(imports),
@@ -890,7 +898,7 @@ export class ModuleContext {
     factory: ModuleFactory,
     webpackModule: WebpackModule,
     filename: string,
-    _source: string,
+    source: string,
     sourceFilename: string = filename,
     seen: Set<string> = new Set()
   ): Promise<Module> {
@@ -904,9 +912,9 @@ export class ModuleContext {
 
     this.modules[filename] = promise;
 
-    const { stats, source, imports } = await factory.compile(
+    const { stats, vmSource, imports } = await factory.compile(
       context,
-      _source,
+      source,
       filename,
       sourceFilename,
       true,
@@ -958,7 +966,7 @@ export class ModuleContext {
 
     const modules = await Promise.all(Object.values(imports).map(next));
 
-    const script = new Script(wrapScript(source), {
+    const script = new Script(wrapScript(vmSource), {
       filename,
       displayErrors: true,
     }).runInThisContext() as WrappedScript;

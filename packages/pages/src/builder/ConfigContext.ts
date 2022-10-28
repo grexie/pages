@@ -37,7 +37,12 @@ export class ConfigModule {
 
   create(module: NodeModule, extra?: Config): Config {
     const parent = this.parent?.create(module);
-    const { config: configFactory } = this.module.load(module).exports;
+    const { exports } = this.module.load(module);
+    if (!exports.config) {
+      console.info(exports);
+      throw new Error(`${this.module.filename} has no config export`);
+    }
+    const { config: configFactory } = exports;
     let config = configFactory(parent);
     if (extra) {
       config = ObjectProxy.create<Config>(extra, config);
