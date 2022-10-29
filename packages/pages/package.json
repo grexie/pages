@@ -14,7 +14,7 @@
     "@babel/preset-env": "^7.18.2",
     "@babel/preset-react": "^7.17.12",
     "@babel/preset-typescript": "^7.17.12",
-    "@grexie/compose": "^0.1.8",
+    "@grexie/compose": "^0.1.10",
     "@grexie/pages-cli": "^0.0.3",
     "@mdx-js/mdx": "^2.1.1",
     "@svgr/babel-plugin-transform-svg-component": "^6.5.0",

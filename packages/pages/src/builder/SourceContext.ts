@@ -90,6 +90,7 @@ export class SourceContext extends Source {
       this.filename,
       {
         filename: this.filename,
+        compile: true,
         esm,
       }
     );

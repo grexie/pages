@@ -654,6 +654,10 @@ export class ModuleResolver {
     const realpath = promisify(fs, fs.realpath!);
     const stat = promisify(fs, fs.stat);
 
+    if (/business\/index.md/.test(request)) {
+      debugger;
+    }
+
     if (/\!/.test(request)) {
       const requests = request.split(/\!/g);
       const result = (
@@ -893,14 +897,6 @@ export class ModuleContext {
     console.info('creating synthetic import module', filename);
 
     const exports = await import(filename);
-
-    if (/runtime\/styles/.test(filename)) {
-      console.info(
-        Object.keys(exports),
-        isPlainObject(exports),
-        Object.getPrototypeOf(exports)
-      );
-    }
 
     const module = new SyntheticModule(
       [...Object.keys(exports)],

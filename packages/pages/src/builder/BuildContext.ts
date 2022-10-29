@@ -111,6 +111,7 @@ export class BuildContext extends Context {
         forceExtensions: Array.from(
           new Set([
             ...(resolver.forceExtensions ?? []),
+            '.md',
             '.pages.yml',
             '.pages.yaml',
             '.pages.json',

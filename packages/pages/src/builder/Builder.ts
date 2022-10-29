@@ -367,6 +367,7 @@ export class Builder {
         },
         extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
         modules: this.context.modulesDirs,
+        fullySpecified: false,
       },
       resolveLoader: {
         extensions: ['.mjs', '.js', '.ts'],
