@@ -1,5 +1,5 @@
 import type { ModuleContext } from './ModuleContext';
-import { transformAsync } from '@babel/core';
+import { parseAsync } from '@babel/core';
 import _traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import babelPresetEnv from '@babel/preset-env';
@@ -32,14 +32,14 @@ export class ModuleCompiler {
   }
 
   async compile({ source, filename, presets = [] }: ModuleCompileOptions) {
-    const transpiled = await transformAsync(source, {
+    const transpiled = await parseAsync(source, {
       ast: true,
       presets: [
         ...presets,
         [
           babelPresetEnv,
           {
-            modules: 'commonjs',
+            modules: false,
           },
         ],
       ],
@@ -51,7 +51,7 @@ export class ModuleCompiler {
 
     const imports: string[] = [];
 
-    traverse(transpiled!.ast!, {
+    traverse(transpiled, {
       CallExpression: path => {
         if (
           t.isIdentifier(path.node.callee, {
@@ -65,8 +65,11 @@ export class ModuleCompiler {
           }
         }
       },
+      ImportDeclaration: path => {
+        imports.push(path.node.source.value);
+      },
     });
 
-    return { filename, source: transpiled!.code!, imports };
+    return { filename, imports };
   }
 }

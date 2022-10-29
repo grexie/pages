@@ -55,8 +55,6 @@ type ModuleLoader = () => Promise<_Module>;
 export interface ModuleOptions {
   context: ModuleContext;
   filename: string;
-  source: string;
-  vmSource: string;
   loader: ModuleLoader;
   imports: Record<string, Import>;
   stats: Stats;
@@ -72,8 +70,6 @@ export interface ModuleEvictOptions {
 export class Module extends EventEmitter {
   readonly #context: ModuleContext;
   readonly filename: string;
-  readonly source: string;
-  readonly vmSource: string;
   readonly load: ModuleLoader;
   readonly imports: Readonly<Record<string, Import>>;
   readonly stats: Stats;
@@ -94,8 +90,6 @@ export class Module extends EventEmitter {
   constructor({
     context,
     filename,
-    source,
-    vmSource,
     loader,
     imports,
     stats,
@@ -107,8 +101,6 @@ export class Module extends EventEmitter {
     this.stats = stats;
     this.webpackModule = webpackModule;
     this.filename = filename;
-    this.source = source;
-    this.vmSource = vmSource;
     this.load = async () => {
       this.#module = await loader();
       (this.#module as any).moduleInfo = this;
@@ -545,7 +537,6 @@ export class ModuleFactory {
         source: source,
         filename,
       });
-      const vmSource = compiled.source;
 
       const imports = await this.resolveImports(
         context,
@@ -554,7 +545,6 @@ export class ModuleFactory {
       );
 
       await Promise.all([
-        cache.set(cacheFile, vmSource, cached.stats.mtime),
         cache.set(
           cacheImportsFile,
           JSON.stringify(imports),
@@ -562,7 +552,7 @@ export class ModuleFactory {
         ),
       ]);
 
-      return { stats: cached.stats, vmSource, imports };
+      return { stats: cached.stats, imports };
     });
   }
 }
@@ -903,20 +893,20 @@ export class ModuleContext {
     context: string,
     filename: string,
     specifier: string,
-    resolved: Import
+    resolved?: Import
   ) {
     let exports: any;
 
-    if (resolved.builtin) {
+    if (!resolved || resolved.builtin) {
       const require = createRequire(filename);
       exports = require(resolved?.filename ?? specifier);
-    } else if (resolved.esm) {
+    } else {
       const context = path.dirname(resolved.filename);
 
       const source = await factory.load(context, resolved.filename);
 
       if (resolved.esm) {
-        const { imports } = await factory.compile(
+        const compiled = await factory.compile(
           context,
           source.source,
           resolved.filename,
@@ -930,7 +920,7 @@ export class ModuleContext {
           source.source,
           context,
           resolved.filename,
-          imports
+          compiled.imports
         );
       }
 
@@ -946,8 +936,8 @@ export class ModuleContext {
         _module.exports,
         _module.require,
         _module,
-        resolved.filename,
-        path.dirname(resolved.filename)
+        resolved!.filename,
+        path.dirname(resolved!.filename)
       );
 
       exports = _module.exports;
@@ -998,11 +988,7 @@ export class ModuleContext {
       context: this.#vmContext,
       initializeImportMeta: () => {},
       identifier: filename,
-      importModuleDynamically: async (
-        specified,
-        parentModule,
-        importAssertions
-      ) => {
+      importModuleDynamically: async specified => {
         const m = await this.require(factory, context, specified);
         await m.load();
         return m.module;
@@ -1011,6 +997,10 @@ export class ModuleContext {
 
     await sourceTextModule.link((async (specifier: string) => {
       const resolved = imports[specifier]!;
+
+      if (!resolved) {
+        console.info(imports, specifier);
+      }
 
       let modulePromise = this.modules[resolved?.filename ?? specifier];
 
@@ -1035,8 +1025,6 @@ export class ModuleContext {
       const module = new Module({
         context: this,
         filename: resolved.filename,
-        source: '',
-        vmSource: '',
         loader: () => Promise.resolve(syntheticModule),
         imports: {},
         stats: { mtime: new Date(0), mtimeMs: 0 } as any,
@@ -1083,7 +1071,7 @@ export class ModuleContext {
       imported = _imported;
     }
 
-    const { stats, vmSource, imports } = await factory.compile(
+    const { stats, imports } = await factory.compile(
       context,
       source,
       filename,
@@ -1148,6 +1136,7 @@ export class ModuleContext {
       _module = resolver;
 
       try {
+        console.info(imported);
         if (imported!.esm) {
           const sourceTextModule = await this.#createSourceTextModule(
             factory,
@@ -1181,8 +1170,6 @@ export class ModuleContext {
     const module = new Module({
       context: this,
       filename,
-      source,
-      vmSource,
       loader,
       imports,
       stats,

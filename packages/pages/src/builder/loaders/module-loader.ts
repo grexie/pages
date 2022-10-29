@@ -179,9 +179,12 @@ export default async function ModuleLoader(
         recompile: true,
       });
 
-      const compiled = await transformAsync(handlerModule.source, {
-        plugins: [handlerModulePlugin],
-      });
+      const compiled = await transformAsync(
+        handlerModule.webpackModule.originalSource()!.buffer().toString(),
+        {
+          plugins: [handlerModulePlugin],
+        }
+      );
 
       resolver.resolve();
 
