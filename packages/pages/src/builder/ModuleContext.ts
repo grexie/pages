@@ -894,24 +894,20 @@ export class ModuleContext {
 
     const exports = await import(filename);
 
+    if (/runtime\/styles/.test(filename)) {
+      console.info(
+        Object.keys(exports),
+        isPlainObject(exports),
+        Object.getPrototypeOf(exports)
+      );
+    }
+
     const module = new SyntheticModule(
-      [
-        ...new Set([
-          'default',
-          ...(isPlainObject(exports) ? Object.keys(exports) : []),
-        ]),
-      ],
+      [...Object.keys(exports)],
       function (this: any) {
-        if (isPlainObject(exports)) {
-          Object.keys(exports).forEach(name => {
-            this.setExport(name, exports[name]);
-          });
-          if (!('default' in exports)) {
-            this.setExport('default', exports);
-          }
-        } else {
-          this.setExport('default', exports);
-        }
+        Object.keys(exports).forEach(name => {
+          this.setExport(name, exports[name]);
+        });
       },
       {
         context: this.#vmContext,
