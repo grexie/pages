@@ -6,6 +6,7 @@ import { SourceContext } from '../SourceContext';
 import { createComposable } from '@grexie/compose';
 import { createResolver } from '../../utils/resolvable';
 import babel, { PluginObj, PluginPass, transformAsync } from '@babel/core';
+import babelEnvPreset from '@babel/preset-env';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
@@ -158,48 +159,68 @@ export default async function ModuleLoader(
       resolver.resolve();
 
       const source = `
-      import { wrapHandler } from '@grexie/pages/api/Handler';
+      import { wrapHandler as __pages_wrap_handler } from "@grexie/pages/api/Handler";
       ${
         composablesRequires.length
-          ? 'import { createComposable } from "@grexie/compose";'
+          ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'
           : ''
       }
-      import handler from ${JSON.stringify(options.handler)};
-      ${serializedResource}
-      export default wrapHandler(resource, handler, ${composablesRequires
-        .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)
+      ${composablesRequires
+        .map(
+          (id, i) =>
+            `import __pages_composable_${i} from ${JSON.stringify(id)};`
+        )
         .join(',\n')}
+      import __pages_handler_component from ${JSON.stringify(options.handler)};
+        
+      ${serializedResource};
+      export default __pages_wrap_handler(
+        resource,
+        __pages_handler_component,
+        ${composablesRequires
+          .map((_, i) => `__pages_create_composable(__pages_composable_${i})`)
+          .join(',\n')}
       );
     `;
       console.info(source);
       phase = 16;
       return source;
     } else {
+      const compiled = await transformAsync(content.toString(), {
+        presets: [[babelEnvPreset, { modules: false }]],
+        plugins: [handlerModulePlugin],
+      });
+
       await context.modules.evict(factory, this.resourcePath, {
         recompile: true,
       });
 
-      const compiled = await transformAsync(
-        handlerModule.webpackModule.originalSource()!.buffer().toString(),
-        {
-          plugins: [handlerModulePlugin],
-        }
-      );
-
       resolver.resolve();
 
       const source = `
-      ${compiled!.code}
-      import { wrapHandler } from "@grexie/pages/api/Handler";
+      import { wrapHandler as __pages_wrap_handler } from "@grexie/pages/api/Handler";
       ${
         composablesRequires.length
-          ? 'import { createComposable } from "@grexie/compose";'
+          ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'
           : ''
       }
+      ${composablesRequires
+        .map(
+          (id, i) =>
+            `import __pages_composable_${i} from ${JSON.stringify(id)};`
+        )
+        .join(',\n')}
+      
+      ${compiled!.code}
+        
       ${serializedResource};
-      export default wrapHandler(resource, __handler_component, ${composablesRequires
-        .map(id => `createComposable(require(${JSON.stringify(id)}).default)`)
-        .join(',\n')});
+      export default __pages_wrap_handler(
+        resource,
+        __pages_handler_component,
+        ${composablesRequires
+          .map((_, i) => `__pages_create_composable(__pages_composable_${i})`)
+          .join(',\n')}
+      );
     `;
       console.info(source);
       phase = 17;
@@ -224,7 +245,7 @@ const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
       path.replaceWith(
         t.variableDeclaration('const', [
           t.variableDeclarator(
-            t.identifier('__handler_component'),
+            t.identifier('__pages_handler_component'),
             path.node.declaration as any
           ),
         ])

@@ -296,7 +296,13 @@ export class Builder {
                 options: {
                   presets: [
                     '@babel/react',
-                    ['@babel/env', { loose: true, modules: false }],
+                    [
+                      '@babel/env',
+                      {
+                        targets: 'node 16',
+                        modules: false,
+                      },
+                    ],
                   ],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
@@ -318,7 +324,13 @@ export class Builder {
                   presets: [
                     '@babel/typescript',
                     '@babel/react',
-                    ['@babel/env', { loose: true, modules: false }],
+                    [
+                      '@babel/env',
+                      {
+                        targets: 'node 16',
+                        modules: false,
+                      },
+                    ],
                   ],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,

@@ -68,6 +68,14 @@ export class ModuleCompiler {
       ImportDeclaration: path => {
         imports.push(path.node.source.value);
       },
+      ExportAllDeclaration: path => {
+        imports.push(path.node.source.value);
+      },
+      ExportNamedDeclaration: path => {
+        if (path.node.source) {
+          imports.push(path.node.source.value);
+        }
+      },
     });
 
     return { filename, imports };

@@ -2,6 +2,7 @@ export type ResourceMetadata = Record<string, any> & { type?: string };
 
 export interface ResourceSerializeOptions {
   serializeMetadata: (source: string) => string;
+  imports: boolean;
 }
 
 export interface ResourceOptions<M extends ResourceMetadata = any> {
@@ -20,12 +21,16 @@ export class Resource<M extends ResourceMetadata = any> {
     this.metadata = metadata;
   }
 
-  async serialize({ serializeMetadata }: ResourceSerializeOptions) {
-    return `export const resource = {
-      path: ${JSON.stringify(this.path)},
-      slug: ${JSON.stringify(this.slug)},
-      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
-    }`;
+  async serialize({ serializeMetadata, imports }: ResourceSerializeOptions) {
+    if (imports) {
+      return '';
+    } else {
+      return `export const resource = {
+        path: ${JSON.stringify(this.path)},
+        slug: ${JSON.stringify(this.slug)},
+        metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
+      }`;
+    }
   }
 
   toJSON() {

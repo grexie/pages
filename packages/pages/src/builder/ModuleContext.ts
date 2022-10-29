@@ -19,6 +19,7 @@ import {
 } from '../utils/resolvable';
 import { promisify } from '../utils/promisify';
 import { KeyedMutex } from '../utils/mutex';
+import { isPlainObject } from '../utils/object';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -582,13 +583,11 @@ export class ModuleResolver {
   }: ModuleResolverOptions & { context: ModuleContext }) {
     this.#require = createRequire(import.meta.url);
     this.context = context;
-    this.#forceCompile = Array.from(
-      new Set([this.context.rootDir, ...forceCompile])
-    );
+    this.#forceCompile = Array.from(new Set([...forceCompile]));
     this.#extensions = Array.from(
       new Set(['.js', '.cjs', '.mjs', ...extensions])
     );
-    this.#forceExtensions = Array.from(new Set(['.mjs', ...forceExtensions]));
+    this.#forceExtensions = Array.from(new Set([...forceExtensions]));
     this.#esm = [...new Set(['.mjs', ...esm])];
   }
 
@@ -709,14 +708,24 @@ export class ModuleResolver {
       });
     }
 
-    const extension = path.extname(resolved.filename);
-    if (this.#forceExtensions.includes(extension)) {
+    if (
+      this.#forceExtensions.reduce(
+        (a, b) => a || resolved.filename.endsWith(b),
+        false
+      )
+    ) {
       return this.#buildImport(factory, request, resolved.filename, {
         compile: true,
         descriptionFile,
       });
-    } else if (!this.#extensions.includes(extension)) {
+    } else if (
+      !this.#extensions.reduce(
+        (a, b) => a || resolved.filename.endsWith(b),
+        false
+      )
+    ) {
       return this.#buildImport(factory, request, resolved.filename, {
+        compile: true,
         descriptionFile,
       });
     }
@@ -755,15 +764,7 @@ export class ModuleResolver {
       }
     }
 
-    if (containsPath(path.resolve(__dirname, '..'), resolved.filename)) {
-      return this.#buildImport(factory, request, resolved.filename, {
-        compile: true,
-        descriptionFile,
-      });
-    }
-
     return this.#buildImport(factory, request, resolved.filename, {
-      compile: true,
       descriptionFile,
     });
   }
@@ -888,6 +889,41 @@ export class ModuleContext {
     return module;
   }
 
+  async #createSyntheticImportModule(factory: ModuleFactory, filename: string) {
+    console.info('creating synthetic import module', filename);
+
+    const exports = await import(filename);
+
+    const module = new SyntheticModule(
+      [
+        ...new Set([
+          'default',
+          ...(isPlainObject(exports) ? Object.keys(exports) : []),
+        ]),
+      ],
+      function (this: any) {
+        if (isPlainObject(exports)) {
+          Object.keys(exports).forEach(name => {
+            this.setExport(name, exports[name]);
+          });
+          if (!('default' in exports)) {
+            this.setExport('default', exports);
+          }
+        } else {
+          this.setExport('default', exports);
+        }
+      },
+      {
+        context: this.#vmContext,
+      }
+    );
+
+    await module.link(() => {});
+    await module.evaluate();
+
+    return module;
+  }
+
   async #createSyntheticModule(
     factory: ModuleFactory,
     context: string,
@@ -897,9 +933,16 @@ export class ModuleContext {
   ) {
     let exports: any;
 
-    if (!resolved || resolved.builtin) {
-      const require = createRequire(filename);
-      exports = require(resolved?.filename ?? specifier);
+    if (!resolved || resolved.builtin || !resolved.compile) {
+      if (resolved?.esm) {
+        return this.#createSyntheticImportModule(
+          factory,
+          resolved?.filename ?? specifier
+        );
+      } else {
+        const require = createRequire(filename);
+        exports = require(resolved?.filename ?? specifier);
+      }
     } else {
       const context = path.dirname(resolved.filename);
 
@@ -914,6 +957,8 @@ export class ModuleContext {
           true,
           this.cache
         );
+
+        console.info(resolved.filename, compiled.imports);
 
         return this.#createSourceTextModule(
           factory,
@@ -947,17 +992,13 @@ export class ModuleContext {
       [
         ...new Set([
           'default',
-          ...(typeof exports === 'object' ? Object.keys(exports) : []),
+          ...(isPlainObject(exports) ? Object.keys(exports) : []),
         ]),
       ],
       function (this: any) {
-        if (typeof exports === 'object') {
+        if (isPlainObject(exports)) {
           Object.keys(exports).forEach(name => {
-            if (typeof exports[name] === 'function') {
-              this.setExport(name, exports[name].bind(exports));
-            } else {
-              this.setExport(name, exports[name]);
-            }
+            this.setExport(name, exports[name]);
           });
           if (!('default' in exports)) {
             this.setExport('default', exports);
@@ -1013,6 +1054,13 @@ export class ModuleContext {
       const resolver = createResolver<Module>();
       this.modules[resolved?.filename ?? specifier] = resolver;
 
+      console.info(
+        'linking to synthetic module',
+        filename,
+        resolved,
+        specifier,
+        imports
+      );
       const syntheticModule = await this.#createSyntheticModule(
         factory,
         context,
@@ -1104,7 +1152,7 @@ export class ModuleContext {
         ];
       }
 
-      if (!require.compile && !require.esm) {
+      if (require.builtin) {
         return [require.filename];
       }
 
@@ -1136,8 +1184,8 @@ export class ModuleContext {
       _module = resolver;
 
       try {
-        console.info(imported);
-        if (imported!.esm) {
+        console.info(imported, imports);
+        if (imported!.esm && imported!.compile) {
           const sourceTextModule = await this.#createSourceTextModule(
             factory,
             source,
@@ -1162,6 +1210,8 @@ export class ModuleContext {
         }
       } catch (err) {
         resolver.reject(err);
+        console.error(err);
+        process.exit(1);
         throw err;
       }
     };

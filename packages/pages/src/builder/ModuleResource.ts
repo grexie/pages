@@ -61,17 +61,27 @@ export class ModuleResource<
 
   async serialize({
     serializeMetadata,
+    imports,
   }: ResourceSerializeOptions): Promise<string> {
-    const compiled = await transformAsync(this.#source, {
-      plugins: [handlerResourcePlugin],
-    });
+    if (imports) {
+      return '';
+    } else {
+      const compiled = await transformAsync(this.#source, {
+        plugins: [handlerResourcePlugin],
+      });
 
-    return `const __handler_exports = {};
-      ${compiled!.code}\nexport const resource = {
-      path: ${JSON.stringify(this.path)},
-      slug: ${JSON.stringify(this.slug)},
-      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
-      exports: __handler_exports,
-    };`;
+      return `
+      const __handler_exports = {};
+
+      ${compiled!.code}
+
+      export const resource = {
+        path: ${JSON.stringify(this.path)},
+        slug: ${JSON.stringify(this.slug)},
+        metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
+        exports: __handler_exports,
+      };
+    `;
+    }
   }
 }

@@ -9,6 +9,10 @@ export interface StylesProviderProps {
 export class StylesContext extends EventEmitter {
   #styles = new Set<{ hash: string; css: string }>();
 
+  constructor() {
+    super();
+  }
+
   add(hash: string, css: string) {
     const entry = { hash, css } as { hash: string; css: string };
     this.#styles.add(entry);

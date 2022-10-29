@@ -100,6 +100,9 @@ export class BuildContext extends Context {
             '.yml',
             '.yaml',
             '.md',
+            '.js',
+            '.cjs',
+            '.mjs',
             '.jsx',
             '.ts',
             '.tsx',
@@ -108,6 +111,14 @@ export class BuildContext extends Context {
         forceExtensions: Array.from(
           new Set([
             ...(resolver.forceExtensions ?? []),
+            '.pages.yml',
+            '.pages.yaml',
+            '.pages.json',
+            '.pages.js',
+            '.pages.ts',
+            '.jsx',
+            '.ts',
+            '.tsx',
             '.scss',
             '.css',
             '.jpeg',
@@ -138,9 +149,7 @@ export class BuildContext extends Context {
             '.mjs',
           ]),
         ],
-        forceCompile: Array.from(
-          new Set([...(resolver.forceCompile ?? []), '@mdx-js/mdx'])
-        ),
+        forceCompile: Array.from(new Set([...(resolver.forceCompile ?? [])])),
       },
     });
 

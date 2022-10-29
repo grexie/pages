@@ -71,7 +71,13 @@ export class SourceContext extends Source {
     return this.createContent({ content: this.content });
   }
 
-  async createModule({ source, esm = false }: { source: string, esm?: boolean }) {
+  async createModule({
+    source,
+    esm = false,
+  }: {
+    source: string;
+    esm?: boolean;
+  }) {
     if (!this.module.module) {
       throw new Error('state error: source module not loaded');
     }
@@ -102,21 +108,28 @@ export class SourceContext extends Source {
     return new ModuleResource({
       path: this.path,
       metadata: this.metadata,
-      source: module.source,
+      source,
       exports,
     });
   }
 
-  serialize(resource: Resource) {
+  async serialize(resource: Resource) {
     const serializeMetadata = (source: string) =>
-      `require('@grexie/pages').ObjectProxy.create(${JSON.stringify(
+      `__pages_object_proxy.create(${JSON.stringify(
         ObjectProxy.get(resource.metadata as any),
         null,
         2
-      )}, ${this.configModule.serialize(path.dirname(this.filename))})`;
+      )}, ${this.configModule.serialize(path.dirname(this.filename), false)})`;
 
-    return resource.serialize({
-      serializeMetadata,
-    });
+    return `
+      import { ObjectProxy as __pages_object_proxy } from '@grexie/pages/utils/proxy';
+      ${await resource.serialize({ serializeMetadata, imports: true })}
+      ${this.configModule.serialize(path.dirname(this.filename), true)}
+
+      ${await resource.serialize({
+        serializeMetadata,
+        imports: false,
+      })}
+    `;
   }
 }

@@ -50,14 +50,29 @@ export class ConfigModule {
     return config;
   }
 
-  serialize(context: string): string {
-    const metadataFactory = `require(${JSON.stringify(
-      `./${path.relative(context, this.module.filename)}`
-    )}).metadata`;
-    if (this.parent) {
-      return `${metadataFactory}(${this.parent.serialize(context)})`;
+  serialize(context: string, imports: boolean, index: number = 1): string {
+    if (imports) {
+      const metadataImport = `import { metadata as __pages_metadata_${index} } from ${JSON.stringify(
+        `./${path.relative(context, this.module.filename)}`
+      )}`;
+
+      if (this.parent) {
+        return `${metadataImport}\n${this.parent.serialize(
+          context,
+          true,
+          index + 1
+        )}`;
+      } else {
+        return metadataImport;
+      }
     } else {
-      return `${metadataFactory}()`;
+      const metadataFactory = `__pages_metadata_${index}`;
+      
+      if (this.parent) {
+        return `${metadataFactory}(${this.parent.serialize(context, false, index + 1)})`;
+      } else {
+        return `${metadataFactory}()`;
+      }
     }
   }
 }
