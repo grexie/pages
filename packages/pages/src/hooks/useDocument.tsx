@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { Document, DocumentProps, DocumentOptions } from '../api/Document';
-import { createContextWithProps } from '../utils/context';
+import { Document, DocumentProps, DocumentOptions } from '../api/Document.js';
+import { createContextWithProps } from '../utils/context.js';
 
 const {
   Provider: DocumentProvider,

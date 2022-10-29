@@ -1,11 +1,11 @@
-import { Source } from '../../api';
-import { BuildContext } from '../BuildContext';
+import { Source } from '../../api/index.js';
+import { BuildContext } from '../BuildContext.js';
 import webpack, { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { ResourceContext } from '../../hooks';
-import { WritableBuffer } from '../../utils/stream';
-import { createResolver } from '../../utils/resolvable';
-import { promisify } from '../../utils/promisify';
+import { ResourceContext } from '../../hooks/index.js';
+import { WritableBuffer } from '../../utils/stream.js';
+import { createResolver } from '../../utils/resolvable.js';
+import { promisify } from '../../utils/promisify.js';
 
 const { RawSource } = webpack.sources;
 

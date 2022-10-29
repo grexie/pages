@@ -1,14 +1,17 @@
-import { ContextOptions, Context } from '../api/Context';
+import { ContextOptions, Context } from '../api/Context.js';
 import path from 'path';
-import { FileSystemOptions, WritableFileSystem } from '@grexie/builder';
-import { Builder } from './Builder';
-import { ProviderConfig, Registry } from '../api';
-import { Renderer } from './Renderer';
-import { ModuleContext, ModuleResolverOptions } from './ModuleContext';
+import {
+  FileSystemOptions,
+  WritableFileSystem,
+} from '@grexie/builder/FileSystem.js';
+import { Builder } from './Builder.js';
+import { ProviderConfig, Registry } from '../api/Registry.js';
+import { Renderer } from './Renderer.js';
+import { ModuleContext, ModuleResolverOptions } from './ModuleContext.js';
 import os from 'os';
-import { ConfigContext } from './ConfigContext';
+import { ConfigContext } from './ConfigContext.js';
 import { Volume } from 'memfs';
-import { ModuleDependencies } from './ModuleDependencies';
+import { ModuleDependencies } from './ModuleDependencies.js';
 import { createRequire } from 'module';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);

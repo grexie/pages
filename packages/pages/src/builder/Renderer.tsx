@@ -2,17 +2,17 @@ import React, { createElement } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
 import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
-import { withDocumentComponent } from '../components/Document';
+import { withDocumentComponent } from '../components/Document.js';
 import {
   withDocument,
   withContext,
   ResourceContext,
   withResourceContext,
-} from '../hooks';
-import { Resource } from '../api';
-import { BuildContext } from '.';
-import { withLazy, withErrorManager, ErrorManager } from '../hooks';
-import { withStyles, StylesContext } from '../hooks/useStyles';
+} from '../hooks/index.js';
+import { Resource } from '../api/index.js';
+import { BuildContext } from './index.js';
+import { withLazy, withErrorManager, ErrorManager } from '../hooks/index.js';
+import { withStyles, StylesContext } from '../hooks/useStyles.js';
 
 export class Renderer {
   readonly context: BuildContext;

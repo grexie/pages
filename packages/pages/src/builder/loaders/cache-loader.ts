@@ -1,7 +1,7 @@
 import type { LoaderContext } from 'webpack';
-import { BuildContext } from '../BuildContext';
-import { ICache } from '@grexie/builder';
-import { createResolver } from '../../utils/resolvable';
+import { BuildContext } from '../BuildContext.js';
+import { ICache } from '@grexie/builder/Cache.js';
+import { createResolver } from '../../utils/resolvable.js';
 
 interface LoaderOptions {
   context: BuildContext;

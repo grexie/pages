@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { Provider } from '../api';
-import { BuildContext } from '../builder';
+import { Provider } from '../api/Provider.js';
+import { BuildContext } from '../builder/BuildContext.js';
 
 export default async () => {
   const context = new BuildContext({

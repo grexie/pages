@@ -4,14 +4,14 @@ import {
   ResourceSerializeOptions,
   ResourceOptions,
   Resource,
-} from '../api';
+} from '../api/Resource.js';
 import type babel from '@babel/core';
 
 const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
 }) => ({
   visitor: {
-    ExportDefaultDeclaration(path) {
+    ExportDefaultDeclaration(path: any) {
       path.replaceWith(
         t.assignmentExpression(
           '=',
@@ -23,7 +23,7 @@ const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
         )
       );
     },
-    ExportNamedDeclaration(path) {
+    ExportNamedDeclaration(path: any) {
       path.replaceWith(
         t.assignmentExpression(
           '=',

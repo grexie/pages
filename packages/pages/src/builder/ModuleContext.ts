@@ -1,9 +1,10 @@
 import EventEmitter from 'events';
-import { BuildContext } from './BuildContext';
-import { Cache, ICache, Stats } from '@grexie/builder';
+import { BuildContext } from './BuildContext.js';
+import { Cache, ICache } from '@grexie/builder/Cache.js';
+import type { Stats } from '@grexie/builder/FileSystem.js';
 import webpack, { Compilation, Module as WebpackModule } from 'webpack';
 import { Module as NodeModule, createRequire } from 'module';
-import { ModuleCompiler } from './ModuleCompiler';
+import { ModuleCompiler } from './ModuleCompiler.js';
 import {
   Module as _Module,
   createContext,
@@ -16,10 +17,10 @@ import {
   createResolver,
   PromiseQueue,
   ResolvablePromise,
-} from '../utils/resolvable';
-import { promisify } from '../utils/promisify';
-import { KeyedMutex } from '../utils/mutex';
-import { isPlainObject } from '../utils/object';
+} from '../utils/resolvable.js';
+import { promisify } from '../utils/promisify.js';
+import { KeyedMutex } from '../utils/mutex.js';
+import { isPlainObject } from '../utils/object.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 

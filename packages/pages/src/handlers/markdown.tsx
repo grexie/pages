@@ -1,10 +1,10 @@
 import React, { FC, PropsWithChildren } from 'react';
 import { compile } from '@mdx-js/mdx';
 import grayMatter from 'gray-matter';
-import { useModule } from '../hooks';
-import { Resource } from '../api';
-import type { SourceContext } from '../builder/SourceContext';
-import { StyleSheet } from '../runtime/styles';
+import { useModule } from '../hooks/index.js';
+import { Resource } from '../api/index.js';
+import type { SourceContext } from '../builder/SourceContext.js';
+import { StyleSheet } from '../runtime/styles.js';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
   const { default: Component, styles } = useModule({ resource: true });

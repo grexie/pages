@@ -1,9 +1,11 @@
-import { ContentResource, Resource, Source, SourceOptions } from '../api';
-import type { BuildContext, ModuleFactory, Module } from '../builder';
-import { ModuleResource } from './ModuleResource';
-import { Config, ConfigModule } from './ConfigContext';
+import { Source, SourceOptions } from '../api/Source.js';
+import { ContentResource, Resource } from '../api/Resource.js';
+import type { BuildContext } from '../builder/BuildContext.js';
+import type { ModuleFactory, Module } from '../builder/ModuleContext.js';
+import { ModuleResource } from './ModuleResource.js';
+import { Config, ConfigModule } from './ConfigContext.js';
 import path from 'path';
-import { ObjectProxy } from '../utils/proxy';
+import { ObjectProxy } from '../utils/proxy.js';
 
 export interface CreateContentOptions<C = any> {
   content: C;

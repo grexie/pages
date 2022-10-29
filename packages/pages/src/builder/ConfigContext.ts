@@ -1,7 +1,8 @@
-import { BuildContext } from './BuildContext';
-import { ResourceMetadata, Source } from '../api';
-import { Module, ModuleFactory } from './ModuleContext';
-import { ObjectProxy } from '../utils/proxy';
+import { BuildContext } from './BuildContext.js';
+import { ResourceMetadata } from '../api/Resource.js';
+import { Source } from '../api/Source.js';
+import { Module, ModuleFactory } from './ModuleContext.js';
+import { ObjectProxy } from '../utils/proxy.js';
 import path from 'path';
 
 export interface ConfigOptions {

@@ -1,4 +1,4 @@
-import { ContentResource, Resource, ResourceMetadata } from './Resource';
+import { ContentResource, Resource, ResourceMetadata } from './Resource.js';
 import path from 'path';
 import EventEmitter from 'events';
 export type SourceTree = { [key: string]: SourceTree | string };

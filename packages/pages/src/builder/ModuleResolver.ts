@@ -1,5 +1,5 @@
 import { Compilation } from 'webpack';
-import { BuildContext } from './BuildContext';
+import { BuildContext } from './BuildContext.js';
 
 export interface ModuleResolverOptions {
   context: BuildContext;

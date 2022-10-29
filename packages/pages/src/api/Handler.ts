@@ -1,8 +1,8 @@
 import { ComponentType } from 'react';
-import { Resource, ResourceMetadata } from './Resource';
-import type { SourceContext } from '../builder/SourceContext';
+import { Resource, ResourceMetadata } from './Resource.js';
+import type { SourceContext } from '../builder/SourceContext.js';
 import { compose } from '@grexie/compose';
-import { withResource } from '../hooks';
+import { withResource } from '../hooks/index.js';
 
 export interface Handler<
   P = any,

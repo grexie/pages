@@ -3,20 +3,20 @@ import {
   Watcher,
   Configuration,
   EntryObject,
-  FileSystemOptions,
   WebpackStats,
+} from '@grexie/builder/Builder.js';
+import {
   FileSystem,
   WritableFileSystem,
-  CacheStorage,
-} from '@grexie/builder';
-import { BuildContext } from './BuildContext';
-import { Cache } from '@grexie/builder';
-import { Source } from '../api';
-import nodeExternals from 'webpack-node-externals';
+  FileSystemOptions,
+} from '@grexie/builder/FileSystem.js';
+import { CacheStorage, Cache } from '@grexie/builder/Cache.js';
+import { BuildContext } from './BuildContext.js';
+import { Source } from '../api/Source.js';
 import _path from 'path';
 import { Volume } from 'memfs';
-import { ResourcesPlugin } from './plugins/resources-plugin';
-import { ModuleContext } from './ModuleContext.new';
+import { ResourcesPlugin } from './plugins/resources-plugin.js';
+import { ModuleContext } from './ModuleContext.new.js';
 import { Compilation } from 'webpack';
 import path from 'path';
 import webpack from 'webpack';

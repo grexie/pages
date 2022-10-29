@@ -1,6 +1,6 @@
 import { ComponentType, useMemo } from 'react';
-import { SourceTree } from '../api/Source';
-import { usePath } from './useResource';
+import { SourceTree } from '../api/Source.js';
+import { usePath } from './useResource.js';
 import _path from 'path';
 
 export type ComponentTree = { [key: string]: ComponentTree | ComponentType };

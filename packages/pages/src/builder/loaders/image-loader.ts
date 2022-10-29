@@ -1,5 +1,5 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '../BuildContext';
+import { BuildContext } from '../BuildContext.js';
 import path from 'path';
 import { createHash } from 'crypto';
 import webpack from 'webpack';

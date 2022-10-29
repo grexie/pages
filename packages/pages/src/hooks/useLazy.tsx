@@ -6,7 +6,7 @@ import React, {
   FC,
   useMemo,
 } from 'react';
-import { createContextWithProps } from '../utils/context';
+import { createContextWithProps } from '../utils/context.js';
 
 interface ErrorManager {
   report: (error: any) => void;

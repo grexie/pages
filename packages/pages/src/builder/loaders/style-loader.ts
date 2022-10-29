@@ -1,5 +1,5 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '../BuildContext';
+import { BuildContext } from '../BuildContext.js';
 import { createHash } from 'crypto';
 
 interface StyleLoaderOptions {

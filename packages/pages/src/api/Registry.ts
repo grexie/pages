@@ -1,7 +1,7 @@
-import type { Provider } from './Provider';
-import { BuildContext } from '../builder/BuildContext';
+import type { Provider } from './Provider.js';
+import { BuildContext } from '../builder/BuildContext.js';
 import _path from 'path';
-import { Source, SourceTree } from './Source';
+import { Source, SourceTree } from './Source.js';
 import path from 'path';
 
 export interface GetOptions {

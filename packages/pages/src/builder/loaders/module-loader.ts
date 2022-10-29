@@ -1,10 +1,12 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext, Module } from '..';
+import { BuildContext } from '../BuildContext.js';
+import { Module } from '../ModuleContext.js';
 import _path from 'path';
-import { Resource, Handler } from '../../api';
-import { SourceContext } from '../SourceContext';
+import { Resource } from '../../api/Resource.js';
+import { Handler } from '../../api/Handler.js';
+import { SourceContext } from '../SourceContext.js';
 import { createComposable } from '@grexie/compose';
-import { createResolver } from '../../utils/resolvable';
+import { createResolver } from '../../utils/resolvable.js';
 import babel, { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
 
@@ -241,7 +243,7 @@ const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
 }) => ({
   visitor: {
-    ExportDefaultDeclaration(path) {
+    ExportDefaultDeclaration(path: any) {
       path.replaceWith(
         t.variableDeclaration('const', [
           t.variableDeclarator(
@@ -251,7 +253,7 @@ const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
         ])
       );
     },
-    ExportNamedDeclaration(path) {
+    ExportNamedDeclaration(path: any) {
       if (path.node.declaration) {
         if (t.isVariableDeclaration(path.node.declaration)) {
           for (const declaration of path.node.declaration.declarations) {

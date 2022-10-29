@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ComponentType, ComponentClass, FunctionComponent } from 'react';
-import { createContextWithProps } from '../utils/context';
+import { createContextWithProps } from '../utils/context.js';
 
 const WrapComponentTable = new WeakMap();
 

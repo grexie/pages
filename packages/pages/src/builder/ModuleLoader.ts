@@ -1,4 +1,4 @@
-import { ModuleResolver } from './ModuleResolver';
+import { ModuleResolver } from './ModuleResolver.js';
 import { Compilation } from 'webpack';
 
 export interface ModuleReference {

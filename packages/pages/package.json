@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@types/babel__core": "^7.1.19",
+    "@types/babel__traverse": "^7.18.2",
     "@types/loader-utils": "^2.0.3",
     "@types/nodemon": "^1.19.1",
     "@types/react": "^18.0.12",
@@ -51,6 +52,9 @@
     "@types/sharp": "^0.31.0",
     "@types/webpack-node-externals": "^2.5.3",
     "@types/whatwg-url": "^8.2.1"
+  },
+  "exports": {
+    ".": "./index.mjs"
   },
   "sideEffects": false
 }

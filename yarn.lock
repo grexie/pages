@@ -1986,6 +1986,13 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/babel__traverse@^7.18.2":
+  version "7.18.2"
+  resolved "https://registry.yarnpkg.com/@types/babel__traverse/-/babel__traverse-7.18.2.tgz#235bf339d17185bdec25e024ca19cce257cc7309"
+  integrity sha512-FcFaxOr2V5KZCviw1TnutEMVUVsGt4D2hP1TAfXZAMKuHYW3xQhe3jTxNPWutgCJ3/X1c5yX8ZoGVEItxKbwBg==
+  dependencies:
+    "@babel/types" "^7.3.0"
+
 "@types/debug@^4.0.0":
   version "4.1.7"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.7.tgz#7cc0ea761509124709b8b2d1090d8f6c17aadb82"

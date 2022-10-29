@@ -1,7 +1,7 @@
 import { Compilation } from 'webpack';
-import { BuildContext } from './BuildContext';
-import { ModuleResolver } from './ModuleResolver';
-import { CommonJsModuleLoader, ModuleLoader } from './ModuleLoader';
+import { BuildContext } from './BuildContext.js';
+import { ModuleResolver } from './ModuleResolver.js';
+import { CommonJsModuleLoader, ModuleLoader } from './ModuleLoader.js';
 import { Module } from 'vm';
 
 export enum ModuleLoaderType {

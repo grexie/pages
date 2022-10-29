@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
-import { ResourceContext } from '../hooks';
-import { Resource } from './Resource';
+import { ResourceContext } from '../hooks/index.js';
+import { Resource } from './Resource.js';
 
 export interface DocumentOptions {
   resource: Resource;

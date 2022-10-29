@@ -1,12 +1,8 @@
-import type { ModuleContext } from './ModuleContext';
+import type { ModuleContext } from './ModuleContext.js';
 import { parseAsync } from '@babel/core';
-import _traverse from '@babel/traverse';
+import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import babelPresetEnv from '@babel/preset-env';
-
-type Traverse = typeof _traverse;
-
-const { default: traverse } = _traverse as unknown as { default: Traverse };
 
 export interface ModuleCompilerOptions {
   context: ModuleContext;
@@ -52,7 +48,7 @@ export class ModuleCompiler {
     const imports: string[] = [];
 
     traverse(transpiled, {
-      CallExpression: path => {
+      CallExpression: (path: any) => {
         if (
           t.isIdentifier(path.node.callee, {
             name: 'require',
@@ -65,13 +61,13 @@ export class ModuleCompiler {
           }
         }
       },
-      ImportDeclaration: path => {
+      ImportDeclaration: (path: any) => {
         imports.push(path.node.source.value);
       },
-      ExportAllDeclaration: path => {
+      ExportAllDeclaration: (path: any) => {
         imports.push(path.node.source.value);
       },
-      ExportNamedDeclaration: path => {
+      ExportNamedDeclaration: (path: any) => {
         if (path.node.source) {
           imports.push(path.node.source.value);
         }

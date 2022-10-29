@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useStyles } from '../hooks/useStyles';
+import { useStyles } from '../hooks/useStyles.js';
 
 export type Class = string | Record<string, any> | null | undefined;
 export type StyleUnuseFunction = () => void;

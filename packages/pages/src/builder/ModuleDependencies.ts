@@ -1,5 +1,6 @@
-import { ICache, ReadableFileSystem } from '@grexie/builder';
-import { ModuleReference } from './ModuleLoader';
+import { ICache } from '@grexie/builder/Cache.js';
+import type { ReadableFileSystem } from '@grexie/builder/FileSystem.js';
+import { ModuleReference } from './ModuleLoader.js';
 
 export interface ModuleDependenciesOptions {
   cache: ICache;

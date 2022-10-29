@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { parseURL } from 'whatwg-url';
-import { Renderer } from '../builder/Renderer';
-import { ServerContext } from './Server';
+import { Renderer } from '../builder/Renderer.js';
+import { ServerContext } from './Server.js';
 import _path from 'path';
 
 const mimetypes: Record<string, string> = {

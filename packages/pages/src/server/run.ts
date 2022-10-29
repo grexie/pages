@@ -1,5 +1,5 @@
-import { Provider } from '../api/Provider';
-import { Server } from './Server';
+import { Provider } from '../api/Provider.js';
+import { Server } from './Server.js';
 import fs from 'fs';
 import path from 'path';
 import 'source-map-support/register.js';

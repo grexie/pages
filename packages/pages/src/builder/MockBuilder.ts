@@ -1,9 +1,10 @@
-import { BuildContext } from './BuildContext';
-import { Provider, ResourceMetadata } from '../api';
+import { BuildContext } from './BuildContext.js';
+import { Provider,  } from '../api/Provider.js';
+import { ResourceMetadata} from '../api/Resource.js';
 import { Volume } from 'memfs';
-import { WritableFileSystem } from '@grexie/builder';
+import { WritableFileSystem } from '@grexie/builder/FileSystem.js';
 import path from 'path';
-import { Config } from './ConfigContext';
+import { Config } from './ConfigContext.js';
 import YAML from 'yaml';
 import fs from 'fs';
 

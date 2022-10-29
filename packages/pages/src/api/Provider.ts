@@ -1,10 +1,10 @@
 import glob from 'glob';
 import _path from 'path';
 import { promisify } from 'util';
-import { Source } from './Source';
-import { createResolver, ResolvablePromise } from '../utils/resolvable';
-import { ProviderOptions, ListOptions } from './Registry';
-import { BuildContext } from '../builder/BuildContext';
+import { Source } from './Source.js';
+import { createResolver, ResolvablePromise } from '../utils/resolvable.js';
+import { ProviderOptions, ListOptions } from './Registry.js';
+import { BuildContext } from '../builder/BuildContext.js';
 
 const globAsync = promisify(glob);
 
