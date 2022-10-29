@@ -45,4 +45,6 @@ declare module 'vm' {
     constructor(code: string, options: SourceTextModuleOptions);
     createCachedData(): Buffer;
   }
+
+  export const SyntheticModule: any;
 }

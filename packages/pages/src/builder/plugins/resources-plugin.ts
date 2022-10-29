@@ -65,14 +65,6 @@ class SourceCompiler {
     await handlerModule.load();
     const { exports } = handlerModule;
 
-    // const pagesModule = await this.context.modules.require(
-    //   factory,
-    //   path.dirname(this.source.filename),
-    //   '@grexie/pages'
-    // );
-
-    // const { ResourceContext } = pagesModule.load(null as any).exports;
-
     const resourceContext = new ResourceContext();
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {

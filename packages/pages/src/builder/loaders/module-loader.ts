@@ -6,7 +6,6 @@ import { SourceContext } from '../SourceContext';
 import { createComposable } from '@grexie/compose';
 import { createResolver } from '../../utils/resolvable';
 import babel, { PluginObj, PluginPass, transformAsync } from '@babel/core';
-import types from '@babel/types';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
@@ -17,23 +16,30 @@ export default async function ModuleLoader(
   this: LoaderContext<ModuleLoaderOptions>,
   content: Buffer
 ) {
+  let phase = 0;
+
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
   }
 
+  phase = 1;
   const { context, ...options } = this.getOptions();
   const resolver = createResolver();
   await context.modules.addBuild(this.resourcePath, resolver);
 
+  phase = 2;
   try {
     const factory = context.modules.createModuleFactory(this._compilation!);
 
+    phase = 3;
     await context.modules.evict(factory, this.resourcePath, {
       recompile: true,
       fail: false,
     });
+    phase = 4;
     const path = context.builder.filenameToPath(this.resourcePath);
 
+    phase = 5;
     const createHandler = async () => {
       let handlerModule: Module;
       if (typeof options.handler === 'string') {
@@ -53,8 +59,11 @@ export default async function ModuleLoader(
       return handlerModule;
     };
 
+    phase = 6;
+
     let handlerModule = await createHandler();
 
+    phase = 7;
     const configModule = await context.config.create(factory, path);
     configModule.ancestors.forEach(({ module }) => {
       if (module) {
@@ -63,10 +72,16 @@ export default async function ModuleLoader(
     });
     await handlerModule.load();
 
+    phase = 8;
     const handler = handlerModule.exports as Handler;
     const handlerConfig = { metadata: {} };
-    const config = await configModule.create(handlerConfig);
+    phase = 29;
+    const configPromise = configModule.create(handlerConfig);
+    phase = 30;
+    console.info(Object.getPrototypeOf(configPromise) === Promise);
+    const config = await configPromise;
 
+    phase = 9;
     let resource: Resource | undefined = undefined;
 
     const sourceContext = new SourceContext({
@@ -80,14 +95,17 @@ export default async function ModuleLoader(
       config,
     });
 
+    phase = 10;
     if (typeof handler.resource === 'function') {
       resource = await handler.resource(sourceContext);
     }
+    phase = 11;
 
     if (!resource) {
       resource = sourceContext.create();
     }
 
+    phase = 12;
     console.info(this.resourcePath, resource);
 
     const composables = [];
@@ -98,6 +116,7 @@ export default async function ModuleLoader(
     }
 
     for (let layout of layouts) {
+      phase = 13;
       if (/^\./.test(layout)) {
         layout = _path.resolve(_path.dirname(this.resourcePath), layout);
         composablesRequires.push(
@@ -112,20 +131,27 @@ export default async function ModuleLoader(
         composablesRequires.push(layout);
       }
 
+      phase = 44;
       const layoutModule = await context.modules.require(
         factory,
         _path.dirname(this.resourcePath),
         layout
       );
 
+      phase = 45;
       this.addDependency(layoutModule.filename);
 
+      phase = 46;
       await layoutModule.load();
+      phase = 47;
       composables.push(createComposable(layoutModule.exports.default));
     }
 
+    phase = 14;
+
     sourceContext.emit('end');
 
+    phase = 15;
     const serializedResource = await sourceContext.serialize(resource);
 
     if (options.handler) {
@@ -146,6 +172,7 @@ export default async function ModuleLoader(
       );
     `;
       console.info(source);
+      phase = 16;
       return source;
     } else {
       await context.modules.evict(factory, this.resourcePath, {
@@ -172,11 +199,17 @@ export default async function ModuleLoader(
         .join(',\n')});
     `;
       console.info(source);
+      phase = 17;
       return source;
     }
   } catch (err) {
+    console.error(this.resourcePath, phase, err);
     resolver.reject(err);
     throw err;
+  } finally {
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('module-loader:complete', this.resourcePath);
+    }
   }
 }
 

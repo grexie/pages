@@ -71,7 +71,7 @@ export class SourceContext extends Source {
     return this.createContent({ content: this.content });
   }
 
-  async createModule({ source }: { source: string }) {
+  async createModule({ source, esm = false }: { source: string, esm?: boolean }) {
     if (!this.module.module) {
       throw new Error('state error: source module not loaded');
     }
@@ -81,7 +81,11 @@ export class SourceContext extends Source {
       this.module.webpackModule,
       `${this.filename}$${++this.#index}`,
       source,
-      this.filename
+      this.filename,
+      {
+        filename: this.filename,
+        esm,
+      }
     );
 
     this.once('end', () =>
@@ -91,7 +95,9 @@ export class SourceContext extends Source {
       })
     );
 
-    const { exports } = module.load(this.module.module);
+    await module.load();
+
+    const { exports } = this.module;
 
     return new ModuleResource({
       path: this.path,

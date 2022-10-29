@@ -1,10 +1,16 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'events';
 import { BuildContext } from './BuildContext';
 import { Cache, ICache, Stats } from '@grexie/builder';
 import webpack, { Compilation, Module as WebpackModule } from 'webpack';
-import { createRequire } from 'module';
+import { Module as NodeModule, createRequire } from 'module';
 import { ModuleCompiler } from './ModuleCompiler';
-import { Module as _Module, createContext, SourceTextModule } from 'vm';
+import {
+  Module as _Module,
+  createContext,
+  SourceTextModule,
+  SyntheticModule,
+  Script,
+} from 'vm';
 import path from 'path';
 import {
   createResolver,
@@ -21,7 +27,7 @@ const { ModuleDependency } = webpack.dependencies;
 type WrappedScript = (
   exports: any,
   require: NodeJS.Require,
-  module: _Module,
+  module: NodeModule,
   __filename: string,
   __dirname: string
 ) => void;
@@ -39,6 +45,7 @@ const containsPath = (root: string, p: string) => {
 
 interface Import {
   readonly compile?: boolean;
+  readonly esm?: boolean;
   readonly builtin?: boolean;
   readonly filename: string;
 }
@@ -278,7 +285,7 @@ export class ModuleFactory {
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
       conditionNames: ['default', 'require', 'import'],
-      mainFields: ['main', 'module'],
+      mainFields: ['module', 'main'],
       extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
       alias: {
         '@grexie/pages': this.context.build.pagesDir,
@@ -426,6 +433,8 @@ export class ModuleFactory {
       );
       phase = '';
 
+      phase = 'built-module';
+
       if (webpackModule.getNumberOfErrors()) {
         throw Array.from(webpackModule.getErrors() as any)[0];
       }
@@ -513,7 +522,7 @@ export class ModuleFactory {
     source: string,
     filename: string,
     sourceFilename: string,
-    resolveImportsDescendants: boolean = true,
+    resolveImportsDescendants: boolean = false,
     cache: ICache = this.context.cache
   ) {
     const { cacheFile, cacheImportsFile } = this.#getCacheNames(filename);
@@ -562,6 +571,7 @@ export interface ModuleResolverOptions {
   extensions?: string[];
   forceCompile?: string[];
   forceExtensions?: string[];
+  esm?: string[];
 }
 
 export class ModuleResolver {
@@ -569,6 +579,7 @@ export class ModuleResolver {
   readonly #forceCompile: string[];
   readonly #extensions: string[];
   readonly #forceExtensions: string[];
+  readonly #esm: string[];
   readonly #descriptions: Record<string, any> = {};
   readonly #require: NodeRequire;
 
@@ -577,6 +588,7 @@ export class ModuleResolver {
     extensions = [],
     forceCompile = [],
     forceExtensions = [],
+    esm = [],
   }: ModuleResolverOptions & { context: ModuleContext }) {
     this.#require = createRequire(import.meta.url);
     this.context = context;
@@ -587,21 +599,41 @@ export class ModuleResolver {
       new Set(['.js', '.cjs', '.mjs', ...extensions])
     );
     this.#forceExtensions = Array.from(new Set(['.mjs', ...forceExtensions]));
+    this.#esm = [...new Set(['.mjs', ...esm])];
   }
 
-  #buildImport(
+  async #buildImport(
+    factory: ModuleFactory,
     request: string,
     filename: string,
-    compile: boolean = true,
-    builtin: boolean = false
+    {
+      compile = false,
+      builtin = false,
+      esm = this.#esm.reduce((a, b) => a || filename.endsWith(b), false),
+      descriptionFile,
+    }: {
+      compile?: boolean;
+      builtin?: boolean;
+      esm?: boolean;
+      descriptionFile?: string;
+    } = {}
   ) {
-    let o: Import;
+    if (!esm && descriptionFile) {
+      const json = await this.#getDescriptionFile(factory, descriptionFile);
+
+      if (json.type === 'module' || json.module) {
+        esm = true;
+      }
+    }
+
+    let o = { filename, esm } as any;
+
     if (compile) {
-      o = { compile, filename };
-    } else if (builtin) {
-      o = { builtin, filename };
-    } else {
-      o = { filename };
+      o.compile = true;
+    }
+
+    if (builtin) {
+      o.builtin = true;
     }
 
     return { [request]: o };
@@ -660,19 +692,20 @@ export class ModuleResolver {
         )
         .join('!');
 
-      return this.#buildImport(request, result, true, false);
+      return this.#buildImport(factory, request, result, { compile: true });
     }
 
     let resolved: { filename: string; descriptionFile?: string };
     try {
       resolved = await factory.resolve(context, request);
     } catch (err) {
-      return this.#buildImport(request, request, false, true);
+      return this.#buildImport(factory, request, request, { builtin: true });
     }
     resolved.filename = await realpath(resolved.filename);
     if (resolved.descriptionFile) {
       resolved.descriptionFile = await realpath(resolved.descriptionFile);
     }
+    const { descriptionFile } = resolved;
 
     if (
       resolved.filename ===
@@ -680,14 +713,22 @@ export class ModuleResolver {
         path.resolve(this.context.build.pagesDir, 'defaults.pages.mjs')
       )
     ) {
-      return this.#buildImport(request, resolved.filename, true);
+      return this.#buildImport(factory, request, resolved.filename, {
+        compile: true,
+        descriptionFile,
+      });
     }
 
     const extension = path.extname(resolved.filename);
     if (this.#forceExtensions.includes(extension)) {
-      return this.#buildImport(request, resolved.filename);
+      return this.#buildImport(factory, request, resolved.filename, {
+        compile: true,
+        descriptionFile,
+      });
     } else if (!this.#extensions.includes(extension)) {
-      return this.#buildImport(request, resolved.filename, false);
+      return this.#buildImport(factory, request, resolved.filename, {
+        descriptionFile,
+      });
     }
 
     const roots = await Promise.all(
@@ -717,26 +758,24 @@ export class ModuleResolver {
       if (
         roots.reduce((a, b) => a || containsPath(b, resolved.filename), false)
       ) {
-        return this.#buildImport(request, resolved.filename);
+        return this.#buildImport(factory, request, resolved.filename, {
+          compile: true,
+          descriptionFile,
+        });
       }
     }
 
     if (containsPath(path.resolve(__dirname, '..'), resolved.filename)) {
-      return this.#buildImport(request, resolved.filename, false);
+      return this.#buildImport(factory, request, resolved.filename, {
+        compile: true,
+        descriptionFile,
+      });
     }
 
-    if (resolved.descriptionFile) {
-      const description = await this.#getDescriptionFile(
-        factory,
-        resolved.descriptionFile
-      );
-
-      if (description.type === 'module') {
-        return this.#buildImport(request, resolved.filename);
-      }
-    }
-
-    return this.#buildImport(request, resolved.filename, false);
+    return this.#buildImport(factory, request, resolved.filename, {
+      compile: true,
+      descriptionFile,
+    });
   }
 }
 
@@ -744,6 +783,8 @@ export interface ModuleContextOptions {
   context: BuildContext;
   resolver?: ModuleResolverOptions;
 }
+
+const vmContext = createContext({ process });
 
 export class ModuleContext {
   readonly build: BuildContext;
@@ -756,6 +797,7 @@ export class ModuleContext {
   readonly locks = new KeyedMutex({ watcher: true });
   readonly resolver: ModuleResolver;
   readonly #builds: Record<string, PromiseQueue> = {};
+  readonly #vmContext = vmContext;
 
   constructor({ context, resolver = {} }: ModuleContextOptions) {
     this.build = context;
@@ -826,31 +868,191 @@ export class ModuleContext {
     await module?.evict(factory, { recompile, fail });
   }
 
-  async require(
-    factory: ModuleFactory,
-    context: string,
-    request: string,
-    parent?: Module
-  ) {
-    const {
-      [request]: { filename },
-    } = await this.resolver.resolve(factory, context, request);
+  async require(factory: ModuleFactory, context: string, request: string) {
+    const { [request]: require } = await this.resolver.resolve(
+      factory,
+      context,
+      request
+    );
+    const { filename } = require;
 
     if (this.modules[filename]) {
       const { cached } = await factory.getCompileCache(filename, filename);
       const cachedModule = this.modules[filename];
       if (cached && cachedModule) {
         const module = await cachedModule;
-        parent?.addDependency(module);
         return module;
       }
     }
 
     const { source, webpackModule } = await factory.load(context, filename);
 
-    const module = await this.create(factory, webpackModule, filename, source);
-    parent?.addDependency(module);
+    const module = await this.create(
+      factory,
+      webpackModule,
+      filename,
+      source,
+      filename,
+      require
+    );
     return module;
+  }
+
+  async #createSyntheticModule(
+    factory: ModuleFactory,
+    context: string,
+    filename: string,
+    specifier: string,
+    resolved: Import
+  ) {
+    let exports: any;
+
+    if (resolved.builtin) {
+      const require = createRequire(filename);
+      exports = require(resolved?.filename ?? specifier);
+    } else if (resolved.esm) {
+      const context = path.dirname(resolved.filename);
+
+      const source = await factory.load(context, resolved.filename);
+
+      if (resolved.esm) {
+        const { imports } = await factory.compile(
+          context,
+          source.source,
+          resolved.filename,
+          resolved.filename,
+          true,
+          this.cache
+        );
+
+        return this.#createSourceTextModule(
+          factory,
+          source.source,
+          context,
+          resolved.filename,
+          imports
+        );
+      }
+
+      const script = new Script(wrapScript(source.source), {
+        filename: resolved.filename,
+        displayErrors: true,
+      }).runInContext(this.#vmContext) as WrappedScript;
+
+      const _module = new NodeModule(resolved.filename);
+      _module.require = createRequire(resolved.filename);
+
+      script(
+        _module.exports,
+        _module.require,
+        _module,
+        resolved.filename,
+        path.dirname(resolved.filename)
+      );
+
+      exports = _module.exports;
+    }
+
+    const module = new SyntheticModule(
+      [
+        ...new Set([
+          'default',
+          ...(typeof exports === 'object' ? Object.keys(exports) : []),
+        ]),
+      ],
+      function (this: any) {
+        if (typeof exports === 'object') {
+          Object.keys(exports).forEach(name => {
+            if (typeof exports[name] === 'function') {
+              this.setExport(name, exports[name].bind(exports));
+            } else {
+              this.setExport(name, exports[name]);
+            }
+          });
+          if (!('default' in exports)) {
+            this.setExport('default', exports);
+          }
+        } else {
+          this.setExport('default', exports);
+        }
+      },
+      {
+        context: this.#vmContext,
+      }
+    );
+
+    await module.link(() => {});
+    await module.evaluate();
+
+    return module;
+  }
+
+  async #createSourceTextModule(
+    factory: ModuleFactory,
+    source: string,
+    context: string,
+    filename: string,
+    imports: Record<string, Import>
+  ) {
+    const sourceTextModule = new SourceTextModule(source, {
+      context: this.#vmContext,
+      initializeImportMeta: () => {},
+      identifier: filename,
+      importModuleDynamically: async (
+        specified,
+        parentModule,
+        importAssertions
+      ) => {
+        const m = await this.require(factory, context, specified);
+        await m.load();
+        return m.module;
+      },
+    });
+
+    await sourceTextModule.link((async (specifier: string) => {
+      const resolved = imports[specifier]!;
+
+      let modulePromise = this.modules[resolved?.filename ?? specifier];
+
+      if (modulePromise) {
+        const module = await modulePromise;
+        await module.load();
+        return module.module;
+      }
+
+      const resolver = createResolver<Module>();
+      this.modules[resolved?.filename ?? specifier] = resolver;
+
+      const syntheticModule = await this.#createSyntheticModule(
+        factory,
+        context,
+        filename,
+        specifier,
+        resolved
+      );
+
+      const ready = createResolver();
+      const module = new Module({
+        context: this,
+        filename: resolved.filename,
+        source: '',
+        vmSource: '',
+        loader: () => Promise.resolve(syntheticModule),
+        imports: {},
+        stats: { mtime: new Date(0), mtimeMs: 0 } as any,
+        webpackModule: null as any,
+        ready,
+      });
+
+      await ready;
+      this.loadedModules[filename] = module;
+
+      resolver.resolve(module);
+      return syntheticModule;
+    }) as any);
+
+    await sourceTextModule.evaluate({});
+    return sourceTextModule;
   }
 
   async create(
@@ -859,6 +1061,7 @@ export class ModuleContext {
     filename: string,
     source: string,
     sourceFilename: string = filename,
+    imported?: Import,
     seen: Set<string> = new Set()
   ): Promise<Module> {
     const loadingModule = this.modules[filename];
@@ -870,6 +1073,15 @@ export class ModuleContext {
     const promise = createResolver<Module>();
 
     this.modules[filename] = promise;
+
+    if (!imported) {
+      const { [filename]: _imported } = await this.resolver.resolve(
+        factory,
+        context,
+        filename
+      );
+      imported = _imported;
+    }
 
     const { stats, vmSource, imports } = await factory.compile(
       context,
@@ -904,7 +1116,7 @@ export class ModuleContext {
         ];
       }
 
-      if (!require.compile) {
+      if (!require.compile && !require.esm) {
         return [require.filename];
       }
 
@@ -918,6 +1130,7 @@ export class ModuleContext {
         require.filename,
         source,
         factory.filename(require.filename),
+        require,
         new Set()
       );
       return [require.filename];
@@ -925,38 +1138,43 @@ export class ModuleContext {
 
     const modules = await Promise.all(Object.values(imports).map(next));
 
-    const vmContext = createContext(global);
-    const sourceTextModule = new SourceTextModule(source, {
-      context: vmContext,
-      initializeImportMeta: (meta, module) => {},
-      identifier: filename,
-      importModuleDynamically: async (
-        specified,
-        parentModule,
-        importAssertions
-      ) => {
-        const m = await this.require(factory, context, specified, module);
-        await m.load();
-        return m.module;
-      },
-    });
-
-    let _module = await sourceTextModule.link((async (specifier: string) => {
-      const require = imports[specifier];
-      let module = await this.modules[require.filename];
-
-      if (!module) {
-        module = await this.require(factory, context, specifier);
+    let _module: Promise<_Module>;
+    const loader = async (): Promise<_Module> => {
+      if (_module) {
+        return _module;
       }
 
-      await module.load();
-      return module.module;
-    }) as any);
+      const resolver = createResolver<_Module>();
+      _module = resolver;
 
-    const loader = async (): Promise<_Module> => {
-      await sourceTextModule.evaluate({});
+      try {
+        if (imported!.esm) {
+          const sourceTextModule = await this.#createSourceTextModule(
+            factory,
+            source,
+            context,
+            filename,
+            imports
+          );
 
-      return _module;
+          resolver.resolve(sourceTextModule);
+          return sourceTextModule;
+        } else {
+          const syntheticModule = await this.#createSyntheticModule(
+            factory,
+            context,
+            filename,
+            imported!.filename,
+            imported!
+          );
+
+          resolver.resolve(syntheticModule);
+          return syntheticModule;
+        }
+      } catch (err) {
+        resolver.reject(err);
+        throw err;
+      }
     };
 
     const ready = createResolver();
@@ -974,6 +1192,13 @@ export class ModuleContext {
 
     await ready;
     this.loadedModules[filename] = module;
+    function promiseState(p?: PromiseLike<any>) {
+      const t = {};
+      return Promise.race([p, t]).then(
+        v => (v === t ? 'pending' : 'fulfilled'),
+        () => 'rejected'
+      );
+    }
 
     await Promise.all(
       modules

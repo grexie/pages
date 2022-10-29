@@ -33,7 +33,7 @@ export default async function PagesLoader(
       content.toString()
     );
 
-    configModule.load(null as any);
+    await configModule.load();
 
     let configExports;
     if (typeof configModule.exports.default === 'function') {

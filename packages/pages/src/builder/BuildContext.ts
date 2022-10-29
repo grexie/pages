@@ -107,24 +107,39 @@ export class BuildContext extends Context {
         ),
         forceExtensions: Array.from(
           new Set([
-            ...(resolver.forceExtensions ?? [
-              '.scss',
-              '.css',
-              '.jpeg',
-              '.jpg',
-              '.png',
-              '.webp',
-              '.gif',
-              '.svg',
-            ]),
+            ...(resolver.forceExtensions ?? []),
+            '.scss',
+            '.css',
+            '.jpeg',
+            '.jpg',
+            '.png',
+            '.webp',
+            '.gif',
+            '.svg',
           ])
         ),
+        esm: [
+          ...new Set([
+            ...(resolver.esm ?? []),
+            '.scss',
+            '.css',
+            '.jpeg',
+            '.jpg',
+            '.png',
+            '.webp',
+            '.gif',
+            '.svg',
+            '.pages.yml',
+            '.pages.yaml',
+            '.md',
+            '.jsx',
+            '.ts',
+            '.tsx',
+            '.mjs',
+          ]),
+        ],
         forceCompile: Array.from(
-          new Set([
-            ...(resolver.forceCompile ?? []),
-            '@mdx-js/mdx',
-            path.resolve(__dirname, '..', 'runtime'),
-          ])
+          new Set([...(resolver.forceCompile ?? []), '@mdx-js/mdx'])
         ),
       },
     });

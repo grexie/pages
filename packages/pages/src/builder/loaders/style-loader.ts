@@ -21,7 +21,9 @@ export default async function StyleLoader(
       factory,
       this._module!,
       this.resourcePath,
-      content.toString()
+      `const module = { id: ${JSON.stringify(
+        this.resourcePath
+      )} };\n${content.toString()}`
     );
 
     await stylesModule.load();
@@ -36,6 +38,9 @@ export default async function StyleLoader(
       css
     )}, ${JSON.stringify(locals, null, 2)}); 
   `;
+  } catch (err) {
+    console.error(err);
+    throw err;
   } finally {
     await context.modules.evict(factory, this.resourcePath, {
       recompile: true,

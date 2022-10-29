@@ -31,7 +31,7 @@ export const resource = async (
   let stylesheets = '';
   if (typeof context.metadata.styles === 'object') {
     stylesheets =
-      'const styles = {' +
+      'export const styles = {' +
       (
         Object.entries(context.metadata.styles ?? {}) as unknown as [
           string,
@@ -43,18 +43,20 @@ export const resource = async (
             `${name}: require(${JSON.stringify(stylesheet)})`
         )
         .join(', ') +
-      '};\nexports.styles = styles;\n\n';
+      '};\n';
   } else if (typeof context.metadata.styles === 'string') {
-    stylesheets = `const styles = require(${JSON.stringify(
+    stylesheets = `export { default as styles } from ${JSON.stringify(
       context.metadata.styles
-    )});\nexports.styles = styles;\n\n`;
+    )};\n`;
   }
 
+  console.info(content);
   const source = await compile(content, {
     outputFormat: 'program',
   });
 
   return context.createModule({
     source: stylesheets + source.toString(),
+    esm: true,
   });
 };

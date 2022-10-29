@@ -21,16 +21,30 @@ export class WritableBuffer extends Writable implements PromiseLike<Buffer> {
   readonly #buffers: Buffer[] = [];
   readonly #resolver = createResolver<Buffer>();
 
-  get then() {
-    return this.#resolver.then.bind(this.#resolver);
+  then<TResult1 = void, TResult2 = never>(
+    onfulfilled?:
+      | ((value: Buffer) => TResult1 | PromiseLike<TResult1>)
+      | null
+      | undefined,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | null
+      | undefined
+  ): Promise<TResult1 | TResult2> {
+    return this.#resolver.then(onfulfilled, onrejected);
   }
 
-  get catch() {
-    return this.#resolver.catch.bind(this.#resolver);
+  catch<TResult = never>(
+    onrejected?:
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | null
+      | undefined
+  ): Promise<Buffer | TResult> {
+    return this.then(x => x, onrejected);
   }
 
-  get finally() {
-    return this.#resolver.finally.bind(this.#resolver);
+  finally(onfinally?: (() => void) | null | undefined): Promise<Buffer> {
+    return this.then(x => x).finally(onfinally);
   }
 
   _write(

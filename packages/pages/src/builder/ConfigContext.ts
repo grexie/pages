@@ -1,7 +1,6 @@
 import { BuildContext } from './BuildContext';
 import { ResourceMetadata, Source } from '../api';
 import { Module, ModuleFactory } from './ModuleContext';
-import { Module as VMModule } from 'vm';
 import { ObjectProxy } from '../utils/proxy';
 import path from 'path';
 
@@ -37,7 +36,7 @@ export class ConfigModule {
   }
 
   async create(extra?: Config): Promise<Config> {
-    const parent = this.parent?.create();
+    const parent = await this.parent?.create();
     await this.module.load();
     const { exports } = this.module;
     if (!exports.config) {

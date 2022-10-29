@@ -91,7 +91,9 @@ export const useLazyBase = (
         }
       });
 
-      return (props: Attributes & PropsWithRef<any>) => <Component {...props} />;
+      return (props: Attributes & PropsWithRef<any>) => (
+        <Component {...props} />
+      );
     });
   }, dependencies);
 
@@ -104,7 +106,10 @@ export const useLazy = <P extends Object = {}>(
 ) => {
   const context = useLazyContext();
 
-  return useLazyBase([async () => context.wrap(cb() as Promise<any>)], dependencies)[0];
+  return useLazyBase(
+    [async () => context.wrap(cb() as Promise<any>)],
+    dependencies
+  )[0];
 };
 
 export const useLazyComplete = <P extends Object = {}>(
@@ -113,7 +118,10 @@ export const useLazyComplete = <P extends Object = {}>(
 ) => {
   const context = useLazyContext();
 
-  return useLazyBase([async () => context.complete(cb() as Promise<any>) ], dependencies)[0];
+  return useLazyBase(
+    [async () => context.complete(cb() as Promise<any>)],
+    dependencies
+  )[0];
 };
 
 export const useManyLazy = (
@@ -127,4 +135,3 @@ export const useManyLazy = (
     dependencies
   )[0];
 };
-

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'events';
 import React, { useMemo, useState } from 'react';
 import { createContextWithProps } from '../utils/context';
 
