@@ -6,7 +6,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src/ -D -d . -x .ts,.tsx --out-file-extension .mjs --ignore **/*.test.tsx --ignore **/*.test.ts",
+    "build": "babel src/ -D -d . -x .ts,.tsx --ignore **/*.test.tsx --ignore **/*.test.ts",
     "test": "jest"
   },
   "dependencies": {
@@ -54,7 +54,11 @@
     "@types/whatwg-url": "^8.2.1"
   },
   "exports": {
-    ".": "./index.mjs"
+    ".": "./index.js",
+    "./scripts/cache/clean": "./scripts/cache/clean.js",
+    "./scripts/build": "./scripts/build.js",
+    "./scripts/serve": "./scripts/serve.js",
+    "./package.json": "./package.json"
   },
   "sideEffects": false
 }

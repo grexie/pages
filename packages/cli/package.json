@@ -17,5 +17,10 @@
   },
   "devDependencies": {
     "@types/resolve": "^1.20.2"
+  },
+  "exports": {
+    "./scripts/dev/link": "./scripts/dev/link.js",
+    "./scripts/dev/unlink": "./scripts/dev/unlink.js",
+    "./scripts/create": "./scripts/create"
   }
 }

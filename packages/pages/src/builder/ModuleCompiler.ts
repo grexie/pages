@@ -1,8 +1,10 @@
 import type { ModuleContext } from './ModuleContext.js';
 import { parseAsync } from '@babel/core';
-import traverse from '@babel/traverse';
+import _traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import babelPresetEnv from '@babel/preset-env';
+
+const { default: traverse } = _traverse;
 
 export interface ModuleCompilerOptions {
   context: ModuleContext;

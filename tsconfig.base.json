@@ -20,7 +20,8 @@
     "jsx": "react",
     "incremental": true,
     "inlineSourceMap": true,
-    "inlineSources": true
+    "inlineSources": true,
+        "allowSyntheticDefaultImports": true
   },
   "exclude": [
     "**/*.spec.ts",

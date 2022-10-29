@@ -64,7 +64,7 @@ export class Registry {
   constructor(context: BuildContext) {
     this.context = context;
     this.defaultConfig = new Source({
-      filename: path.resolve(context.pagesDir, 'defaults.pages.mjs'),
+      filename: path.resolve(context.pagesDir, 'defaults.pages.js'),
       path: [],
     });
   }

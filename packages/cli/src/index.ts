@@ -3,7 +3,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { createRequire } from 'module';
 
-const __dirname = path.dirname(import.meta.url);
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 type Script = (...args: string[]) => Promise<void>;
 
@@ -25,7 +25,8 @@ const importScript = async (name: string): Promise<Script> => {
   for (const { domain, parent } of domains) {
     try {
       const modulePath = path.join(domain, name.replace(/:/g, '/'));
-      module = await import.meta.resolve?.(modulePath, parent ?? process.cwd());
+      const require = createRequire(parent ?? process.cwd());
+      module = require.resolve(modulePath);
       break;
     } catch (err) {
       continue;
@@ -67,7 +68,7 @@ const main = async (name: string, ...args: string[]) => {
   try {
     script = await importScript(name);
   } catch (err) {
-    console.error();
+    console.error(err);
     console.error(chalk.red(`command ${chalk.bold(name)} not found`));
     console.error();
     console.error(await usage());
