@@ -1,6 +1,7 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
 import { createHash } from 'crypto';
+import { SourceNode } from 'source-map';
 
 interface StyleLoaderOptions {
   context: BuildContext;
@@ -8,7 +9,8 @@ interface StyleLoaderOptions {
 
 export default async function StyleLoader(
   this: LoaderContext<StyleLoaderOptions>,
-  content: Buffer
+  content: Buffer,
+  inputSourceMap: any
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('style-loader', this.resourcePath);
@@ -32,12 +34,27 @@ export default async function StyleLoader(
     const { locals } = styles;
     const hash = createHash('md5').update(css).digest('hex').substring(0, 8);
 
-    return `
+    const chunk = `
     import { wrapStyles } from '@grexie/pages/runtime/styles';
     export default wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
       css
     )}, ${JSON.stringify(locals, null, 2)}); 
   `;
+
+    let map;
+
+    if (this.sourceMap) {
+      const node = new SourceNode(1, 1, this.resourcePath, chunk);
+      node.setSourceContent(
+        this.resourcePath,
+        inputSourceMap.sourcesContent[
+          inputSourceMap.sources.indexOf(this.resourcePath)
+        ]
+      );
+      map = JSON.parse(
+        node.toStringWithSourceMap({ file: this.resourcePath }).map.toString()
+      );
+    }
   } catch (err) {
     console.error(err);
     throw err;

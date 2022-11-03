@@ -6,6 +6,7 @@ import { ModuleResource } from './ModuleResource.js';
 import { Config, ConfigModule } from './ConfigContext.js';
 import path from 'path';
 import { ObjectProxy } from '../utils/proxy.js';
+import { SourceMap } from 'module';
 
 export interface CreateContentOptions<C = any> {
   content: C;
@@ -75,9 +76,11 @@ export class SourceContext extends Source {
 
   async createModule({
     source,
+    map,
     esm = false,
   }: {
     source: string;
+    map?: any;
     esm?: boolean;
   }) {
     if (!this.module.module) {
@@ -112,11 +115,12 @@ export class SourceContext extends Source {
       path: this.path,
       metadata: this.metadata,
       source,
+      map,
       exports,
     });
   }
 
-  async serialize(resource: Resource) {
+  async serialize(resource: Resource): Promise<{ code: string; map?: any }> {
     const serializeMetadata = (source: string) =>
       `__pages_object_proxy.create(${JSON.stringify(
         ObjectProxy.get(resource.metadata as any),
@@ -124,15 +128,24 @@ export class SourceContext extends Source {
         2
       )}, ${this.configModule.serialize(path.dirname(this.filename), false)})`;
 
-    return `
+    const { code: imports } = await resource.serialize({
+      serializeMetadata,
+      imports: true,
+    });
+    const { code, map } = await resource.serialize({
+      serializeMetadata,
+      imports: false,
+    });
+
+    return {
+      code: `
       import { ObjectProxy as __pages_object_proxy } from '@grexie/pages/utils/proxy';
-      ${await resource.serialize({ serializeMetadata, imports: true })}
+      ${imports}
       ${this.configModule.serialize(path.dirname(this.filename), true)}
 
-      ${await resource.serialize({
-        serializeMetadata,
-        imports: false,
-      })}
-    `;
+      ${code}
+    `,
+      map,
+    };
   }
 }

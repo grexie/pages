@@ -5,6 +5,7 @@ import { useModule } from '../hooks/index.js';
 import { Resource } from '../api/index.js';
 import type { SourceContext } from '../builder/SourceContext.js';
 import { StyleSheet } from '../runtime/styles.js';
+import { SourceMapGenerator, SourceMapConsumer } from 'source-map';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
   const { default: Component, styles } = useModule({ resource: true });
@@ -50,12 +51,24 @@ export const resource = async (
     )};\n`;
   }
 
-  const source = await compile(content, {
-    outputFormat: 'program',
-  });
+  const source = await compile(
+    { path: context.filename, value: content },
+    {
+      outputFormat: 'program',
+      format: 'mdx',
+      SourceMapGenerator,
+    }
+  );
+
+  const map = SourceMapGenerator.fromSourceMap(
+    new SourceMapConsumer(source.map as any)
+  );
+  map.setSourceContent(context.filename, content);
+  source.map = JSON.parse(map.toString());
 
   return context.createModule({
     source: stylesheets + source.toString(),
+    map: source.map,
     esm: true,
   });
 };

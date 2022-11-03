@@ -169,6 +169,7 @@ export class Builder {
           .reduce((a, b) => ({ ...a, ...b }), {}),
       },
       mode: 'development',
+      devtool: 'source-map',
       output: {
         path: this.context.outputDir,
         filename: `[name].js`,
@@ -334,6 +335,7 @@ export class Builder {
                   ],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
+                  sourceMaps: true,
                 },
               },
             ],

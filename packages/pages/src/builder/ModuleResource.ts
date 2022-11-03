@@ -6,6 +6,7 @@ import {
   Resource,
 } from '../api/Resource.js';
 import type * as babel from '@babel/core';
+import { SourceMap } from 'module';
 
 const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
@@ -43,6 +44,7 @@ export interface ModuleResourceOptions<
   M extends ResourceMetadata = any
 > extends ResourceOptions<M> {
   source: string;
+  map?: any;
   exports: X;
 }
 
@@ -51,26 +53,34 @@ export class ModuleResource<
   M extends ResourceMetadata = any
 > extends Resource<M> {
   readonly #source: string;
+  readonly #map: string;
   readonly exports: X;
 
-  constructor({ source, exports, ...options }: ModuleResourceOptions<X, M>) {
+  constructor({
+    source,
+    map,
+    exports,
+    ...options
+  }: ModuleResourceOptions<X, M>) {
     super(options);
     this.#source = source;
+    this.#map = map;
     this.exports = exports;
   }
 
   async serialize({
     serializeMetadata,
     imports,
-  }: ResourceSerializeOptions): Promise<string> {
+  }: ResourceSerializeOptions): Promise<{ code: string; map?: any }> {
     if (imports) {
-      return '';
+      return { code: '' };
     } else {
       const compiled = await transformAsync(this.#source, {
         plugins: [handlerResourcePlugin],
       });
 
-      return `
+      return {
+        code: `
       const __handler_exports = {};
 
       ${compiled!.code}
@@ -81,7 +91,9 @@ export class ModuleResource<
         metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
         exports: __handler_exports,
       };
-    `;
+    `,
+        map: this.#map,
+      };
     }
   }
 }

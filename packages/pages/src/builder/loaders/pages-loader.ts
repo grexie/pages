@@ -1,6 +1,7 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
 import { createResolver } from '../../utils/resolvable.js';
+import { SourceNode } from 'source-map';
 
 interface PagesLoaderOptions {
   context: BuildContext;
@@ -8,12 +9,14 @@ interface PagesLoaderOptions {
 
 export default async function PagesLoader(
   this: LoaderContext<PagesLoaderOptions>,
-  content: Buffer
+  content: Buffer,
+  inputSourceMap: any
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('pages-loader', this.resourcePath);
   }
   const { context } = this.getOptions();
+  const callback = this.async();
 
   const resolver = createResolver();
   context.modules.addBuild(this.resourcePath, resolver);
@@ -52,7 +55,9 @@ export default async function PagesLoader(
       recompile: true,
     });
 
-    return `
+    callback(
+      null,
+      `
       import { ObjectProxy } from '@grexie/pages';
 
       const _metadata = ${JSON.stringify(metadata, null, 2)};
@@ -62,9 +67,12 @@ export default async function PagesLoader(
         ...${JSON.stringify(config, null, 2)}
       }, parent);
       export const metadata = (parent) => ObjectProxy.create(_metadata, parent);
-    `;
+    `,
+      inputSourceMap
+    );
   } catch (err) {
     resolver.reject(err);
+    callback(err as any);
   } finally {
     resolver.resolve();
   }

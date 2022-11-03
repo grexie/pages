@@ -3,7 +3,7 @@ import { BuildContext } from './BuildContext.js';
 import { Cache, ICache } from '@grexie/builder/Cache.js';
 import type { Stats } from '@grexie/builder/FileSystem.js';
 import {
-  dependencies as WebpackDependencies,
+  default as webpack,
   Compilation,
   Module as WebpackModule,
 } from 'webpack';
@@ -28,7 +28,7 @@ import { isPlainObject } from '../utils/object.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const { ModuleDependency } = WebpackDependencies;
+const { ModuleDependency } = webpack.dependencies;
 
 type WrappedScript = (
   exports: any,

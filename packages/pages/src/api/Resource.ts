@@ -21,15 +21,23 @@ export class Resource<M extends ResourceMetadata = any> {
     this.metadata = metadata;
   }
 
-  async serialize({ serializeMetadata, imports }: ResourceSerializeOptions) {
+  async serialize({
+    serializeMetadata,
+    imports,
+  }: ResourceSerializeOptions): Promise<{
+    code: string;
+    map?: any;
+  }> {
     if (imports) {
-      return '';
+      return { code: '' };
     } else {
-      return `export const resource = {
+      return {
+        code: `export const resource = {
         path: ${JSON.stringify(this.path)},
         slug: ${JSON.stringify(this.slug)},
         metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
-      }`;
+      }`,
+      };
     }
   }
 

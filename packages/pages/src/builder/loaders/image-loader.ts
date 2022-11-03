@@ -2,7 +2,7 @@ import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
 import path from 'path';
 import { createHash } from 'crypto';
-import * as webpack from 'webpack';
+import { default as webpack } from 'webpack';
 import { default as sharp, Metadata } from 'sharp';
 import { transform } from '@svgr/core';
 import { transform as babelTransform } from '@babel/core';

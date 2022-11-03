@@ -1,4 +1,4 @@
-import * as glob from 'glob';
+import { default as glob } from 'glob';
 import * as _path from 'path';
 import { promisify } from 'util';
 import { Source } from './Source.js';
@@ -6,7 +6,7 @@ import { createResolver, ResolvablePromise } from '../utils/resolvable.js';
 import { ProviderOptions, ListOptions } from './Registry.js';
 import { BuildContext } from '../builder/BuildContext.js';
 
-const globAsync = glob.__promisify__;
+const globAsync = promisify(glob);
 
 export class Provider {
   readonly context: BuildContext;
