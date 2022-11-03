@@ -7,7 +7,8 @@ import { Handler } from '../../api/Handler.js';
 import { SourceContext } from '../SourceContext.js';
 import { createComposable } from '@grexie/compose';
 import { createResolver } from '../../utils/resolvable.js';
-import babel, { PluginObj, PluginPass, transformAsync } from '@babel/core';
+import * as babel from '@babel/core';
+import { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
 
 interface ModuleLoaderOptions {

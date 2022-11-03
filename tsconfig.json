@@ -1,5 +1,8 @@
 {
   "files": [],
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true
+  },
   "references": [
     {
       "path": "packages/builder"

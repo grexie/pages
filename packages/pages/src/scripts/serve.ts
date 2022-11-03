@@ -1,10 +1,12 @@
-import nodemon from 'nodemon';
-import path from 'path';
-import fs from 'fs';
-import * as chalk from 'chalk';
+import * as _nodemon from 'nodemon';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as _chalk from 'chalk';
 import { createRequire } from 'module';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const chalk = _chalk.default;
+const nodemon = _nodemon.default;
 
 export default () => {
   const require = createRequire(import.meta.url);
@@ -14,7 +16,7 @@ export default () => {
     path.dirname(require.resolve('@grexie/builder/package.json')),
   ];
 
-  const options: nodemon.Settings = {
+  const options: _nodemon.Settings = {
     script: path.resolve(__dirname, '..', 'server', 'run'),
     ext: 'js jsx json',
     watch: watch.map(pathname => fs.realpathSync(pathname)),

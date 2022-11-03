@@ -2,7 +2,11 @@ import EventEmitter from 'events';
 import { BuildContext } from './BuildContext.js';
 import { Cache, ICache } from '@grexie/builder/Cache.js';
 import type { Stats } from '@grexie/builder/FileSystem.js';
-import webpack, { Compilation, Module as WebpackModule } from 'webpack';
+import {
+  dependencies as WebpackDependencies,
+  Compilation,
+  Module as WebpackModule,
+} from 'webpack';
 import { Module as NodeModule, createRequire } from 'module';
 import { ModuleCompiler } from './ModuleCompiler.js';
 import {
@@ -24,7 +28,7 @@ import { isPlainObject } from '../utils/object.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const { ModuleDependency } = webpack.dependencies;
+const { ModuleDependency } = WebpackDependencies;
 
 type WrappedScript = (
   exports: any,

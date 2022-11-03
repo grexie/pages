@@ -1,6 +1,7 @@
 import { Source } from '../../api/index.js';
 import { BuildContext } from '../BuildContext.js';
-import webpack, { Compiler, Compilation } from 'webpack';
+import * as webpack from 'webpack';
+import { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { ResourceContext } from '../../hooks/index.js';
 import { WritableBuffer } from '../../utils/stream.js';
