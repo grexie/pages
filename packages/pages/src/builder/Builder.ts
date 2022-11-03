@@ -19,7 +19,7 @@ import { ResourcesPlugin } from './plugins/resources-plugin.js';
 import { ModuleContext } from './ModuleContext.new.js';
 import { Compilation } from 'webpack';
 import path from 'path';
-import * as webpack from 'webpack';
+import { default as webpack } from 'webpack';
 import { createRequire } from 'module';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -141,10 +141,11 @@ export class Builder {
   }
 
   entry(source: Source): EntryObject {
-    let path = source.path.slice();
-    const slug = [...path, 'index'].join('/');
     return {
-      [slug]: `./${_path.relative(this.context.rootDir, source.filename)}`,
+      [source.slug]: `./${_path.relative(
+        this.context.rootDir,
+        source.filename
+      )}`,
     };
   }
 
@@ -172,7 +173,7 @@ export class Builder {
       devtool: 'source-map',
       output: {
         path: this.context.outputDir,
-        filename: `[name].js`,
+        filename: `[name]/index.js`,
       },
       // externals: [
       //   nodeExternals({
@@ -188,8 +189,12 @@ export class Builder {
             use: [
               this.#loader('cache-loader'),
               this.#loader('style-loader'),
-              'css-loader',
-              'sass-loader',
+              {
+                loader: 'css-loader',
+              },
+              {
+                loader: 'sass-loader',
+              },
             ],
             include: /\.global\.scss$/,
           },
@@ -205,7 +210,9 @@ export class Builder {
                   modules: true,
                 },
               },
-              'sass-loader',
+              {
+                loader: 'sass-loader',
+              },
             ],
             include: /\.module\.scss$/,
           },
@@ -215,7 +222,9 @@ export class Builder {
             use: [
               this.#loader('cache-loader'),
               this.#loader('style-loader'),
-              'css-loader',
+              {
+                loader: 'css-loader',
+              },
             ],
             include: /\.global\.css$/,
           },
@@ -385,8 +394,15 @@ export class Builder {
       },
       optimization: {
         usedExports: true,
+        minimize: true,
+        splitChunks: {
+          chunks: 'all',
+        },
       },
-      plugins: [new ResourcesPlugin({ context: this.context })],
+      plugins: [
+        new ResourcesPlugin({ context: this.context }),
+        new webpack.DefinePlugin({ 'process.env': '({})' }),
+      ],
     };
   }
 

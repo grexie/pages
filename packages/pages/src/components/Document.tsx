@@ -2,11 +2,18 @@ import { FC, PropsWithChildren } from 'react';
 import { Head, HeadProvider } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles } from '../hooks/useStyles.js';
+import { useContext } from '../index.js';
+import { BuildContext } from '../builder/index.js';
+import { useScripts } from '../hooks/useScripts.js';
 
 const Scripts = () => {
+  const scripts = useScripts();
+
   return (
     <>
-      <script src="./index.js" />
+      {scripts.map(script => (
+        <script src={script} key={script} />
+      ))}
     </>
   );
 };

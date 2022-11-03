@@ -13,6 +13,7 @@ import { Resource } from '../api/index.js';
 import { BuildContext } from './index.js';
 import { withLazy } from '../hooks/index.js';
 import { withStyles, StylesContext } from '../hooks/useStyles.js';
+import { withScripts } from '../hooks/useScripts.js';
 
 export class Renderer {
   readonly context: BuildContext;
@@ -25,6 +26,7 @@ export class Renderer {
     writable: T,
     resourceContext: ResourceContext,
     resource: Resource,
+    scripts: string[],
     ...composables: any[]
   ): Promise<T> {
     const styles = new StylesContext();
@@ -35,6 +37,7 @@ export class Renderer {
       withResourceContext({ resourceContext }),
       withStyles({ styles }),
       withDocument({ resourceContext, resource }),
+      withScripts({ scripts }),
       withDocumentComponent,
       ...composables
     );

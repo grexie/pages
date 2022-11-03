@@ -2,6 +2,7 @@ import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
 import { createHash } from 'crypto';
 import { SourceNode } from 'source-map';
+import { offsetLines } from '../../utils/source-maps.js';
 
 interface StyleLoaderOptions {
   context: BuildContext;
@@ -16,6 +17,7 @@ export default async function StyleLoader(
     console.info('style-loader', this.resourcePath);
   }
   const { context } = this.getOptions();
+  const callback = this.async();
   const factory = context.modules.createModuleFactory(this._compilation!);
 
   try {
@@ -44,20 +46,14 @@ export default async function StyleLoader(
     let map;
 
     if (this.sourceMap) {
-      const node = new SourceNode(1, 1, this.resourcePath, chunk);
-      node.setSourceContent(
-        this.resourcePath,
-        inputSourceMap.sourcesContent[
-          inputSourceMap.sources.indexOf(this.resourcePath)
-        ]
-      );
-      map = JSON.parse(
-        node.toStringWithSourceMap({ file: this.resourcePath }).map.toString()
-      );
+      map =
+        inputSourceMap &&
+        offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length);
     }
+
+    callback(null, chunk, map as any);
   } catch (err) {
-    console.error(err);
-    throw err;
+    callback(err as any);
   } finally {
     await context.modules.evict(factory, this.resourcePath, {
       recompile: true,

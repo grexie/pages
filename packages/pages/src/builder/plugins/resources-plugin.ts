@@ -48,7 +48,7 @@ class SourceCompiler {
     this.source = source;
   }
 
-  async render(compilation: Compilation) {
+  async render(compilation: Compilation, scripts: string[]) {
     const factory = this.context.modules.createModuleFactory(compilation);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
@@ -76,6 +76,7 @@ class SourceCompiler {
       new WritableBuffer(),
       resourceContext,
       exports.resource,
+      scripts,
       exports.default
     );
 
@@ -135,13 +136,14 @@ class SourceCompiler {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('SourceCompiler', async compilation => {
       const resolver = createResolver();
+      let changed = false;
 
       this.context.promises[this.source.filename] = resolver;
       let buffer: Buffer | undefined;
       try {
         compilation.fileDependencies.add(this.source.filename);
 
-        const changed = await this.hasChanged(
+        changed = await this.hasChanged(
           compilation.compiler,
           this.source.filename
         );
@@ -158,24 +160,37 @@ class SourceCompiler {
             )
           );
         }
-
-        if (changed) {
-          buffer = await this.render(compilation);
-        }
-
-        resolver.resolve();
       } catch (err) {
         console.error(err);
         resolver.reject(err);
         throw err;
       }
 
-      compilation.hooks.processAssets.tap('SourceCompiler', () => {
-        if (buffer) {
+      compilation.hooks.processAssets.tapPromise('SourceCompiler', async () => {
+        const entrypoint = [...compilation.entrypoints].find(
+          ([name]) => name === this.source.slug
+        )?.[1];
+
+        if (changed) {
+          const files = new Set<string>();
+
+          if (entrypoint) {
+            entrypoint.chunks.forEach(chunk =>
+              [...chunk.files].forEach(file => files.add(file))
+            );
+          }
+
+          buffer = await this.render(compilation, [...files]);
+
+          resolver.resolve();
+
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
             new RawSource(buffer!)
           );
+        }
+
+        if (buffer) {
         }
       });
     });
@@ -321,6 +336,12 @@ export class ResourcesPlugin {
     };
 
     return { resolver, process };
+  }
+
+  getEntries(compilation: Compilation) {
+    return [...compilation.entrypoints].map(([name, entrypoint]) => ({
+      [name]: entrypoint.chunks,
+    }));
   }
 
   apply(compiler: Compiler) {
