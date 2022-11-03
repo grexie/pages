@@ -75,16 +75,13 @@ export default async function ModuleLoader(
     });
     await handlerModule.load();
 
-    phase = 8;
     const handler = handlerModule.exports as Handler;
     const handlerConfig = { metadata: {} };
-    phase = 29;
+
     const configPromise = configModule.create(handlerConfig);
-    phase = 30;
-    console.info(Object.getPrototypeOf(configPromise) === Promise);
+
     const config = await configPromise;
 
-    phase = 9;
     let resource: Resource | undefined = undefined;
 
     const sourceContext = new SourceContext({
@@ -98,18 +95,13 @@ export default async function ModuleLoader(
       config,
     });
 
-    phase = 10;
     if (typeof handler.resource === 'function') {
       resource = await handler.resource(sourceContext);
     }
-    phase = 11;
 
     if (!resource) {
       resource = sourceContext.create();
     }
-
-    phase = 12;
-    console.info(this.resourcePath, resource);
 
     const composables = [];
     const composablesRequires = [];
@@ -184,8 +176,7 @@ export default async function ModuleLoader(
           .join(',\n')}
       );
     `;
-      console.info(source);
-      phase = 16;
+
       return source;
     } else {
       const compiled = await transformAsync(content.toString(), {
@@ -224,8 +215,7 @@ export default async function ModuleLoader(
           .join(',\n')}
       );
     `;
-      console.info(source);
-      phase = 17;
+
       return source;
     }
   } catch (err) {

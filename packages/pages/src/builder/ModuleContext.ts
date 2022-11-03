@@ -415,17 +415,20 @@ export class ModuleFactory {
       webpackModule.buildMeta = {};
 
       phase = 'build-module';
-      await new Promise((resolve, reject) =>
-        this.compilation.buildModule(webpackModule, (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+      await new Promise((resolve, reject) => {
+        try {
+          this.compilation.buildQueue.add(webpackModule, (err, result) => {
+            if (err) {
+              reject(err);
+              return;
+            }
 
-          resolve(result);
-        })
-      );
-      phase = '';
+            resolve(result);
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
 
       phase = 'built-module';
 
@@ -895,8 +898,6 @@ export class ModuleContext {
   }
 
   async #createSyntheticImportModule(factory: ModuleFactory, filename: string) {
-    console.info('creating synthetic import module', filename);
-
     const exports = await import(filename);
 
     const module = new SyntheticModule(
@@ -950,8 +951,6 @@ export class ModuleContext {
           true,
           this.cache
         );
-
-        console.info(resolved.filename, compiled.imports);
 
         return this.#createSourceTextModule(
           factory,
@@ -1032,10 +1031,6 @@ export class ModuleContext {
     await sourceTextModule.link((async (specifier: string) => {
       const resolved = imports[specifier]!;
 
-      if (!resolved) {
-        console.info(imports, specifier);
-      }
-
       let modulePromise = this.modules[resolved?.filename ?? specifier];
 
       if (modulePromise) {
@@ -1047,13 +1042,6 @@ export class ModuleContext {
       const resolver = createResolver<Module>();
       this.modules[resolved?.filename ?? specifier] = resolver;
 
-      console.info(
-        'linking to synthetic module',
-        filename,
-        resolved,
-        specifier,
-        imports
-      );
       const syntheticModule = await this.#createSyntheticModule(
         factory,
         context,
@@ -1162,6 +1150,7 @@ export class ModuleContext {
         require,
         new Set()
       );
+
       return [require.filename];
     };
 
@@ -1177,7 +1166,6 @@ export class ModuleContext {
       _module = resolver;
 
       try {
-        console.info(imported, imports);
         if (imported!.esm && imported!.compile) {
           const sourceTextModule = await this.#createSourceTextModule(
             factory,
@@ -1230,11 +1218,13 @@ export class ModuleContext {
       );
     }
 
-    await Promise.all(
-      modules
-        .reduce((a, b) => [...a, ...b], [])
-        .map(module => this.modules[module])
-    );
+    (
+      await Promise.all(
+        modules
+          .reduce((a, b) => [...a, ...b], [])
+          .map(module => this.modules[module])
+      )
+    ).forEach(childModule => childModule && module.addDependency(childModule));
     promise.resolve(module);
     return module;
   }

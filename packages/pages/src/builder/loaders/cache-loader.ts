@@ -156,16 +156,32 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       return results.reduce((a, b) => a || b, false);
     };
 
-    return cache.lock(
+    const result = await cache.lock(
       [this.resourcePath, `${this.resourcePath}.webpack.json`],
       async cache => {
-        if (await cache.has(this.resourcePath)) {
-          if (!(await hasChanged(cache, this.resourcePath))) {
-            return await cache.get(this.resourcePath);
+        let phase = 0;
+        const interval = setInterval(() => {
+          console.info(this.resourcePath, phase);
+        }, 5000);
+        try {
+          phase = 1;
+          if (await cache.has(this.resourcePath)) {
+            phase = 2;
+            if (!(await hasChanged(cache, this.resourcePath))) {
+              phase = 3;
+              return await cache.get(this.resourcePath);
+            }
           }
+        } catch (err) {
+          console.info(err);
+          throw err;
+        } finally {
+          clearInterval(interval);
+          console.info('cache-loader:pitch-unlocking', this.resourcePath);
         }
       }
     );
+    return result;
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('cache-loader:pitch-complete', this.resourcePath);

@@ -38,7 +38,7 @@ export class PromiseQueue implements PromiseLike<void> {
     const previousPromises = [...this.#promises];
 
     this.#promises.push(promise);
-    console.info('awaiting', previousPromises.length, 'promises');
+
     await Promise.all(previousPromises);
   }
 

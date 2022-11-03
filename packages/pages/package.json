@@ -6,7 +6,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src/ -D -d . -x .ts,.tsx --ignore **/*.test.tsx --ignore **/*.test.ts",
+    "build": "babel src/ -D -d . -x .ts,.tsx",
     "test": "jest"
   },
   "dependencies": {

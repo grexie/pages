@@ -8,5 +8,5 @@ export default {
   },
   projects: ['packages/*'],
   testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/.test/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.test/', '.test.js'],
 };

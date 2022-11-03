@@ -50,7 +50,6 @@ export const resource = async (
     )};\n`;
   }
 
-  console.info(content);
   const source = await compile(content, {
     outputFormat: 'program',
   });

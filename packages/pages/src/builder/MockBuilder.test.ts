@@ -1,4 +1,4 @@
-import { MockBuilder } from './MockBuilder';
+import { MockBuilder } from './MockBuilder.js';
 import path from 'path';
 describe('MockBuilder', () => {
   it.only('should write files', () => {
