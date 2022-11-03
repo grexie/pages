@@ -5,7 +5,7 @@ import {
   ResourceOptions,
   Resource,
 } from '../api/Resource.js';
-import type babel from '@babel/core';
+import type * as babel from '@babel/core';
 
 const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,

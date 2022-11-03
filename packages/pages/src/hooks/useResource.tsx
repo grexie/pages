@@ -1,6 +1,10 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { createContextWithProps } from '../utils/context.js';
-import { ContentResource, Resource, ResourceMetadata } from '../api/Resource.js';
+import {
+  ContentResource,
+  Resource,
+  ResourceMetadata,
+} from '../api/Resource.js';
 import type { ModuleResource } from '../builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
 

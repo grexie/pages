@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren } from 'react';
 import { compile } from '@mdx-js/mdx';
 import grayMatter from 'gray-matter';
 import { useModule } from '../hooks/index.js';

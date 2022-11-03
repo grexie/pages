@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createContextWithProps } from '../utils/context.js';
 
 export interface StylesProviderProps {

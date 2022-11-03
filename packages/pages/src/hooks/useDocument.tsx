@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Document, DocumentProps, DocumentOptions } from '../api/Document.js';
 import { createContextWithProps } from '../utils/context.js';
 

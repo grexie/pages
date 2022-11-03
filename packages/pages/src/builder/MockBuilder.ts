@@ -1,6 +1,6 @@
 import { BuildContext } from './BuildContext.js';
-import { Provider,  } from '../api/Provider.js';
-import { ResourceMetadata} from '../api/Resource.js';
+import { Provider } from '../api/Provider.js';
+import { ResourceMetadata } from '../api/Resource.js';
 import { Volume } from 'memfs';
 import { WritableFileSystem } from '@grexie/builder/FileSystem.js';
 import path from 'path';
@@ -62,7 +62,6 @@ export class JSXSource {
       return decorate(`${decorator}(${code})`, decorators);
     };
     const source = `
-import React from 'react';
 ${this.imports
   .map(({ importName, name, path }) => {
     if (importName === 'default') {

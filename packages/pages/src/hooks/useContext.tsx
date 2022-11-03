@@ -1,4 +1,3 @@
-import React from 'react';
 import { createContextWithProps } from '../utils/context.js';
 import { Context } from '../api/Context.js';
 

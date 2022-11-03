@@ -1,4 +1,4 @@
-import React, { FC, ComponentType } from 'react';
+import { FC, ComponentType } from 'react';
 import type { Metadata } from 'sharp';
 import styles from './image.global.css';
 

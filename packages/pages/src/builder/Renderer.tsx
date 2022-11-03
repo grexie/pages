@@ -1,4 +1,4 @@
-import React, { createElement } from 'react';
+import { createElement } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
 import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
@@ -11,7 +11,7 @@ import {
 } from '../hooks/index.js';
 import { Resource } from '../api/index.js';
 import { BuildContext } from './index.js';
-import { withLazy, withErrorManager, ErrorManager } from '../hooks/index.js';
+import { withLazy } from '../hooks/index.js';
 import { withStyles, StylesContext } from '../hooks/useStyles.js';
 
 export class Renderer {
@@ -27,13 +27,10 @@ export class Renderer {
     resource: Resource,
     ...composables: any[]
   ): Promise<T> {
-    const errorManager = new ErrorManager();
-
     const styles = new StylesContext();
 
     const component = compose(
-      withErrorManager({ errorManager }),
-      withLazy({ errorManager }),
+      withLazy,
       withContext({ context: this.context }),
       withResourceContext({ resourceContext }),
       withStyles({ styles }),
@@ -50,7 +47,6 @@ export class Renderer {
         onAllReady: () => resolve(),
       }).pipe(writable);
     });
-    errorManager.throwIfErrors();
 
     return Promise.resolve(writable);
   }

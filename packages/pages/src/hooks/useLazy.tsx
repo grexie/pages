@@ -1,4 +1,4 @@
-import React, {
+import {
   lazy,
   Attributes,
   PropsWithRef,
@@ -6,19 +6,10 @@ import React, {
   FC,
   useMemo,
 } from 'react';
-import { createContextWithProps } from '../utils/context.js';
-
-interface ErrorManager {
-  report: (error: any) => void;
-}
+import { createContext } from '../utils/context.js';
 
 class LazyContext {
   readonly #wrapped: Promise<any>[] = [];
-  readonly errorManager?: ErrorManager;
-
-  constructor(errorManager?: ErrorManager) {
-    this.errorManager = errorManager;
-  }
 
   async wrap<T extends unknown>(promise: Promise<T>): Promise<T> {
     promise = promise.finally(() => {
@@ -51,23 +42,15 @@ export const {
   Provider: LazyProvider,
   with: withLazy,
   use: useLazyContext,
-} = createContextWithProps<LazyContext, { errorManager?: ErrorManager }>(
-  Provider =>
-    ({ errorManager, children }) => {
-      const context = useMemo(
-        () => new LazyContext(errorManager),
-        [errorManager]
-      );
-      return <Provider value={context}>{children}</Provider>;
-    }
-);
+} = createContext<LazyContext>(Provider => ({ children }) => {
+  const context = useMemo(() => new LazyContext(), []);
+  return <Provider value={context}>{children}</Provider>;
+});
 
 export const useLazyBase = (
   cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
   dependencies: DependencyList | undefined
 ) => {
-  const { errorManager } = useLazyContext();
-
   const Components = useMemo(() => {
     return cb.map(cb => {
       const Component = lazy(async () => {
@@ -82,12 +65,7 @@ export const useLazyBase = (
             return { default: Component };
           }
         } catch (err) {
-          if (!errorManager) {
-            throw err;
-          }
-
-          errorManager.report(err);
-          return { default: () => <></> };
+          throw err;
         }
       });
 

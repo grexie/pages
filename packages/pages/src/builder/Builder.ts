@@ -295,7 +295,7 @@ export class Builder {
                 loader: 'babel-loader',
                 options: {
                   presets: [
-                    '@babel/react',
+                    ['@babel/react', { runtime: 'automatic' }],
                     [
                       '@babel/env',
                       {
@@ -323,7 +323,7 @@ export class Builder {
                 options: {
                   presets: [
                     '@babel/typescript',
-                    '@babel/react',
+                    ['@babel/react', { runtime: 'automatic' }],
                     [
                       '@babel/env',
                       {

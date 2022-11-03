@@ -74,7 +74,10 @@ export default async function ImageLoader(
       );
 
       jsCode = babelTransform(jsCode, {
-        presets: [babelPresetReact, [babelPresetEnv, { modules: false }]],
+        presets: [
+          [babelPresetReact, { runtime: 'automatic' }],
+          [babelPresetEnv, { modules: false }],
+        ],
       })?.code!;
     } else {
       this._compilation?.emitAsset(filename, new RawSource(content, false));

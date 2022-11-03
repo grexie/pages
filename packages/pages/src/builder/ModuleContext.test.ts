@@ -179,7 +179,7 @@ describe('ModuleContext', () => {
     const compiled = await builder.modules.compiler.compile({
       source,
       filename,
-      presets: [require('@babel/preset-react')],
+      presets: [[require('@babel/preset-react'), { runtime: 'automatic' }]],
     });
     const module2 = await builder.modules.create(
       factory2,
