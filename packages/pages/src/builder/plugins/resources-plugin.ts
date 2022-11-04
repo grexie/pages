@@ -5,10 +5,10 @@ import { Compiler, Compilation } from 'webpack';
 import path, { resolve } from 'path';
 import { ResourceContext } from '../../hooks/index.js';
 import { WritableBuffer } from '../../utils/stream.js';
-import { createResolver } from '../../utils/resolvable.js';
+import { createResolver, ResolvablePromise } from '../../utils/resolvable.js';
 import { promisify } from '../../utils/promisify.js';
-import { rejects } from 'assert';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
+import { rejects } from 'assert';
 
 const { RawSource } = webpack.sources;
 
@@ -41,13 +41,94 @@ class CompilationContext {
   }
 }
 
+class EntryCompiler {
+  readonly context: CompilationContext;
+  readonly sources: Source[];
+  readonly resolver: ResolvablePromise<Record<string, webpack.Chunk>>;
+
+  constructor(
+    context: CompilationContext,
+    sources: Source[],
+    resolver: ResolvablePromise<Record<string, webpack.Chunk>>
+  ) {
+    this.context = context;
+    this.sources = sources;
+    this.resolver = resolver;
+  }
+
+  apply(compiler: Compiler) {
+    compiler.hooks.make.tapPromise('EntryCompiler', async compilation => {
+      compilation.dependencyFactories.set(
+        EntryDependency,
+        compilation.params.normalModuleFactory
+      );
+
+      const entryModules = (
+        await Promise.all(
+          this.sources.map(async source => {
+            const dependency = new EntryDependency(source.filename);
+            dependency.loc = { name: source.slug };
+            const entryModule = await new Promise<webpack.Module>(
+              (resolve, reject) =>
+                compilation.addEntry(
+                  this.context.build.rootDir,
+                  dependency,
+                  {
+                    name: source.slug,
+                    filename: `${source.slug}${source.slug ? '/' : ''}index.js`,
+                  },
+                  (err, entryModule) => {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+
+                    resolve(entryModule!);
+                  }
+                )
+            );
+
+            return [source, entryModule] as [Source, webpack.Module];
+          })
+        )
+      ).reduce(
+        (a, [source, entryModule]) => ({
+          ...a,
+          [source.slug]: entryModule,
+        }),
+        {}
+      );
+
+      console.info('here4');
+      compilation.hooks.processAssets.tap('ResourcesPlugin', () => {
+        const entryChunks = {} as Record<string, webpack.Chunk>;
+
+        compilation.chunks.forEach(chunk => {
+          if (chunk.id !== null && chunk.id in entryModules) {
+            entryChunks[chunk.id] = chunk;
+          }
+        });
+
+        console.info('here2');
+        this.resolver.resolve(entryChunks);
+      });
+    });
+  }
+}
+
 class SourceCompiler {
   readonly context: CompilationContext;
   readonly source: Source;
+  readonly chunks: Promise<Record<string, webpack.Chunk>>;
 
-  constructor(context: CompilationContext, source: Source) {
+  constructor(
+    context: CompilationContext,
+    source: Source,
+    chunks: Promise<Record<string, webpack.Chunk>>
+  ) {
     this.context = context;
     this.source = source;
+    this.chunks = chunks;
   }
 
   async render(compilation: Compilation, scripts: string[]) {
@@ -143,7 +224,6 @@ class SourceCompiler {
       let changed = false;
 
       this.context.promises[this.source.filename] = resolver;
-      let buffer: Buffer | undefined;
       try {
         compilation.fileDependencies.add(this.source.filename);
 
@@ -165,36 +245,6 @@ class SourceCompiler {
           );
         }
 
-        if (changed) {
-          // console.info(this.source.filename);
-          // const entryModule = await new Promise((resolve, reject) =>
-          //   compilation.addEntry(
-          //     this.context.build.rootDir,
-          //     new EntryDependency(
-          //       path.relative(this.context.build.rootDir, this.source.filename)
-          //     ),
-          //     {
-          //       name: this.source.slug,
-          //     },
-          //     (err, entryModule) => {
-          //       if (err) {
-          //         reject(err);
-          //         return;
-          //       }
-
-          //       resolve(entryModule);
-          //     }
-          //   )
-          // );
-
-          // const files = new Set<string>();
-          // [...compilation.chunks].forEach(chunk =>
-          //   chunk.files.forEach(file => files.add(file))
-          // );
-
-          buffer = await this.render(compilation, [...[]]);
-        }
-
         resolver.resolve();
       } catch (err) {
         console.error(err);
@@ -202,8 +252,26 @@ class SourceCompiler {
         throw err;
       }
 
-      compilation.hooks.processAssets.tap('SourceCompiler', () => {
-        if (buffer) {
+      compilation.hooks.processAssets.tapPromise('SourceCompiler', async () => {
+        if (changed) {
+          const files = new Set<string>();
+          console.info('here2', this.source.filename);
+          const chunk = (await this.chunks)[this.source.slug];
+
+          console.info('here', this.source.filename);
+
+          chunk?.files.forEach((a, b, c) => {
+            files.add(a);
+          });
+
+          for (const group of chunk?.groupsIterable ?? []) {
+            for (const file of group.getFiles()) {
+              files.add(file);
+            }
+          }
+
+          const buffer = await this.render(compilation, [...files]);
+
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
             new RawSource(buffer!)
@@ -384,15 +452,31 @@ export class ResourcesPlugin {
 
       let sourceCount = sources.length;
 
+      const chunksResolver = createResolver<Record<string, webpack.Chunk>>();
+
       await Promise.all([
         dependencyResolver,
+        new Promise<void>((resolve, reject) =>
+          compilation
+            .createChildCompiler('EntryCompiler', { clean: false }, [
+              new EntryCompiler(context, sources, chunksResolver),
+            ])
+            .runAsChild(err => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve();
+            })
+        ),
         ...sources.map(async source => {
           const child = compilation.createChildCompiler(
             'SourceCompiler',
             {
               clean: false,
             },
-            [new SourceCompiler(context, source)]
+            [new SourceCompiler(context, source, chunksResolver)]
           );
           context.compilers[source.filename] = child;
 

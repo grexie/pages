@@ -169,6 +169,10 @@ export class Builder {
       //     .map(source => this.entry(source))
       //     .reduce((a, b) => ({ ...a, ...b }), {}),
       // },
+      entry: {},
+      stats: {
+        children: true,
+      },
       mode: 'development',
       devtool: 'source-map',
       output: {
@@ -395,9 +399,9 @@ export class Builder {
       optimization: {
         usedExports: true,
         // minimize: true,
-        // splitChunks: {
-        //   chunks: 'all',
-        // },
+        splitChunks: {
+          chunks: 'all',
+        },
       },
       plugins: [
         new ResourcesPlugin({ context: this.context }),
