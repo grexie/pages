@@ -164,11 +164,11 @@ export class Builder {
 
     return {
       context: this.context.rootDir,
-      entry: {
-        ...sources
-          .map(source => this.entry(source))
-          .reduce((a, b) => ({ ...a, ...b }), {}),
-      },
+      // entry: {
+      //   ...sources
+      //     .map(source => this.entry(source))
+      //     .reduce((a, b) => ({ ...a, ...b }), {}),
+      // },
       mode: 'development',
       devtool: 'source-map',
       output: {
@@ -394,10 +394,10 @@ export class Builder {
       },
       optimization: {
         usedExports: true,
-        minimize: true,
-        splitChunks: {
-          chunks: 'all',
-        },
+        // minimize: true,
+        // splitChunks: {
+        //   chunks: 'all',
+        // },
       },
       plugins: [
         new ResourcesPlugin({ context: this.context }),

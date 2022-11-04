@@ -193,8 +193,6 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
             } catch (err) {
               console.info(err);
               throw err;
-            } finally {
-              console.info('cache-loader:pitch-unlocking', this.resourcePath);
             }
           }
         );

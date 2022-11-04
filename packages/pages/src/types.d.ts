@@ -4,6 +4,7 @@ declare module '@babel/preset-react';
 declare module '@babel/traverse';
 declare module 'inline-source-map-comment';
 declare module '*.css';
+declare module 'webpack/lib/dependencies/EntryDependency.js';
 
 declare module 'vm' {
   export * from 'node:vm';

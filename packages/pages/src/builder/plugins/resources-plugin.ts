@@ -2,11 +2,13 @@ import { Source } from '../../api/index.js';
 import { BuildContext } from '../BuildContext.js';
 import { default as webpack } from 'webpack';
 import { Compiler, Compilation } from 'webpack';
-import path from 'path';
+import path, { resolve } from 'path';
 import { ResourceContext } from '../../hooks/index.js';
 import { WritableBuffer } from '../../utils/stream.js';
 import { createResolver } from '../../utils/resolvable.js';
 import { promisify } from '../../utils/promisify.js';
+import { rejects } from 'assert';
+import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 
 const { RawSource } = webpack.sources;
 
@@ -71,6 +73,8 @@ class SourceCompiler {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendering', this.source.filename);
     }
+
+    console.info('rendering', this.source.filename, scripts);
 
     const buffer = await this.context.renderer.render(
       new WritableBuffer(),
@@ -160,37 +164,50 @@ class SourceCompiler {
             )
           );
         }
+
+        if (changed) {
+          // console.info(this.source.filename);
+          // const entryModule = await new Promise((resolve, reject) =>
+          //   compilation.addEntry(
+          //     this.context.build.rootDir,
+          //     new EntryDependency(
+          //       path.relative(this.context.build.rootDir, this.source.filename)
+          //     ),
+          //     {
+          //       name: this.source.slug,
+          //     },
+          //     (err, entryModule) => {
+          //       if (err) {
+          //         reject(err);
+          //         return;
+          //       }
+
+          //       resolve(entryModule);
+          //     }
+          //   )
+          // );
+
+          // const files = new Set<string>();
+          // [...compilation.chunks].forEach(chunk =>
+          //   chunk.files.forEach(file => files.add(file))
+          // );
+
+          buffer = await this.render(compilation, [...[]]);
+        }
+
+        resolver.resolve();
       } catch (err) {
         console.error(err);
         resolver.reject(err);
         throw err;
       }
 
-      compilation.hooks.processAssets.tapPromise('SourceCompiler', async () => {
-        const entrypoint = [...compilation.entrypoints].find(
-          ([name]) => name === this.source.slug
-        )?.[1];
-
-        if (changed) {
-          const files = new Set<string>();
-
-          if (entrypoint) {
-            entrypoint.chunks.forEach(chunk =>
-              [...chunk.files].forEach(file => files.add(file))
-            );
-          }
-
-          buffer = await this.render(compilation, [...files]);
-
-          resolver.resolve();
-
+      compilation.hooks.processAssets.tap('SourceCompiler', () => {
+        if (buffer) {
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
             new RawSource(buffer!)
           );
-        }
-
-        if (buffer) {
         }
       });
     });
