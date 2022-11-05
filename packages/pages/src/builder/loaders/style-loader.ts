@@ -3,6 +3,7 @@ import { BuildContext } from '../BuildContext.js';
 import { createHash } from 'crypto';
 import { SourceNode } from 'source-map';
 import { offsetLines } from '../../utils/source-maps.js';
+import { createResolver } from '../../utils/resolvable.js';
 
 interface StyleLoaderOptions {
   context: BuildContext;
@@ -17,6 +18,8 @@ export default async function StyleLoader(
     console.info('style-loader', this.resourcePath);
   }
   const { context } = this.getOptions();
+  const resolver = createResolver();
+  context.modules.addBuild(this.resourcePath, resolver);
   const callback = this.async();
   const factory = context.modules.createModuleFactory(this._compilation!);
 
@@ -54,6 +57,7 @@ export default async function StyleLoader(
     callback(null, chunk, map as any);
   } catch (err) {
     callback(err as any);
+    resolver.reject(err);
   } finally {
     await context.modules.evict(factory, this.resourcePath, {
       recompile: true,
@@ -62,5 +66,7 @@ export default async function StyleLoader(
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('style-loader:complete', this.resourcePath);
     }
+
+    resolver.resolve();
   }
 }

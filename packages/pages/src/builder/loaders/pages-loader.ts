@@ -74,6 +74,9 @@ export default async function PagesLoader(
     resolver.reject(err);
     callback(err as any);
   } finally {
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('pages-loader:complete', this.resourcePath);
+    }
     resolver.resolve();
   }
 }

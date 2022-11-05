@@ -141,6 +141,7 @@ class SourceCompiler {
     const resolver = createResolver();
 
     this.context.promises[this.source.filename] = resolver;
+
     try {
       compilation.fileDependencies.add(this.source.filename);
 
@@ -265,7 +266,6 @@ class AssetCompiler {
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
     const resolver = createResolver();
-    await this.context.build.modules.addBuild(this.resourcePath, resolver);
 
     this.context.promises[this.resourcePath] = resolver;
     let buffer: Buffer | undefined;
