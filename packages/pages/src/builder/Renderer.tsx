@@ -13,6 +13,7 @@ import { Resource } from '../api/index.js';
 import { BuildContext } from './index.js';
 import { withStyles, StylesContext } from '../hooks/useStyles.js';
 import { withScripts } from '../hooks/useScripts.js';
+import { withLazy } from '../hooks/useLazy.js';
 
 export class Renderer {
   readonly context: BuildContext;
@@ -31,6 +32,7 @@ export class Renderer {
     const styles = new StylesContext();
 
     const component = compose(
+      withLazy,
       withContext({ context: this.context }),
       withResourceContext({ resourceContext }),
       withStyles({ styles }),

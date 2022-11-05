@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
 import type { DocumentProps } from '../api/Document.js';
-import { withLazyComplete } from '../hooks/useLazy.js';
+import { useLazyComplete } from '../hooks/useLazy.js';
 import hash from 'object-hash';
 
 const HeadContext = createContext<boolean>(true);
@@ -116,7 +116,7 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
         </head>
       );
     };
-  });
+  }, [renderHead]);
 
   return <Head />;
 };

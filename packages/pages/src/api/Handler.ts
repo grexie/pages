@@ -14,6 +14,7 @@ import {
 } from '../hooks/index.js';
 import { withHydratedDocumentComponent } from '../components/Document.js';
 import { Context } from './Context.js';
+import { withLazy } from '../hooks/useLazy.js';
 
 export interface Handler<
   P = any,
@@ -51,6 +52,7 @@ export const hydrate = (resource: Resource, handler: any) => {
   const resourceContext = new ResourceContext();
 
   const component = compose(
+    withLazy,
     withContext({ context: context }),
     withStyles({ styles }),
     withResourceContext({ resourceContext }),
