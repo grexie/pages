@@ -84,39 +84,40 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const Head = useLazyComplete(async () => {
     return () => {
-      const [, setState] = useState({});
-      const document = useDocument();
-      const renderHead = useHead();
+      return null;
+      // const [, setState] = useState({});
+      // const document = useDocument();
+      // const renderHead = useHead();
 
-      if (typeof window === 'undefined') {
-        useMemo(() => {
-          document.on('update', () => setState({}));
-        }, []);
-      } else {
-        useEffect(() => {
-          const handler = () => setState({});
-          document.on('update', handler);
-          return () => {
-            document.removeListener('update', handler);
-          };
-        }, []);
-      }
+      // if (typeof window === 'undefined') {
+      //   useMemo(() => {
+      //     document.on('update', () => setState({}));
+      //   }, []);
+      // } else {
+      //   useEffect(() => {
+      //     const handler = () => setState({});
+      //     document.on('update', handler);
+      //     return () => {
+      //       document.removeListener('update', handler);
+      //     };
+      //   }, []);
+      // }
 
-      if (!renderHead) {
-        return null;
-      }
+      // if (!renderHead) {
+      //   return null;
+      // }
 
-      console.info('rendering head', document.props);
+      // console.info('rendering head', document.props);
 
-      return (
-        <head>
-          <meta charSet="utf-8" />
-          {document.props.title && <title>{document.props.title}</title>}
-          {document.props.children}
-        </head>
-      );
+      // return (
+      //   <head>
+      //     <meta charSet="utf-8" />
+      //     {document.props.title && <title>{document.props.title}</title>}
+      //     {document.props.children}
+      //   </head>
+      // );
     };
-  }, [renderHead]);
+  }, []);
 
   return <Head />;
 };

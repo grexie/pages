@@ -27,7 +27,8 @@ class LazyContext {
 
     await next();
 
-    return promise();
+    const result = await promise();
+    return result;
   }
 }
 
@@ -44,22 +45,27 @@ export const useLazyBase = (
   cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
   dependencies: any[]
 ) => {
-  const Components = useMemo(
+  return useMemo(
     () =>
       cb.map(cb => {
         const Component = lazy(async () => {
           await new Promise(resolve => setImmediate(resolve));
 
           const Component = await cb();
+          let exports;
 
           if (!Component) {
-            return { default: () => null } as any;
+            exports = { default: () => null } as any;
           } else if (typeof Component === 'object') {
-            return Component;
+            exports = Component;
           } else {
-            return { default: Component };
+            exports = { default: Component };
           }
+          console.info(exports);
+          return exports;
         });
+
+        return Component;
 
         return (props: Attributes & PropsWithRef<any>) => (
           <Component {...props} />
@@ -67,8 +73,6 @@ export const useLazyBase = (
       }),
     dependencies
   );
-
-  return Components;
 };
 
 export const useLazy = <P extends Object = {}>(
@@ -89,10 +93,12 @@ export const useLazyComplete = <P extends Object = {}>(
 ) => {
   const context = useLazyContext();
 
-  return useLazyBase(
+  const Component = useLazyBase(
     [async () => context.complete(cb as () => Promise<any>)],
     dependencies
   )[0];
+
+  return Component;
 };
 
 export const useManyLazy = (
