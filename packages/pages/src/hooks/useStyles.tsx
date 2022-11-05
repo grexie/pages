@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createContextWithProps } from '../utils/context.js';
 
 export interface StylesProviderProps {
@@ -50,9 +50,19 @@ export const useStyles = () => {
   const [, setState] = useState({});
   const styles = _useStyles();
 
-  useMemo(() => {
-    styles.on('update', () => setState({}));
-  }, []);
+  if (typeof window === 'undefined') {
+    useMemo(() => {
+      styles.on('update', () => setState({}));
+    }, []);
+  } else {
+    useEffect(() => {
+      const handler = () => setTimeout(() => setState({}), 0);
+      styles.on('update', handler);
+      return () => {
+        styles.removeListener('update', handler);
+      };
+    }, []);
+  }
 
   return styles;
 };

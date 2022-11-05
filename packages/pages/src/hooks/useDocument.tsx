@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Document, DocumentProps, DocumentOptions } from '../api/Document.js';
 import { createContextWithProps } from '../utils/context.js';
+import hash from 'object-hash';
 
 const {
   Provider: DocumentProvider,
@@ -27,7 +28,7 @@ export const useDocument = (props?: DocumentProps) => {
       Object.assign(document.props, _props);
       document.props.children = [...document.props.children, ...children];
     }
-  }, [document, JSON.stringify(props ?? null)]);
+  }, [document, hash(props ?? null, { ignoreUnknown: true })]);
 
   return document;
 };

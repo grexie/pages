@@ -1,8 +1,20 @@
-import { ComponentType } from 'react';
+import { createElement, ComponentType } from 'react';
 import { Resource, ResourceMetadata } from './Resource.js';
+import { hydrateRoot } from 'react-dom/client';
 import type { SourceContext } from '../builder/SourceContext.js';
 import { compose } from '@grexie/compose';
-import { withResource } from '../hooks/index.js';
+import {
+  ResourceContext,
+  StylesContext,
+  withContext,
+  withDocument,
+  withLazy,
+  withResource,
+  withResourceContext,
+  withStyles,
+} from '../hooks/index.js';
+import { withHydratedDocumentComponent } from '../components/Document.js';
+import { Context } from './Context.js';
 
 export interface Handler<
   P = any,
@@ -21,7 +33,7 @@ export const wrapHandler = (
   return compose(...composables, withResource({ resource }), handler as any);
 };
 
-export const hydrate = (resource: Resource, handler: ComponentType<{}>) => {
+export const hydrate = (resource: Resource, handler: any) => {
   if (typeof window === 'undefined') {
     return;
   }
@@ -35,5 +47,21 @@ export const hydrate = (resource: Resource, handler: ComponentType<{}>) => {
     return;
   }
 
-  console.info(data);
+  const styles = new StylesContext();
+  const context = new Context({});
+  const resourceContext = new ResourceContext();
+
+  const component = compose(
+    withLazy,
+    withContext({ context: context }),
+    withStyles({ styles }),
+    withResourceContext({ resourceContext }),
+    withDocument({ resourceContext, resource }),
+    withHydratedDocumentComponent,
+    handler
+  );
+
+  const element = createElement(component as any);
+
+  hydrateRoot(document.querySelector('#__pages_root')!, element);
 };

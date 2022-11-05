@@ -2,13 +2,12 @@ import { Source } from '../../api/index.js';
 import { BuildContext } from '../BuildContext.js';
 import { default as webpack } from 'webpack';
 import { Compiler, Compilation } from 'webpack';
-import path, { resolve } from 'path';
+import path from 'path';
 import { ResourceContext } from '../../hooks/index.js';
 import { WritableBuffer } from '../../utils/stream.js';
-import { createResolver, ResolvablePromise } from '../../utils/resolvable.js';
+import { createResolver } from '../../utils/resolvable.js';
 import { promisify } from '../../utils/promisify.js';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
-import { rejects } from 'assert';
 
 const { RawSource } = webpack.sources;
 

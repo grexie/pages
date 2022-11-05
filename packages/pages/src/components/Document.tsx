@@ -30,16 +30,23 @@ export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
     <html>
       <Head></Head>
       <body>
-        <HeadProvider>
-          {children}
-          <Head>
-            <Styles />
-          </Head>
-        </HeadProvider>
+        <div id="__pages_root">
+          <HeadProvider>
+            {children}
+            <Head>
+              <Styles />
+            </Head>
+          </HeadProvider>
+        </div>
         <Scripts />
       </body>
     </html>
   );
 };
 
+export const HydratedDocument: FC<PropsWithChildren<{}>> = ({ children }) => {
+  return <HeadProvider>{children}</HeadProvider>;
+};
+
 export const withDocumentComponent = createComposable(Document);
+export const withHydratedDocumentComponent = createComposable(HydratedDocument);
