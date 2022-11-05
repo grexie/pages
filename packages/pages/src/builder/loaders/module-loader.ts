@@ -240,7 +240,6 @@ export default async function ModuleLoader(
       );
     }
   } catch (err) {
-    console.error(err);
     resolver.reject(err);
     return callback(err as any);
   } finally {

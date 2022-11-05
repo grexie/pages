@@ -27,9 +27,9 @@ export const useDocument = (props?: DocumentProps) => {
       Object.assign(document.props, _props);
       document.props.children = [...document.props.children, ...children];
     }
-  }, [document, JSON.stringify(props)]);
+  }, [document, JSON.stringify(props ?? null)]);
 
   return document;
 };
 
-export { DocumentProvider, withDocument };
+export { DocumentProvider, withDocument, useDocumentContext };

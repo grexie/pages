@@ -2,14 +2,14 @@ import { FC, PropsWithChildren } from 'react';
 import { Head, HeadProvider } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles } from '../hooks/useStyles.js';
-import { useContext, useResource } from '../index.js';
+import { useContext, useDocumentContext } from '../index.js';
 import { BuildContext } from '../builder/index.js';
 import { useScripts } from '../hooks/useScripts.js';
 
 const Scripts = () => {
-  const resource = useResource();
+  // const { resource } = useDocumentContext();
   const scripts = useScripts();
-  const data = { slug: resource.slug };
+  const data = { slug: '' };
 
   return (
     <>
