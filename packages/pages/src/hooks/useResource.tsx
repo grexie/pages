@@ -99,12 +99,6 @@ const {
         return resourceContext;
       }, [parentResourceContext, hash(resource, { ignoreUnknown: true })]);
 
-      console.info(
-        `${JSON.stringify(
-          parentResourceContext?.resource?.slug
-        )} => ${JSON.stringify(resourceContext.resource?.slug)}`
-      );
-
       return (
         <ResourceContextProvider resourceContext={resourceContext}>
           <Provider value={resource}>{children}</Provider>

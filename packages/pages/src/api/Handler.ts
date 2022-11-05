@@ -64,7 +64,5 @@ export const hydrate = (resource: Resource, handler: any) => {
 
   const element = createElement(component as any);
 
-  console.info('hydrating', resource.slug);
   const root = hydrateRoot(document.querySelector('#__pages_root')!, element);
-  console.info('hydrated', resource.slug);
 };

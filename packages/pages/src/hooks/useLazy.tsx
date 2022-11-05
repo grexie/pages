@@ -54,6 +54,8 @@ export const useLazyBase = (
   const Components = useMemo(() => {
     return cb.map(cb => {
       const Component = lazy(async () => {
+        await new Promise(resolve => setImmediate(resolve));
+
         const Component = await cb();
 
         if (!Component) {
