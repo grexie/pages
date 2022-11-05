@@ -11,6 +11,7 @@ export const {
   use: useContext,
 } = createContextWithProps<Context, ContextProviderProps>(
   Provider =>
-    ({ context, children }) =>
-      <Provider value={context}>{children}</Provider>
+    ({ context, children }) => {
+      return <Provider value={context}>{children}</Provider>;
+    }
 );

@@ -55,11 +55,13 @@ class SourceCompiler {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render', this.source.filename);
     }
+
     const handlerModule = await this.context.modules.require(
       factory,
       path.dirname(this.source.filename),
       this.source.filename
     );
+
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:handler', this.source.filename);
     }
@@ -135,6 +137,27 @@ class SourceCompiler {
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
+    await new Promise<void>((resolve, reject) =>
+      compilation.addEntry(
+        compiler.context,
+        new EntryDependency(this.source.filename),
+        {
+          name: this.source.slug,
+          filename: this.source.slug
+            ? `${this.source.slug}/index.js`
+            : 'index.js',
+        },
+        err => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve();
+        }
+      )
+    );
+
     let changed = false;
 
     const resolver = createResolver();
@@ -159,27 +182,6 @@ class SourceCompiler {
           meta.dependencies.map(dependency => this.context.promises[dependency])
         );
       }
-
-      await new Promise<void>((resolve, reject) =>
-        compilation.addEntry(
-          compiler.context,
-          new EntryDependency(this.source.filename),
-          {
-            name: this.source.slug,
-            filename: this.source.slug
-              ? `./${this.source.slug}/index.js`
-              : 'index.js',
-          },
-          err => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            resolve();
-          }
-        )
-      );
 
       resolver.resolve();
     } catch (err) {

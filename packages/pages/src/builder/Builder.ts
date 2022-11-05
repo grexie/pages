@@ -378,6 +378,7 @@ export class Builder {
           util: false,
           fs: false,
           path: require.resolve('path-browserify'),
+          timers: require.resolve('timers-browserify'),
         },
         extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
         modules: this.context.modulesDirs,

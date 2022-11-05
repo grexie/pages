@@ -1,25 +1,41 @@
 import EventEmitter from 'events';
 import { useEffect, useMemo, useState } from 'react';
 import { createContextWithProps } from '../utils/context.js';
+import hash from 'object-hash';
+import { setImmediate, clearImmediate } from 'timers';
 
 export interface StylesProviderProps {
   styles: StylesContext;
 }
 
 export class StylesContext extends EventEmitter {
+  #updateTimeout?: NodeJS.Immediate;
   #styles = new Set<{ hash: string; css: string }>();
 
-  constructor() {
+  constructor(styles?: { hash: string; css: string }[]) {
     super();
+    if (styles) {
+      for (const style of styles) {
+        this.#styles.add(style);
+      }
+    }
+  }
+
+  #emitUpdate() {
+    clearImmediate(this.#updateTimeout);
+    this.#updateTimeout = setImmediate(() => {
+      this.emit('update');
+    });
   }
 
   add(hash: string, css: string) {
     const entry = { hash, css } as { hash: string; css: string };
     this.#styles.add(entry);
-    this.emit('update');
+    this.#emitUpdate();
+
     return () => {
       this.#styles.delete(entry);
-      this.emit('update');
+      this.#emitUpdate();
     };
   }
 
@@ -42,9 +58,13 @@ export class StylesContext extends EventEmitter {
 export const { with: withStyles, use: _useStyles } = createContextWithProps<
   StylesContext,
   StylesProviderProps
->(Provider => ({ styles, children }) => (
-  <Provider value={styles}>{children}</Provider>
-));
+>(Provider => ({ styles, children }) => {
+  const _styles = useMemo(
+    () => styles,
+    [hash(styles, { ignoreUnknown: true })]
+  );
+  return <Provider value={_styles}>{children}</Provider>;
+});
 
 export const useStyles = () => {
   const [, setState] = useState({});
@@ -56,7 +76,7 @@ export const useStyles = () => {
     }, []);
   } else {
     useEffect(() => {
-      const handler = () => setTimeout(() => setState({}), 0);
+      const handler = () => setState({});
       styles.on('update', handler);
       return () => {
         styles.removeListener('update', handler);

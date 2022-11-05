@@ -7,6 +7,7 @@ import {
   useMemo,
 } from 'react';
 import { createContext } from '../utils/context.js';
+import { setImmediate } from 'timers';
 
 class LazyContext {
   readonly #wrapped: Promise<any>[] = [];
@@ -22,10 +23,9 @@ class LazyContext {
     return promise;
   }
 
-  async complete<T extends unknown>(promise: Promise<T> | T): Promise<T> {
+  async complete<T extends unknown>(promise: () => Promise<T> | T): Promise<T> {
     const next = async (): Promise<void> => {
       await new Promise(resolve => setImmediate(resolve));
-
       if (this.#wrapped.length) {
         await Promise.all(this.#wrapped);
         return next();
@@ -34,7 +34,7 @@ class LazyContext {
 
     await next();
 
-    return promise;
+    return promise();
   }
 }
 
@@ -54,18 +54,14 @@ export const useLazyBase = (
   const Components = useMemo(() => {
     return cb.map(cb => {
       const Component = lazy(async () => {
-        try {
-          const Component = await cb();
+        const Component = await cb();
 
-          if (!Component) {
-            return { default: () => <></> } as any;
-          } else if (typeof Component === 'object') {
-            return Component;
-          } else {
-            return { default: Component };
-          }
-        } catch (err) {
-          throw err;
+        if (!Component) {
+          return { default: () => null } as any;
+        } else if (typeof Component === 'object') {
+          return Component;
+        } else {
+          return { default: Component };
         }
       });
 
@@ -97,7 +93,7 @@ export const useLazyComplete = <P extends Object = {}>(
   const context = useLazyContext();
 
   return useLazyBase(
-    [async () => context.complete(cb() as Promise<any>)],
+    [async () => context.complete(cb as () => Promise<any>)],
     dependencies
   )[0];
 };

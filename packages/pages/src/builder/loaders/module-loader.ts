@@ -36,6 +36,10 @@ export default async function ModuleLoader(
   try {
     const factory = context.modules.createModuleFactory(this._compilation!);
 
+    await context.modules.evict(factory, `${this.resourcePath}$original`, {
+      recompile: true,
+      fail: false,
+    });
     await context.modules.evict(factory, this.resourcePath, {
       recompile: true,
       fail: false,
@@ -55,8 +59,15 @@ export default async function ModuleLoader(
         handlerModule = await context.modules.create(
           factory,
           this._module!,
+          `${this.resourcePath}$original`,
+          content.toString(),
           this.resourcePath,
-          content.toString()
+          {
+            filename: content.toString(),
+            compile: true,
+            builtin: false,
+            esm: true,
+          }
         );
       }
       return handlerModule;
@@ -192,7 +203,7 @@ export default async function ModuleLoader(
         sourceMaps: this.sourceMap,
       });
 
-      await context.modules.evict(factory, this.resourcePath, {
+      await context.modules.evict(factory, `${this.resourcePath}$original`, {
         recompile: true,
       });
 

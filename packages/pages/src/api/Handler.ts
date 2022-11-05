@@ -15,6 +15,7 @@ import {
 } from '../hooks/index.js';
 import { withHydratedDocumentComponent } from '../components/Document.js';
 import { Context } from './Context.js';
+import { withScripts } from '../hooks/useScripts.js';
 
 export interface Handler<
   P = any,
@@ -63,5 +64,7 @@ export const hydrate = (resource: Resource, handler: any) => {
 
   const element = createElement(component as any);
 
-  hydrateRoot(document.querySelector('#__pages_root')!, element);
+  console.info('hydrating', resource.slug);
+  const root = hydrateRoot(document.querySelector('#__pages_root')!, element);
+  console.info('hydrated', resource.slug);
 };

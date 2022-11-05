@@ -7,6 +7,7 @@ import {
 } from '../api/Resource.js';
 import type { ModuleResource } from '../builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
+import hash from 'object-hash';
 
 const ResourceContextSet = Symbol();
 
@@ -96,7 +97,13 @@ const {
         }
         resourceContext[ResourceContextSet](resource);
         return resourceContext;
-      }, [parentResourceContext, resource]);
+      }, [parentResourceContext, hash(resource, { ignoreUnknown: true })]);
+
+      console.info(
+        `${JSON.stringify(
+          parentResourceContext?.resource?.slug
+        )} => ${JSON.stringify(resourceContext.resource?.slug)}`
+      );
 
       return (
         <ResourceContextProvider resourceContext={resourceContext}>
@@ -115,6 +122,7 @@ export const useResource = <
   T extends Resource<M> = Resource<M>
 >({ resource = false }: ResourceQueryOptions = {}) => {
   const parentResource = useResourceUntyped() as T;
+
   const document = useDocument();
 
   if (resource) {

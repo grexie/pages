@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren } from 'react';
 import { Head, HeadProvider } from './Head.js';
 import { createComposable } from '@grexie/compose';
-import { Styles } from '../hooks/useStyles.js';
+import { Styles, useStyles } from '../hooks/useStyles.js';
 import { useResource } from '../hooks/index.js';
 import { useScripts } from '../hooks/useScripts.js';
 import { Resource } from '../api/Resource.js';
@@ -9,7 +9,11 @@ import { Resource } from '../api/Resource.js';
 const Scripts: FC<{}> = () => {
   const { slug } = useResource();
   const scripts = useScripts();
-  const data = { slug };
+  const styles = useStyles();
+  const data = {
+    slug,
+    styles: [...styles].map(({ hash, css }) => ({ hash, css })),
+  };
 
   return (
     <>
@@ -30,14 +34,14 @@ export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
     <html>
       <Head></Head>
       <body>
-        <div id="__pages_root">
+        <span id="__pages_root">
           <HeadProvider>
             {children}
             <Head>
               <Styles />
             </Head>
           </HeadProvider>
-        </div>
+        </span>
         <Scripts />
       </body>
     </html>
@@ -45,7 +49,12 @@ export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
 };
 
 export const HydratedDocument: FC<PropsWithChildren<{}>> = ({ children }) => {
-  return <HeadProvider>{children}</HeadProvider>;
+  return (
+    <HeadProvider>
+      {children}
+      <Head />
+    </HeadProvider>
+  );
 };
 
 export const withDocumentComponent = createComposable(Document);

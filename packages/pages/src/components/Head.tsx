@@ -8,10 +8,12 @@ import {
   Fragment,
   createContext,
   useContext,
+  Suspense,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
 import type { DocumentProps } from '../api/Document.js';
 import { useLazyComplete } from '../hooks/useLazy.js';
+import hash from 'object-hash';
 
 const HeadContext = createContext<boolean>(true);
 
@@ -74,15 +76,15 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
     const props = { children: [] };
     processChildren(children, props);
     return props;
-  }, [renderHead, children]);
+  }, [renderHead, hash({ children }, { ignoreUnknown: true })]);
 
   const document = useDocument(props);
 
-  const Head = useLazyComplete(async () => {
-    if (!renderHead) {
-      return;
-    }
+  if (!renderHead) {
+    return null;
+  }
 
+  const Head = useLazyComplete(async () => {
     return () => {
       return (
         <head>
@@ -92,7 +94,7 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
         </head>
       );
     };
-  }, [renderHead]);
+  }, []);
 
   return <Head />;
 };
