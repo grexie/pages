@@ -74,8 +74,6 @@ class SourceCompiler {
       console.info('render:rendering', this.source.filename);
     }
 
-    console.info('rendering', this.source.filename, scripts);
-
     const buffer = await this.context.renderer.render(
       new WritableBuffer(),
       resourceContext,
@@ -170,7 +168,7 @@ class SourceCompiler {
     }
 
     compilation.hooks.processAssets.tapPromise(
-      { name: 'SourceCompiler', stage: Infinity },
+      { name, stage: Infinity },
       async () => {
         if (changed) {
           const files = new Set<string>();

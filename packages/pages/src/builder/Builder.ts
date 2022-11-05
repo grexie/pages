@@ -142,10 +142,10 @@ export class Builder {
 
   entry(source: Source): EntryObject {
     return {
-      [source.slug]: `./${_path.relative(
-        this.context.rootDir,
-        source.filename
-      )}`,
+      [source.slug]: {
+        import: `./${_path.relative(this.context.rootDir, source.filename)}`,
+        filename: source.slug ? `${source.slug}/index.js` : 'index.js',
+      },
     };
   }
 
@@ -176,7 +176,7 @@ export class Builder {
       devtool: 'source-map',
       output: {
         path: this.context.outputDir,
-        filename: `[name]/index.js`,
+        filename: `assets/js/[name].js`,
       },
       // externals: [
       //   nodeExternals({
@@ -400,6 +400,26 @@ export class Builder {
         // minimize: true,
         splitChunks: {
           chunks: 'all',
+          minSize: 20000,
+          minRemainingSize: 0,
+          minChunks: 1,
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
+          enforceSizeThreshold: 50000,
+          cacheGroups: {
+            defaultVendors: {
+              test: /[\\/]node_modules[\\/]/,
+              filename: 'assets/js/vendor-[chunkhash].js',
+              priority: -10,
+              reuseExistingChunk: true,
+            },
+            default: {
+              filename: 'assets/js/site-[chunkhash].js',
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+          },
         },
       },
       plugins: [

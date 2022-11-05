@@ -20,3 +20,11 @@ export const wrapHandler = (
 ) => {
   return compose(...composables, withResource({ resource }), handler as any);
 };
+
+export const hydrate = () => {
+  const data = (global as any)['__PAGES_DATA__'];
+
+  if (!data) {
+    alert('hello');
+  }
+};
