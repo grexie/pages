@@ -33,14 +33,14 @@ export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
     <html>
       <Head></Head>
       <body>
-        <span id="__pages_root">
+        <div id="__pages_root">
           <HeadProvider>
             {children}
             <Head>
               <Styles />
             </Head>
           </HeadProvider>
-        </span>
+        </div>
         <Scripts />
       </body>
     </html>
