@@ -91,10 +91,10 @@ const main = async (...args: string[]) => {
   await script(...args);
 };
 
-const [name, ...args] = process.argv.slice(2);
+const [...args] = process.argv.slice(2);
 
 const run = () =>
-  main(name, ...args).catch(err => {
+  main(...args).catch(err => {
     console.error(err);
     process.exit(1);
   });
