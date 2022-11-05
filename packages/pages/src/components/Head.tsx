@@ -12,10 +12,9 @@ import {
   useState,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
-import type { Document, DocumentProps } from '../api/Document.js';
-import { withLazyComplete } from '../utils/lazy.js';
+import type { DocumentProps } from '../api/Document.js';
+import { withLazyComplete } from '../hooks/useLazy.js';
 import hash from 'object-hash';
-import { render } from 'react-dom';
 
 const HeadContext = createContext<boolean>(true);
 
@@ -72,42 +71,6 @@ const processElement = (element: ReactElement, props: DocumentProps) => {
   }
 };
 
-const HeadImpl = withLazyComplete(async () => {
-  return () => {
-    const [, setState] = useState({});
-    const document = useDocument();
-    const renderHead = useHead();
-
-    if (typeof window === 'undefined') {
-      useMemo(() => {
-        document.on('update', () => setState({}));
-      }, []);
-    } else {
-      useEffect(() => {
-        const handler = () => setState({});
-        document.on('update', handler);
-        return () => {
-          document.removeListener('update', handler);
-        };
-      }, []);
-    }
-
-    if (!renderHead) {
-      return null;
-    }
-
-    console.info('rendering head', document.props);
-
-    return (
-      <head>
-        <meta charSet="utf-8" />
-        {document.props.title && <title>{document.props.title}</title>}
-        {document.props.children}
-      </head>
-    );
-  };
-});
-
 export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
   const renderHead = useHead();
 
@@ -119,7 +82,41 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   useDocument(props);
 
-  console.info('setting head', props);
+  const Head = useLazyComplete(async () => {
+    return () => {
+      const [, setState] = useState({});
+      const document = useDocument();
+      const renderHead = useHead();
 
-  return <HeadImpl />;
+      if (typeof window === 'undefined') {
+        useMemo(() => {
+          document.on('update', () => setState({}));
+        }, []);
+      } else {
+        useEffect(() => {
+          const handler = () => setState({});
+          document.on('update', handler);
+          return () => {
+            document.removeListener('update', handler);
+          };
+        }, []);
+      }
+
+      if (!renderHead) {
+        return null;
+      }
+
+      console.info('rendering head', document.props);
+
+      return (
+        <head>
+          <meta charSet="utf-8" />
+          {document.props.title && <title>{document.props.title}</title>}
+          {document.props.children}
+        </head>
+      );
+    };
+  });
+
+  return <Head />;
 };

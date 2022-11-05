@@ -4,7 +4,6 @@ import { createComposable } from '@grexie/compose';
 import { Styles, useStyles } from '../hooks/useStyles.js';
 import { useResource } from '../hooks/index.js';
 import { useScripts } from '../hooks/useScripts.js';
-import { Resource } from '../api/Resource.js';
 
 const Scripts: FC<{}> = () => {
   const { slug } = useResource();
