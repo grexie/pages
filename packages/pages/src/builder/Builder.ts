@@ -164,12 +164,11 @@ export class Builder {
 
     return {
       context: this.context.rootDir,
-      // entry: {
-      //   ...sources
-      //     .map(source => this.entry(source))
-      //     .reduce((a, b) => ({ ...a, ...b }), {}),
-      // },
-      entry: {},
+      entry: {
+        ...sources
+          .map(source => this.entry(source))
+          .reduce((a, b) => ({ ...a, ...b }), {}),
+      },
       stats: {
         children: true,
       },
