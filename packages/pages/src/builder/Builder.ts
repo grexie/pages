@@ -142,10 +142,10 @@ export class Builder {
 
   entry(source: Source): EntryObject {
     return {
-      [source.slug]: {
-        import: `./${_path.relative(this.context.rootDir, source.filename)}`,
-        filename: source.slug ? `${source.slug}/index.js` : 'index.js',
-      },
+      // [source.slug]: {
+      //   import: `./${_path.relative(this.context.rootDir, source.filename)}`,
+      //   filename: source.slug ? `${source.slug}/index.js` : 'index.js',
+      // },
     };
   }
 

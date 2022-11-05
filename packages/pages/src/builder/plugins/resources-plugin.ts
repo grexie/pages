@@ -160,6 +160,27 @@ class SourceCompiler {
         );
       }
 
+      await new Promise<void>((resolve, reject) =>
+        compilation.addEntry(
+          compiler.context,
+          new EntryDependency(this.source.filename),
+          {
+            name: this.source.slug,
+            filename: this.source.slug
+              ? `./${this.source.slug}/index.js`
+              : 'index.js',
+          },
+          err => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            resolve();
+          }
+        )
+      );
+
       resolver.resolve();
     } catch (err) {
       console.error(err);
@@ -324,6 +345,11 @@ export class ResourcesPlugin {
 
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
+      compilation.dependencyFactories.set(
+        EntryDependency,
+        compilation.params.normalModuleFactory
+      );
+
       let sources = await this.context.registry.list();
 
       const context = new CompilationContext({
