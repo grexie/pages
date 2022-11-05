@@ -45,7 +45,7 @@ const usage = async () => `${chalk.cyan.bold('Grexie Pages')}
 
 usage: ${chalk.bold('pages COMMAND')}`;
 
-const main = async (name: string, ...args: string[]) => {
+const main = async (...args: string[]) => {
   if (fs.existsSync('node_modules')) {
     try {
       const require = createRequire(process.cwd());
@@ -57,6 +57,18 @@ const main = async (name: string, ...args: string[]) => {
       }
     } catch (err) {}
   }
+
+  let names = [];
+  for (const arg of args) {
+    if (arg.startsWith('-')) {
+      break;
+    } else {
+      names.push(arg);
+    }
+  }
+
+  args = args.slice(names.length);
+  const name = names.join(':');
 
   if (!name) {
     console.error(await usage());
