@@ -61,7 +61,7 @@ export const useLazyBase = (
           } else {
             exports = { default: Component };
           }
-          console.info(exports);
+
           return exports;
         });
 

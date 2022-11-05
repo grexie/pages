@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, startTransition } from 'react';
 import EventEmitter from 'events';
 import { ResourceContext } from '../hooks/index.js';
 import { Resource } from './Resource.js';
@@ -43,7 +43,9 @@ export class Document extends EventEmitter {
   update() {
     clearImmediate(this.#updateImmediate);
     this.#updateImmediate = setImmediate(() => {
-      this.emit('update');
+      startTransition(() => {
+        this.emit('update');
+      });
     });
   }
 }

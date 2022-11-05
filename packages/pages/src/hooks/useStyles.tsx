@@ -1,8 +1,9 @@
 import EventEmitter from 'events';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, startTransition } from 'react';
 import { createContextWithProps } from '../utils/context.js';
 import hash from 'object-hash';
 import { setImmediate, clearImmediate } from 'timers';
+import { start } from 'repl';
 
 export interface StylesProviderProps {
   styles: StylesContext;
@@ -24,7 +25,9 @@ export class StylesContext extends EventEmitter {
   #emitUpdate() {
     clearImmediate(this.#updateTimeout);
     this.#updateTimeout = setImmediate(() => {
-      this.emit('update');
+      startTransition(() => {
+        this.emit('update');
+      });
     });
   }
 
