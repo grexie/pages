@@ -2,15 +2,22 @@ import { FC, PropsWithChildren } from 'react';
 import { Head, HeadProvider } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles } from '../hooks/useStyles.js';
-import { useContext } from '../index.js';
+import { useContext, useResource } from '../index.js';
 import { BuildContext } from '../builder/index.js';
 import { useScripts } from '../hooks/useScripts.js';
 
 const Scripts = () => {
+  const resource = useResource();
   const scripts = useScripts();
+  const data = { slug: resource.slug };
 
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `var __PAGES_DATA__ = ${JSON.stringify(data)};`,
+        }}
+      />
       {scripts.map(script => (
         <script src={script} key={script} />
       ))}

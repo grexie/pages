@@ -143,7 +143,7 @@ export default async function ModuleLoader(
       resolver.resolve();
 
       const header = `
-        import { wrapHandler as __pages_wrap_handler } from "@grexie/pages/api/Handler";
+        import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages/api/Handler";
         ${
           composablesRequires.length
             ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'
@@ -161,13 +161,17 @@ export default async function ModuleLoader(
       `;
 
       const footer = `
-        export default __pages_wrap_handler(
+        const __pages_handler = __pages_wrap_handler(
           resource,
           __pages_handler_component,
           ${composablesRequires
             .map((_, i) => `__pages_create_composable(__pages_composable_${i})`)
             .join(',\n')}
         );
+
+        __pages_hydrate(resource, __pages_handler);
+
+        export default __pages_handler;
       `;
 
       return callback(
@@ -219,7 +223,7 @@ export default async function ModuleLoader(
           .join(',\n')}
       );
 
-      __pages_hydrate(__pages_handler);
+      __pages_hydrate(resource, __pages_handler);
 
       export default __pages_handler;
     `;

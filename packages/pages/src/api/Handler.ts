@@ -21,10 +21,19 @@ export const wrapHandler = (
   return compose(...composables, withResource({ resource }), handler as any);
 };
 
-export const hydrate = () => {
-  const data = (global as any)['__PAGES_DATA__'];
-
-  if (!data) {
-    alert('hello');
+export const hydrate = (resource: Resource, handler: ComponentType<{}>) => {
+  if (typeof window === 'undefined') {
+    return;
   }
+
+  const data = (window as any)['__PAGES_DATA__'];
+  if (typeof data === 'undefined') {
+    return;
+  }
+
+  if (data.slug !== resource.slug) {
+    return;
+  }
+
+  console.info(data);
 };
