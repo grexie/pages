@@ -15,7 +15,7 @@ const Scripts = () => {
     <>
       <script
         dangerouslySetInnerHTML={{
-          __html: `var __PAGES_DATA__ = ${JSON.stringify(data)};`,
+          __html: `\nvar __PAGES_DATA__ = ${JSON.stringify(data)};\n`,
         }}
       />
       {scripts.map(script => (

@@ -224,7 +224,7 @@ export default async function ModuleLoader(
       );
 
       __pages_hydrate(resource, __pages_handler);
-
+      
       export default __pages_handler;
     `;
 

@@ -421,6 +421,9 @@ export class Builder {
             },
           },
         },
+        runtimeChunk: {
+          name: 'runtime',
+        },
       },
       plugins: [
         new ResourcesPlugin({ context: this.context }),
