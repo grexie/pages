@@ -1,6 +1,5 @@
-import webpack from 'webpack';
-import { Configuration, EntryObject } from 'webpack';
-import { FileSystem } from './FileSystem';
+import webpack, { Configuration, EntryObject } from 'webpack';
+import { FileSystem } from './FileSystem.js';
 import { EventEmitter } from 'events';
 
 export type WebpackStats = webpack.Stats;

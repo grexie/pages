@@ -14,14 +14,14 @@
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "isolatedModules": false,
     "resolveJsonModule": true,
     "jsx": "react-jsx",
     "incremental": true,
     "inlineSourceMap": true,
     "inlineSources": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": false
   },
   "exclude": [
     "**/*.spec.ts",

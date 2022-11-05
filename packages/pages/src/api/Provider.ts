@@ -1,4 +1,4 @@
-import { default as glob } from 'glob';
+import glob from 'glob';
 import * as _path from 'path';
 import { promisify } from 'util';
 import { Source } from './Source.js';
@@ -71,7 +71,7 @@ export class Provider {
     });
 
     const sources = await Promise.all(
-      files.map(async filename =>
+      files.map(async (filename: string) =>
         this.create(
           _path.resolve(this.context.rootDir, filename),
           this.context.rootDir

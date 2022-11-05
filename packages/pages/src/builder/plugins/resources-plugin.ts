@@ -1,6 +1,6 @@
 import { Source } from '../../api/index.js';
 import { BuildContext } from '../BuildContext.js';
-import { default as webpack } from 'webpack';
+import webpack from 'webpack';
 import { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { ResourceContext } from '../../hooks/index.js';

@@ -1,5 +1,5 @@
 import { Readable, Writable } from 'stream';
-import { createResolver } from './resolvable';
+import { createResolver } from './resolvable.js';
 
 export const toBuffer = async (
   readable: Promise<Readable> | Readable

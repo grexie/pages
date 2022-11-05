@@ -2,11 +2,8 @@ import EventEmitter from 'events';
 import { BuildContext } from './BuildContext.js';
 import { Cache, ICache } from '@grexie/builder/Cache.js';
 import type { Stats } from '@grexie/builder/FileSystem.js';
-import {
-  default as webpack,
-  Compilation,
-  Module as WebpackModule,
-} from 'webpack';
+import webpack from 'webpack';
+import { Compilation, Module as WebpackModule } from 'webpack';
 import { Module as NodeModule, createRequire } from 'module';
 import { ModuleCompiler } from './ModuleCompiler.js';
 import {

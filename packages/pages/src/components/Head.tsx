@@ -8,12 +8,12 @@ import {
   Fragment,
   createContext,
   useContext,
-  Suspense,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
-import type { DocumentProps } from '../api/Document.js';
-import { useLazyComplete } from '../hooks/useLazy.js';
+import type { Document, DocumentProps } from '../api/Document.js';
+import { withLazyComplete } from '../utils/lazy.js';
 import hash from 'object-hash';
+import { render } from 'react-dom';
 
 const HeadContext = createContext<boolean>(true);
 
@@ -70,31 +70,39 @@ const processElement = (element: ReactElement, props: DocumentProps) => {
   }
 };
 
+const HeadImpl = withLazyComplete(async () => {
+  return () => {
+    const document = useDocument();
+    const renderHead = useHead();
+
+    if (!renderHead) {
+      return null;
+    }
+
+    console.info('rendering head', document.props);
+
+    return (
+      <head>
+        <meta charSet="utf-8" />
+        {document.props.title && <title>{document.props.title}</title>}
+        {document.props.children}
+      </head>
+    );
+  };
+});
+
 export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
   const renderHead = useHead();
+
   const props = useMemo(() => {
     const props = { children: [] };
     processChildren(children, props);
     return props;
   }, [renderHead, hash({ children }, { ignoreUnknown: true })]);
 
-  const document = useDocument(props);
+  useDocument(props);
 
-  if (!renderHead) {
-    return null;
-  }
+  console.info('setting head', props);
 
-  const Head = useLazyComplete(async () => {
-    return () => {
-      return (
-        <head>
-          <meta charSet="utf-8" />
-          {document.props.title && <title>{document.props.title}</title>}
-          {document.props.children}
-        </head>
-      );
-    };
-  }, []);
-
-  return <Head />;
+  return <HeadImpl />;
 };

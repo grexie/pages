@@ -19,7 +19,7 @@ import { ResourcesPlugin } from './plugins/resources-plugin.js';
 import { ModuleContext } from './ModuleContext.new.js';
 import { Compilation } from 'webpack';
 import path from 'path';
-import { default as webpack } from 'webpack';
+import webpack from 'webpack';
 import { createRequire } from 'module';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);

@@ -1,7 +1,7 @@
-import { FileSystem } from './FileSystem';
+import { FileSystem } from './FileSystem.js';
 import path from 'path';
 import { createHash } from 'crypto';
-import { KeyedMutex, Mutex } from './utils/mutex';
+import { KeyedMutex, Mutex } from './utils/mutex.js';
 
 export enum CacheType {
   inherit,

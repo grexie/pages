@@ -4,6 +4,7 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*.ts",
