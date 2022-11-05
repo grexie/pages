@@ -27,6 +27,7 @@ export const useDocument = (props?: DocumentProps) => {
       const { children, ..._props } = props;
       Object.assign(document.props, _props);
       document.props.children = [...document.props.children, ...children];
+      document.update();
     }
   }, [document, hash(props ?? null, { ignoreUnknown: true })]);
 

@@ -18,6 +18,7 @@ class LazyContext {
   async complete<T extends unknown>(promise: () => Promise<T> | T): Promise<T> {
     const next = async (): Promise<void> => {
       await new Promise(resolve => setImmediate(resolve));
+
       if (this.#wrapped.length) {
         await Promise.all(this.#wrapped);
         return next();

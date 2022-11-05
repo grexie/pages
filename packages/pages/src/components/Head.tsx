@@ -8,6 +8,8 @@ import {
   Fragment,
   createContext,
   useContext,
+  useEffect,
+  useState,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
 import type { Document, DocumentProps } from '../api/Document.js';
@@ -72,8 +74,23 @@ const processElement = (element: ReactElement, props: DocumentProps) => {
 
 const HeadImpl = withLazyComplete(async () => {
   return () => {
+    const [, setState] = useState({});
     const document = useDocument();
     const renderHead = useHead();
+
+    if (typeof window === 'undefined') {
+      useMemo(() => {
+        document.on('update', () => setState({}));
+      }, []);
+    } else {
+      useEffect(() => {
+        const handler = () => setState({});
+        document.on('update', handler);
+        return () => {
+          document.removeListener('update', handler);
+        };
+      }, []);
+    }
 
     if (!renderHead) {
       return null;

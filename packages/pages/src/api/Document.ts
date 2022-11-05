@@ -1,6 +1,8 @@
 import { ReactElement } from 'react';
+import EventEmitter from 'events';
 import { ResourceContext } from '../hooks/index.js';
 import { Resource } from './Resource.js';
+import { setImmediate, clearImmediate } from 'timers';
 
 export interface DocumentOptions {
   resource: Resource;
@@ -14,16 +16,19 @@ export interface DocumentProps {
   children: ReactElement[];
 }
 
-export class Document {
+export class Document extends EventEmitter {
   readonly resourceContext: ResourceContext;
   readonly resource: Resource;
   readonly props: DocumentProps = { children: [] };
+  #updateImmediate?: NodeJS.Immediate;
 
   constructor({
     initialProps = { children: [] },
     resource,
     resourceContext,
   }: DocumentOptions) {
+    super();
+
     this.resourceContext = resourceContext;
     this.resource = resource;
     let { title, scripts, children } = initialProps;
@@ -32,6 +37,13 @@ export class Document {
       title,
       scripts,
       children: [...this.props.children, ...children],
+    });
+  }
+
+  update() {
+    clearImmediate(this.#updateImmediate);
+    this.#updateImmediate = setImmediate(() => {
+      this.emit('update');
     });
   }
 }
