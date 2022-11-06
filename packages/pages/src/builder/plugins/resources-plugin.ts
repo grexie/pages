@@ -137,27 +137,6 @@ class SourceCompiler {
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
-    await new Promise<void>((resolve, reject) =>
-      compilation.addEntry(
-        compiler.context,
-        new EntryDependency(this.source.filename),
-        {
-          name: this.source.slug,
-          filename: this.source.slug
-            ? `${this.source.slug}/index.js`
-            : 'index.js',
-        },
-        err => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          resolve();
-        }
-      )
-    );
-
     let changed = false;
 
     const resolver = createResolver();
@@ -181,6 +160,44 @@ class SourceCompiler {
         await Promise.all(
           meta.dependencies.map(dependency => this.context.promises[dependency])
         );
+      }
+
+      const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
+        compilation.addEntry(
+          compiler.context,
+          new EntryDependency(this.source.filename),
+          {
+            name: this.source.slug,
+            filename: this.source.slug
+              ? `${this.source.slug}/index.js`
+              : 'index.js',
+          },
+          (err, result) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            resolve(result!);
+          }
+        )
+      );
+
+      if (changed) {
+        await new Promise((resolve, reject) => {
+          try {
+            compilation.rebuildModule(entryModule, (err, result) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(result);
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
       }
 
       resolver.resolve();
