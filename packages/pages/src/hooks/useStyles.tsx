@@ -11,13 +11,13 @@ export interface StylesProviderProps {
 
 export class StylesContext extends EventEmitter {
   #updateTimeout?: NodeJS.Immediate;
-  #styles = new Set<{ hash: string; css: string }>();
+  #styles = new Map<string, { hash: string; css: string }>();
 
   constructor(styles?: { hash: string; css: string }[]) {
     super();
     if (styles) {
       for (const style of styles) {
-        this.#styles.add(style);
+        this.#styles.set(style.hash, style);
       }
     }
   }
@@ -33,17 +33,17 @@ export class StylesContext extends EventEmitter {
 
   add(hash: string, css: string) {
     const entry = { hash, css } as { hash: string; css: string };
-    this.#styles.add(entry);
+    this.#styles.set(hash, entry);
     this.#emitUpdate();
 
     return () => {
-      this.#styles.delete(entry);
+      this.#styles.delete(hash);
       this.#emitUpdate();
     };
   }
 
   [Symbol.iterator](): Iterator<{ hash: string; css: string }> {
-    const stylesMap = [...this.#styles].reduce((a, { hash, css }) => {
+    const stylesMap = [...this.#styles].reduce((a, [, { hash, css }]) => {
       if (hash in a) {
         return a;
       } else {

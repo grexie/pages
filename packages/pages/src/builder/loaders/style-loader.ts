@@ -37,7 +37,10 @@ export default async function StyleLoader(
     const styles = stylesModule.exports.default;
     const css = styles.toString();
     const { locals } = styles;
-    const hash = createHash('md5').update(css).digest('hex').substring(0, 8);
+    const hash = createHash('md5')
+      .update(this.resourcePath)
+      .digest('hex')
+      .substring(0, 8);
 
     const chunk = `
     import { wrapStyles } from '@grexie/pages/runtime/styles';

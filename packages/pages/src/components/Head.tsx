@@ -107,7 +107,9 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
   const document = useDocument(props);
 
   useEffect(() => {
-    const elements = window.document.head.querySelectorAll('[data-pages-head]');
+    const elements = Array.from(
+      window.document.head.querySelectorAll('[data-pages-head]')
+    );
     const children = document.props.children;
 
     const html = renderToStaticMarkup(<>{children}</>);
