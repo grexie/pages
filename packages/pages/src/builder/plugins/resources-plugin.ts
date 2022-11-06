@@ -142,6 +142,28 @@ class SourceCompiler {
     const resolver = createResolver();
 
     this.context.promises[this.source.filename] = resolver;
+    const factory = this.context.modules.createModuleFactory(compilation);
+
+    const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
+      compilation.addEntry(
+        compiler.context,
+        new EntryDependency(this.source.filename),
+        {
+          name: this.source.slug,
+          filename: this.source.slug
+            ? `${this.source.slug}/index.js`
+            : 'index.js',
+        },
+        (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve(result!);
+        }
+      )
+    );
 
     try {
       compilation.fileDependencies.add(this.source.filename);
@@ -160,44 +182,37 @@ class SourceCompiler {
         await Promise.all(
           meta.dependencies.map(dependency => this.context.promises[dependency])
         );
+
+        await Promise.all(
+          meta.dependencies.map(dependency =>
+            this.context.build.modules.evict(factory, dependency, {
+              recompile: true,
+              fail: false,
+            })
+          )
+        );
       }
 
-      const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
-        compilation.addEntry(
-          compiler.context,
-          new EntryDependency(this.source.filename),
-          {
-            name: this.source.slug,
-            filename: this.source.slug
-              ? `${this.source.slug}/index.js`
-              : 'index.js',
-          },
-          (err, result) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            resolve(result!);
-          }
-        )
-      );
-
       if (changed) {
-        await new Promise((resolve, reject) => {
-          try {
-            compilation.rebuildModule(entryModule, (err, result) => {
-              if (err) {
-                reject(err);
-                return;
-              }
-
-              resolve(result);
-            });
-          } catch (err) {
-            reject(err);
-          }
+        await this.context.build.modules.evict(factory, this.source.filename, {
+          recompile: true,
+          fail: false,
         });
+
+        // await new Promise((resolve, reject) => {
+        //   try {
+        //     compilation.rebuildModule(entryModule, (err, result) => {
+        //       if (err) {
+        //         reject(err);
+        //         return;
+        //       }
+
+        //       resolve(result);
+        //     });
+        //   } catch (err) {
+        //     reject(err);
+        //   }
+        // });
       }
 
       resolver.resolve();

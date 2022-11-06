@@ -160,13 +160,13 @@ export class Module extends EventEmitter {
           this.stats.mtime
         );
       }),
-      // ...this.dependencies.map(async dependency => {
-      //   const module = await this.#context.modules[dependency];
-      //   if (module) {
-      //     await module.load();
-      //     await module.persist();
-      //   }
-      // }),
+      ...this.dependencies.map(async dependency => {
+        const module = await this.#context.modules[dependency];
+        if (module) {
+          // await module.load();
+          await module.persist();
+        }
+      }),
     ]);
   }
 
