@@ -160,13 +160,13 @@ export class Module extends EventEmitter {
           this.stats.mtime
         );
       }),
-      ...this.dependencies.map(async dependency => {
-        const module = await this.#context.modules[dependency];
-        if (module) {
-          await module.load();
-          await module.persist();
-        }
-      }),
+      // ...this.dependencies.map(async dependency => {
+      //   const module = await this.#context.modules[dependency];
+      //   if (module) {
+      //     await module.load();
+      //     await module.persist();
+      //   }
+      // }),
     ]);
   }
 
@@ -940,7 +940,7 @@ export class ModuleContext {
       specifier
     );
 
-    if (!resolved.esm && (!resolved || resolved.builtin || !resolved.compile)) {
+    if (!resolved || resolved.builtin || !resolved.compile) {
       if (resolved?.esm) {
         return this.#createSyntheticImportModule(
           factory,
@@ -961,7 +961,7 @@ export class ModuleContext {
           source.source,
           resolved.filename,
           resolved.filename,
-          false,
+          true,
           this.cache
         );
 
@@ -1042,7 +1042,6 @@ export class ModuleContext {
     });
 
     await sourceTextModule.link((async (specifier: string) => {
-      console.info(specifier);
       const { [specifier]: resolved } = await this.resolver.resolve(
         factory,
         context,
@@ -1122,7 +1121,7 @@ export class ModuleContext {
       source,
       filename,
       sourceFilename,
-      false,
+      true,
       this.cache
     );
 
@@ -1140,14 +1139,13 @@ export class ModuleContext {
       if (this.modules[require.filename]) {
         const module = await this.modules[require.filename]!;
 
-        // const modules = await Promise.all(
-        //   Object.values(module.imports).map(require => next(require))
-        // );
-        //const modules: string[] = [];
+        const modules = await Promise.all(
+          Object.values(module.imports).map(require => next(require))
+        );
 
         return [
           require.filename,
-          //...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
+          ...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
         ];
       }
 
