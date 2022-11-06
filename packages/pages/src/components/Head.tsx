@@ -12,11 +12,13 @@ import {
   useState,
   lazy,
   Suspense,
+  cloneElement,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
 import type { DocumentProps } from '../api/Document.js';
 import { ClientSuspense, useLazyComplete } from '../hooks/useLazy.js';
 import hash from 'object-hash';
+import { useMountId } from '../hooks/useMountId.js';
 
 const HeadContext = createContext<boolean>(true);
 
@@ -51,34 +53,53 @@ const nodeToString = (children: ReactNode) => {
   return out.join('');
 };
 
-const processChildren = (children: ReactNode, props: DocumentProps) => {
-  Children.toArray(children).forEach(child => {
+const processChildren = (
+  children: ReactNode,
+  id: string,
+  props: DocumentProps
+) => {
+  Children.toArray(children).forEach((child, index) => {
     if (Array.isArray(child)) {
-      processChildren(child, props);
+      processChildren(child, `${id}:${index}`, props);
     } else if (typeof child === 'object' && child !== null) {
-      processElement(child as ReactElement, props);
+      processElement(child as ReactElement, `${id}:${index}`, props);
     }
   });
 };
 
-const processElement = (element: ReactElement, props: DocumentProps) => {
+const processElement = (
+  element: ReactElement,
+  id: string,
+  props: DocumentProps
+) => {
+  element = cloneElement(element, { 'data-pages-loc': id });
+
   switch (element.type) {
     case 'title': {
       props.title = nodeToString(element.props.children);
       break;
     }
     default: {
-      props.children.push(element);
+      const index = props.children.findIndex(
+        child =>
+          child.props['data-pages-loc'] === element.props['data-pages-loc']
+      );
+      if (index !== -1) {
+        props.children.splice(index, 1, element);
+      } else {
+        props.children.push(element);
+      }
     }
   }
 };
 
 export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
   const renderHead = useHead();
+  const id = useMountId();
 
   const props = useMemo(() => {
     const props = { children: [] };
-    processChildren(children, props);
+    processChildren(children, id, props);
     return props;
   }, [renderHead, hash({ children }, { ignoreUnknown: true })]);
 

@@ -1,9 +1,10 @@
 import EventEmitter from 'events';
-import { useEffect, useMemo, useState, startTransition } from 'react';
+import { useEffect, useMemo, useState, startTransition, FC } from 'react';
 import { createContextWithProps } from '../utils/context.js';
 import hash from 'object-hash';
 import { setImmediate, clearImmediate } from 'timers';
 import { start } from 'repl';
+import { Head } from '../index.js';
 
 export interface StylesProviderProps {
   styles: StylesContext;
@@ -92,14 +93,14 @@ export const useStyles = () => {
   return styles;
 };
 
-export const Styles = () => {
+export const Styles: FC<{}> = () => {
   const styles = useStyles();
 
   return (
-    <>
+    <Head>
       {[...styles].map(({ hash, css }) => (
         <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
       ))}
-    </>
+    </Head>
   );
 };

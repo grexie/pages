@@ -36,9 +36,7 @@ export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
         <div id="__pages_root">
           <HeadProvider>
             {children}
-            <Head>
-              <Styles />
-            </Head>
+            <Styles />
           </HeadProvider>
         </div>
         <Scripts />
@@ -51,7 +49,7 @@ export const HydratedDocument: FC<PropsWithChildren<{}>> = ({ children }) => {
   return (
     <HeadProvider>
       {children}
-      <Head />
+      <Styles />
     </HeadProvider>
   );
 };
