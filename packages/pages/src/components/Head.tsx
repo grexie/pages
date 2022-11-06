@@ -14,6 +14,7 @@ import {
   Suspense,
   cloneElement,
 } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { useDocument } from '../hooks/useDocument.js';
 import type { DocumentProps } from '../api/Document.js';
 import { ClientSuspense, useLazyComplete } from '../hooks/useLazy.js';
@@ -72,7 +73,7 @@ const processElement = (
   id: string,
   props: DocumentProps
 ) => {
-  element = cloneElement(element, { 'data-pages-loc': id });
+  element = cloneElement(element, { 'data-pages-head': id });
 
   switch (element.type) {
     case 'title': {
@@ -82,7 +83,7 @@ const processElement = (
     default: {
       const index = props.children.findIndex(
         child =>
-          child.props['data-pages-loc'] === element.props['data-pages-loc']
+          child.props['data-pages-head'] === element.props['data-pages-head']
       );
       if (index !== -1) {
         props.children.splice(index, 1, element);
@@ -103,7 +104,22 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
     return props;
   }, [renderHead, hash({ children }, { ignoreUnknown: true })]);
 
-  useDocument(props);
+  const document = useDocument(props);
+
+  useEffect(() => {
+    const elements = window.document.head.querySelectorAll('[data-pages-head]');
+    const children = document.props.children;
+
+    const html = renderToStaticMarkup(<>{children}</>);
+    const fragment = window.document.createDocumentFragment();
+    const div = window.document.createElement('div');
+    div.innerHTML = html;
+    for (const el of Array.from(div.children)) {
+      fragment.appendChild(el);
+    }
+    window.document.head.insertBefore(fragment, elements[0]);
+    elements.forEach(element => element.remove());
+  }, [hash(document.props, { ignoreUnknown: true })]);
 
   if (!renderHead) {
     return null;
