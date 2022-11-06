@@ -6,9 +6,7 @@ import path from 'path';
 import { ResourceContext } from '../../hooks/index.js';
 import { WritableBuffer } from '../../utils/stream.js';
 import { createResolver } from '../../utils/resolvable.js';
-import { promisify } from '../../utils/promisify.js';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
-import { ModuleContext } from '../ModuleContext.js';
 
 const { RawSource } = webpack.sources;
 
@@ -89,51 +87,52 @@ class SourceCompiler {
     return buffer;
   }
 
-  async hasChanged(
-    compiler: Compiler,
-    filename: string,
-    seen: Record<string, boolean> = {},
-    defaultForNoMeta: boolean = true
-  ): Promise<boolean> {
-    if (seen[filename]) {
-      return false;
-    }
+  // async hasChanged(
+  //   compiler: Compiler,
+  //   filename: string,
+  //   seen: Record<string, boolean> = {},
+  //   defaultForNoMeta: boolean = true
+  // ): Promise<boolean> {
+  //   if (seen[filename]) {
+  //     return false;
+  //   }
 
-    seen[filename] = true;
+  //   seen[filename] = true;
 
-    const meta = await this.context.modules.meta(filename);
-    if (!meta) {
-      return defaultForNoMeta;
-    }
+  //   const meta = await this.context.modules.meta(filename);
+  //   if (!meta) {
+  //     return defaultForNoMeta;
+  //   }
 
-    const stat = promisify(
-      compiler.inputFileSystem,
-      compiler.inputFileSystem.stat
-    );
-    try {
-      const stats = await stat(filename);
-      if (stats.mtimeMs > meta.mtime) {
-        return true;
-      }
-    } catch (err) {
-      return false;
-    }
+  //   const stat = promisify(
+  //     compiler.inputFileSystem,
+  //     compiler.inputFileSystem.stat
+  //   );
+  //   try {
+  //     const stats = await stat(filename);
+  //     if (stats.mtimeMs > meta.mtime) {
+  //       return true;
+  //     }
+  //   } catch (err) {
+  //     return false;
+  //   }
 
-    const results = await Promise.all(
-      meta.dependencies.map(dependency =>
-        this.hasChanged(compiler, dependency, seen, false)
-      )
-    );
-    return results.reduce((a, b) => a || b, false);
-  }
+  //   const results = await Promise.all(
+  //     meta.dependencies.map(dependency =>
+  //       this.hasChanged(compiler, dependency, seen, false)
+  //     )
+  //   );
+  //   return results.reduce((a, b) => a || b, false);
+  // }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
+    const modules = this.context.build.getModuleContext(compilation);
+
     let changed = false;
 
     const resolver = createResolver();
 
     this.context.promises[this.source.filename] = resolver;
-    const factory = this.context.modules.createModuleFactory(compilation);
 
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
@@ -159,52 +158,52 @@ class SourceCompiler {
     try {
       compilation.fileDependencies.add(this.source.filename);
 
-      changed = await this.hasChanged(
-        compilation.compiler,
-        this.source.filename
-      );
+      // changed = await this.hasChanged(
+      //   compilation.compiler,
+      //   this.source.filename
+      // );
 
-      const meta = await this.context.modules.meta(this.source.filename);
-      if (meta) {
-        meta.dependencies.forEach(dependency =>
-          compilation.fileDependencies.add(dependency)
-        );
+      // const meta = await this.context.modules.meta(this.source.filename);
+      // if (meta) {
+      //   meta.dependencies.forEach(dependency =>
+      //     compilation.fileDependencies.add(dependency)
+      //   );
 
-        await Promise.all(
-          meta.dependencies.map(dependency => this.context.promises[dependency])
-        );
+      //   await Promise.all(
+      //     meta.dependencies.map(dependency => this.context.promises[dependency])
+      //   );
 
-        await Promise.all(
-          meta.dependencies.map(dependency =>
-            this.context.build.modules.evict(factory, dependency, {
-              recompile: true,
-              fail: false,
-            })
-          )
-        );
-      }
+      //   await Promise.all(
+      //     meta.dependencies.map(dependency =>
+      //       this.context.build.modules.evict(factory, dependency, {
+      //         recompile: true,
+      //         fail: false,
+      //       })
+      //     )
+      //   );
+      // }
 
-      if (changed) {
-        await this.context.build.modules.evict(factory, this.source.filename, {
-          recompile: true,
-          fail: false,
-        });
+      // if (changed) {
+      //   await this.context.build.modules.evict(factory, this.source.filename, {
+      //     recompile: true,
+      //     fail: false,
+      //   });
 
-        // await new Promise((resolve, reject) => {
-        //   try {
-        //     compilation.rebuildModule(entryModule, (err, result) => {
-        //       if (err) {
-        //         reject(err);
-        //         return;
-        //       }
+      //   // await new Promise((resolve, reject) => {
+      //   //   try {
+      //   //     compilation.rebuildModule(entryModule, (err, result) => {
+      //   //       if (err) {
+      //   //         reject(err);
+      //   //         return;
+      //   //       }
 
-        //       resolve(result);
-        //     });
-        //   } catch (err) {
-        //     reject(err);
-        //   }
-        // });
-      }
+      //   //       resolve(result);
+      //   //     });
+      //   //   } catch (err) {
+      //   //     reject(err);
+      //   //   }
+      //   // });
+      // }
 
       resolver.resolve();
     } catch (err) {
@@ -265,91 +264,91 @@ class SourceCompiler {
   }
 }
 
-class AssetCompiler {
-  readonly context: CompilationContext;
-  readonly resourcePath: string;
+// class AssetCompiler {
+//   readonly context: CompilationContext;
+//   readonly resourcePath: string;
 
-  constructor(context: CompilationContext, resourcePath: string) {
-    this.context = context;
-    this.resourcePath = resourcePath;
-  }
+//   constructor(context: CompilationContext, resourcePath: string) {
+//     this.context = context;
+//     this.resourcePath = resourcePath;
+//   }
 
-  async hasChanged(
-    compiler: Compiler,
-    filename: string,
-    seen: Record<string, boolean> = {},
-    defaultForNoMeta: boolean = true
-  ): Promise<boolean> {
-    if (seen[filename]) {
-      return false;
-    }
+//   async hasChanged(
+//     compiler: Compiler,
+//     filename: string,
+//     seen: Record<string, boolean> = {},
+//     defaultForNoMeta: boolean = true
+//   ): Promise<boolean> {
+//     if (seen[filename]) {
+//       return false;
+//     }
 
-    seen[filename] = true;
+//     seen[filename] = true;
 
-    const meta = await this.context.modules.meta(filename);
-    if (!meta) {
-      return defaultForNoMeta;
-    }
+//     const meta = await this.context.modules.meta(filename);
+//     if (!meta) {
+//       return defaultForNoMeta;
+//     }
 
-    const stat = promisify(
-      compiler.inputFileSystem,
-      compiler.inputFileSystem.stat
-    );
-    try {
-      const stats = await stat(filename);
-      if (stats.mtimeMs > meta.mtime) {
-        return true;
-      }
-    } catch (err) {
-      return false;
-    }
+//     const stat = promisify(
+//       compiler.inputFileSystem,
+//       compiler.inputFileSystem.stat
+//     );
+//     try {
+//       const stats = await stat(filename);
+//       if (stats.mtimeMs > meta.mtime) {
+//         return true;
+//       }
+//     } catch (err) {
+//       return false;
+//     }
 
-    const results = await Promise.all(
-      meta.dependencies.map(dependency =>
-        this.hasChanged(compiler, dependency, seen, false)
-      )
-    );
-    return results.reduce((a, b) => a || b, false);
-  }
+//     const results = await Promise.all(
+//       meta.dependencies.map(dependency =>
+//         this.hasChanged(compiler, dependency, seen, false)
+//       )
+//     );
+//     return results.reduce((a, b) => a || b, false);
+//   }
 
-  async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
-    const resolver = createResolver();
+//   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
+//     const resolver = createResolver();
 
-    this.context.promises[this.resourcePath] = resolver;
-    let buffer: Buffer | undefined;
-    try {
-      compilation.fileDependencies.add(this.resourcePath);
+//     this.context.promises[this.resourcePath] = resolver;
+//     let buffer: Buffer | undefined;
+//     try {
+//       compilation.fileDependencies.add(this.resourcePath);
 
-      const changed = await this.hasChanged(
-        compilation.compiler,
-        this.resourcePath
-      );
+//       const changed = await this.hasChanged(
+//         compilation.compiler,
+//         this.resourcePath
+//       );
 
-      const meta = await this.context.modules.meta(this.resourcePath);
-      if (meta) {
-        meta.dependencies.forEach(dependency =>
-          compilation.fileDependencies.add(dependency)
-        );
+//       const meta = await this.context.modules.meta(this.resourcePath);
+//       if (meta) {
+//         meta.dependencies.forEach(dependency =>
+//           compilation.fileDependencies.add(dependency)
+//         );
 
-        await Promise.all(
-          meta.dependencies.map(dependency => this.context.promises[dependency])
-        );
-      }
+//         await Promise.all(
+//           meta.dependencies.map(dependency => this.context.promises[dependency])
+//         );
+//       }
 
-      if (changed) {
-        const factory = this.context.modules.createModuleFactory(compilation);
-        await this.context.build.modules.evict(factory, this.resourcePath, {
-          fail: false,
-        });
-      }
+//       if (changed) {
+//         const factory = this.context.modules.createModuleFactory(compilation);
+//         await this.context.build.modules.evict(factory, this.resourcePath, {
+//           fail: false,
+//         });
+//       }
 
-      resolver.resolve();
-    } catch (err) {
-      resolver.reject(err);
-      throw err;
-    }
-  }
-}
+//       resolver.resolve();
+//     } catch (err) {
+//       resolver.reject(err);
+//       throw err;
+//     }
+//   }
+// }
 
 export class ResourcesPlugin {
   readonly context: BuildContext;
@@ -358,32 +357,32 @@ export class ResourcesPlugin {
     this.context = context;
   }
 
-  processDependencies(
-    context: CompilationContext,
-    compiler: Compiler,
-    compilation: Compilation,
-    _dependencies: Set<string>
-  ) {
-    const resolver = createResolver();
-    const process = async () => {
-      const dependencies = [..._dependencies];
-      _dependencies.clear();
+  // processDependencies(
+  //   context: CompilationContext,
+  //   compiler: Compiler,
+  //   compilation: Compilation,
+  //   _dependencies: Set<string>
+  // ) {
+  //   const resolver = createResolver();
+  //   const process = async () => {
+  //     const dependencies = [..._dependencies];
+  //     _dependencies.clear();
 
-      await Promise.all(
-        dependencies.map(async dependency => {
-          const child = new AssetCompiler(context, dependency);
+  //     await Promise.all(
+  //       dependencies.map(async dependency => {
+  //         const child = new AssetCompiler(context, dependency);
 
-          await (context.promises[dependency] = child.makeHook(
-            'ResourcesPlugin',
-            compiler,
-            compilation
-          ));
-        })
-      );
-    };
+  //         await (context.promises[dependency] = child.makeHook(
+  //           'ResourcesPlugin',
+  //           compiler,
+  //           compilation
+  //         ));
+  //       })
+  //     );
+  //   };
 
-    return { resolver, process };
-  }
+  //   return { resolver, process };
+  // }
 
   getEntries(compilation: Compilation) {
     return [...compilation.entrypoints].map(([name, entrypoint]) => ({
@@ -392,7 +391,7 @@ export class ResourcesPlugin {
   }
 
   apply(compiler: Compiler) {
-    compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
+    compiler.hooks.make.tapPromise('ResourcesPlugin', async ([compilation]) => {
       compilation.dependencyFactories.set(
         EntryDependency,
         compilation.params.normalModuleFactory
@@ -405,36 +404,36 @@ export class ResourcesPlugin {
         compilation,
       });
 
-      const seen = new Set<string>([...sources].map(source => source.filename));
-      const dependenciesToProcess = new Set<string>();
-      const { resolver: dependencyResolver, process: processDependencies } =
-        this.processDependencies(
-          context,
-          compiler,
-          compilation,
-          dependenciesToProcess
-        );
+      // const seen = new Set<string>([...sources].map(source => source.filename));
+      // const dependenciesToProcess = new Set<string>();
+      // const { resolver: dependencyResolver, process: processDependencies } =
+      //   this.processDependencies(
+      //     context,
+      //     compiler,
+      //     compilation,
+      //     dependenciesToProcess
+      //   );
 
       let sourceCount = sources.length;
 
       await Promise.all([
-        dependencyResolver,
+        // dependencyResolver,
         ...sources.map(async source => {
           const child = new SourceCompiler(context, source);
 
-          const meta = await this.context.modules.meta(source.filename);
-          meta?.dependencies.forEach(dependency => {
-            if (!seen.has(dependency)) {
-              seen.add(dependency);
-              dependenciesToProcess.add(dependency);
-            }
-          });
-          processDependencies();
-          if (--sourceCount === 0) {
-            dependencyResolver.resolve();
-          }
+          // const meta = await this.context.modules.meta(source.filename);
+          // meta?.dependencies.forEach(dependency => {
+          //   if (!seen.has(dependency)) {
+          //     seen.add(dependency);
+          //     dependenciesToProcess.add(dependency);
+          //   }
+          // });
+          // processDependencies();
+          // if (--sourceCount === 0) {
+          //   dependencyResolver.resolve();
+          // }
 
-          await dependencyResolver;
+          // await dependencyResolver;
 
           await child.makeHook('ResourcesPlugin', compiler, compilation);
         }),
