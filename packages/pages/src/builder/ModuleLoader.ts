@@ -6,6 +6,13 @@ import * as t from '@babel/types';
 import { createResolver } from '../utils/resolvable.js';
 import webpack from 'webpack';
 import path from 'path';
+import vm from 'vm';
+import { attach as attachHotReload } from '../runtime/hmr.js';
+
+const vmGlobal = { process } as any;
+vmGlobal.global = vmGlobal;
+attachHotReload(vmGlobal);
+export const vmContext = vm.createContext(vmGlobal);
 
 export interface ModuleReference {
   readonly filename: string;
@@ -127,8 +134,6 @@ export abstract class ModuleLoader {
     return resolver;
   }
 
-  abstract instantiate(module: Module): Promise<Module>;
-
   /**
    * Parses a module source file
    * @param context the context of the request
@@ -201,8 +206,4 @@ export interface CommonJsModule extends Module {}
 
 export class CommonJsModuleLoader extends ModuleLoader {
   async instantiate(module: Module): Promise<CommonJsModule> {}
-}
-
-export class EsmModuleLoader extends ModuleLoader {
-  async instantiate(module: Module): Promise<any> {}
 }
