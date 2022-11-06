@@ -1,8 +1,8 @@
-import path from 'path';
 import vm from 'vm';
-import { Module, ModuleLoader, vmContext } from './ModuleLoader.js';
+import type { InstantiatedModule, Module } from './ModuleLoader.js';
+import { ModuleLoader, vmContext } from './ModuleLoader.js';
 
-export interface EsmModule extends Module {
+export interface EsmModule extends InstantiatedModule {
   readonly vmModule: vm.Module;
 }
 

@@ -1,11 +1,10 @@
-import { ModuleResolver } from './ModuleResolver.js';
-import { Compilation } from 'webpack';
+import type { ModuleReference, ModuleResolver } from './ModuleResolver.js';
+import type { Compilation } from 'webpack';
 import { parseAsync, traverse } from '@babel/core';
 import babelPresetEnv from '@babel/preset-env';
 import * as t from '@babel/types';
 import { createResolver } from '../utils/resolvable.js';
 import webpack from 'webpack';
-import path from 'path';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 import type { ModuleContext } from './ModuleContext.new.js';
@@ -15,11 +14,9 @@ vmGlobal.global = vmGlobal;
 attachHotReload(vmGlobal);
 export const vmContext = vm.createContext(vmGlobal);
 
-export interface ModuleReference {
-  readonly filename: string;
-  readonly compile: boolean;
-  readonly builtin: boolean;
-  readonly esm: boolean;
+export enum ModuleLoaderType {
+  commonjs = 'commonjs',
+  esm = 'esm',
 }
 
 export interface ModuleLoaderOptions {
@@ -32,7 +29,6 @@ export interface Module {
   readonly context: string;
   readonly filename: string;
   readonly source: string;
-  readonly webpackModule: webpack.Module;
   readonly references: ModuleReference[];
 }
 
@@ -143,7 +139,6 @@ export abstract class ModuleLoader {
         context,
         filename,
         source,
-        webpackModule,
         references,
       });
     } catch (err) {
@@ -155,6 +150,8 @@ export abstract class ModuleLoader {
 
     return resolver;
   }
+
+  abstract instantiate(module: Module): Promise<InstantiatedModule>;
 
   /**
    * Parses a module source file

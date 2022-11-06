@@ -1,10 +1,17 @@
 import { Compilation } from 'webpack';
 import { promisify } from '../utils/promisify.js';
 import { BuildContext } from './BuildContext.js';
-import type { ModuleReference } from './ModuleLoader.js';
+import { ModuleLoaderType } from './ModuleLoader.js';
 import type { Compiler } from 'webpack';
-import { createRequire } from 'module';
+import { createRequire, Module } from 'module';
 import path from 'path';
+
+export interface ModuleReference {
+  readonly filename: string;
+  readonly compile: boolean;
+  readonly builtin: boolean;
+  readonly loader: ModuleLoaderType;
+}
 
 export interface ModuleResolverOptions {
   context: BuildContext;
@@ -108,32 +115,34 @@ export class ModuleResolver {
     {
       compile = false,
       builtin = false,
-      esm = this.#esmExtensions.reduce(
+      loader = this.#esmExtensions.reduce(
         (a, b) => a || filename.endsWith(b),
         false
-      ),
+      )
+        ? ModuleLoaderType.esm
+        : ModuleLoaderType.commonjs,
       descriptionFileData,
     }: {
       compile?: boolean;
       builtin?: boolean;
-      esm?: boolean;
+      loader?: ModuleLoaderType;
       descriptionFileData?: any;
     } = {}
   ) {
-    if (!esm && descriptionFileData) {
+    if (loader !== ModuleLoaderType.esm && descriptionFileData) {
       if (descriptionFileData.type === 'module' || descriptionFileData.module) {
-        esm = true;
+        loader = ModuleLoaderType.esm;
       }
     }
 
-    let o = { filename, esm } as any;
+    let o = { filename, loader } as ModuleReference;
 
     if (compile) {
-      o.compile = true;
+      (o as any).compile = true;
     }
 
     if (builtin) {
-      o.builtin = true;
+      (o as any).builtin = true;
     }
 
     return o;

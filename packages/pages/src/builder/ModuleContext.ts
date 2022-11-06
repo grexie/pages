@@ -22,8 +22,6 @@ import {
 import { promisify } from '../utils/promisify.js';
 import { KeyedMutex } from '../utils/mutex.js';
 import { isPlainObject } from '../utils/object.js';
-import ReactRefreshRuntime from 'react-refresh/runtime';
-import React from 'react';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
