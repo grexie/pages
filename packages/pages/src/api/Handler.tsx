@@ -63,5 +63,12 @@ export const hydrate = (resource: Resource, handler: any) => {
 
   const element = createElement(component as any);
 
-  const root = hydrateRoot(document.querySelector('#__pages_root')!, element);
+  if ((window as any).__PAGES_ROOT__) {
+    (window as any).__PAGES_ROOT__.render(element);
+  } else {
+    (window as any).__PAGES_ROOT__ = hydrateRoot(
+      document.querySelector('#__pages_root')!,
+      element
+    );
+  }
 };

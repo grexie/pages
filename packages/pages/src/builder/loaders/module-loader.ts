@@ -152,25 +152,26 @@ export default async function ModuleLoader(
     const serializedResource = await sourceContext.serialize(resource);
 
     const hmrHeader = `
-      import __pages_refresh_runtime from 'react-refresh/runtime';
+      import __pages_refresh_runtime from '@grexie/pages/runtime/hmr';
+
       const __pages_refresh_global = typeof window === 'undefined' ? global : window;
       const __pages_previous_refreshreg = __pages_refresh_global.$RefreshReg$;
       const __pages_previous_refreshsig = __pages_refresh_global.$RefreshSig$;
 
       __pages_refresh_global.$RefreshReg$ = (type, id) => {
-        const fullId = import.meta.id + ' ' + id;
+        const fullId = import.meta.url + ' ' + id;
         __pages_refresh_runtime.register(type, fullId);
       };
       __pages_refresh_global.$RefreshSig$ = __pages_refresh_runtime.createSignatureFunctionForTransform;
     `;
 
     const hmrFooter = `
-      __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
-      __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
       if (import.meta.webpackHot) {
         import.meta.webpackHot.accept();
-        __pages_refresh_runtime.performReactRefresh();
+        __pages_refresh_runtime.update();
       }
+      __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
+      __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
     `;
 
     if (options.handler) {
