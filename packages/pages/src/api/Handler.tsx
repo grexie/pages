@@ -53,7 +53,7 @@ export const hydrate = (resource: Resource, handler: any) => {
 
   const component = compose(
     withLazy,
-    withContext({ context: context }),
+    withContext({ context }),
     withStyles({ styles }),
     withResourceContext({ resourceContext }),
     withDocument({ resourceContext, resource }),

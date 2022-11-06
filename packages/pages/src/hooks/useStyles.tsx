@@ -58,7 +58,7 @@ export class StylesContext extends EventEmitter {
   }
 }
 
-export const { with: withStyles, use: _useStyles } = createContextWithProps<
+const { with: withStyles, use: _useStyles } = createContextWithProps<
   StylesContext,
   StylesProviderProps
 >(Provider => ({ styles, children }) => {
@@ -68,6 +68,8 @@ export const { with: withStyles, use: _useStyles } = createContextWithProps<
   );
   return <Provider value={_styles}>{children}</Provider>;
 });
+
+export { withStyles };
 
 export const useStyles = () => {
   const [, setState] = useState({});

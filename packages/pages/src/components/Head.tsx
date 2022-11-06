@@ -10,6 +10,7 @@ import {
   useContext,
   useEffect,
   useState,
+  lazy,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
 import type { DocumentProps } from '../api/Document.js';
@@ -84,38 +85,35 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const Head = useLazyComplete(async () => {
     return () => {
-      return null;
-      // const [, setState] = useState({});
-      // const document = useDocument();
-      // const renderHead = useHead();
+      const [, setState] = useState({});
+      const document = useDocument();
+      const renderHead = useHead();
 
-      // if (typeof window === 'undefined') {
-      //   useMemo(() => {
-      //     document.on('update', () => setState({}));
-      //   }, []);
-      // } else {
-      //   useEffect(() => {
-      //     const handler = () => setState({});
-      //     document.on('update', handler);
-      //     return () => {
-      //       document.removeListener('update', handler);
-      //     };
-      //   }, []);
-      // }
+      if (typeof window === 'undefined') {
+        useMemo(() => {
+          document.on('update', () => setState({}));
+        }, []);
+      } else {
+        useEffect(() => {
+          const handler = () => setState({});
+          document.on('update', handler);
+          return () => {
+            document.removeListener('update', handler);
+          };
+        }, []);
+      }
 
-      // if (!renderHead) {
-      //   return null;
-      // }
+      if (!renderHead) {
+        return null;
+      }
 
-      // console.info('rendering head', document.props);
-
-      // return (
-      //   <head>
-      //     <meta charSet="utf-8" />
-      //     {document.props.title && <title>{document.props.title}</title>}
-      //     {document.props.children}
-      //   </head>
-      // );
+      return (
+        <head>
+          <meta charSet="utf-8" />
+          {document.props.title && <title>{document.props.title}</title>}
+          {document.props.children}
+        </head>
+      );
     };
   }, []);
 
