@@ -8,6 +8,7 @@ import { WritableBuffer } from '../../utils/stream.js';
 import { createResolver } from '../../utils/resolvable.js';
 import { promisify } from '../../utils/promisify.js';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
+import { ModuleContext } from '../ModuleContext.js';
 
 const { RawSource } = webpack.sources;
 
@@ -50,14 +51,13 @@ class SourceCompiler {
   }
 
   async render(compilation: Compilation, scripts: string[]) {
-    const factory = this.context.modules.createModuleFactory(compilation);
+    const modules = this.context.build.getModuleContext(compilation);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render', this.source.filename);
     }
 
-    const handlerModule = await this.context.modules.require(
-      factory,
+    const handlerModule = await modules.require(
       path.dirname(this.source.filename),
       this.source.filename
     );
@@ -66,7 +66,6 @@ class SourceCompiler {
       console.info('render:handler', this.source.filename);
     }
 
-    await handlerModule.load();
     const { exports } = handlerModule;
 
     const resourceContext = new ResourceContext();
@@ -86,14 +85,6 @@ class SourceCompiler {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendered', this.source.filename);
     }
-
-    compilation.fileDependencies.add(this.source.filename);
-
-    handlerModule.dependencies.forEach(filename =>
-      compilation.fileDependencies.add(filename)
-    );
-
-    await handlerModule.persist();
 
     return buffer;
   }

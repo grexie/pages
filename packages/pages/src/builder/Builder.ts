@@ -16,7 +16,7 @@ import { Source } from '../api/Source.js';
 import _path from 'path';
 import { Volume } from 'memfs';
 import { ResourcesPlugin } from './plugins/resources-plugin.js';
-import { ModuleContext } from './ModuleContext.new.js';
+import { ModuleContext } from './ModuleContext.js';
 import { Compilation } from 'webpack';
 import path from 'path';
 import webpack from 'webpack';
@@ -467,9 +467,5 @@ export class Builder {
   async compiler(sources: Source[]): Promise<webpack.Compiler> {
     const config = await this.config(sources);
     return this.#builder.compiler({ config });
-  }
-
-  createModuleContext(compilation: Compilation) {
-    return new ModuleContext({ context: this.context, compilation });
   }
 }

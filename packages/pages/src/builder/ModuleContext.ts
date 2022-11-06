@@ -37,7 +37,7 @@ export class ModuleContext {
     return this.loader.load(context, reference.filename);
   }
 
-  async instantiate(
+  async create(
     context: string,
     filename: string,
     source: string

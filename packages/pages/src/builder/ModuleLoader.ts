@@ -33,6 +33,7 @@ export interface Module {
 }
 
 export interface InstantiatedModule extends Module {
+  readonly webpackModule: webpack.Module;
   readonly exports: any;
 }
 
@@ -108,7 +109,7 @@ export class ModuleLoader {
       }
     });
 
-    return { context, filename, source, references, exports };
+    return { context, filename, source, references, webpackModule, exports };
   }
 
   /**
