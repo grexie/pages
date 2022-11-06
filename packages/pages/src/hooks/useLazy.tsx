@@ -1,4 +1,14 @@
-import { lazy, Attributes, PropsWithRef, FC, useMemo } from 'react';
+import {
+  lazy,
+  Attributes,
+  PropsWithRef,
+  FC,
+  useMemo,
+  PropsWithChildren,
+  ComponentType,
+  Suspense,
+  SuspenseProps,
+} from 'react';
 import { setImmediate } from 'timers';
 import { createContext } from '../utils/context.js';
 
@@ -111,4 +121,12 @@ export const useManyLazy = (
     cb.map(cb => () => context.wrap(cb() as Promise<any>)),
     dependencies
   )[0];
+};
+
+export const ClientSuspense: FC<SuspenseProps> = ({ children, ...props }) => {
+  if (typeof window === 'undefined') {
+    return <>{children}</>;
+  } else {
+    return <Suspense {...props}>{children}</Suspense>;
+  }
 };

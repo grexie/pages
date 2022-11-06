@@ -11,10 +11,11 @@ import {
   useEffect,
   useState,
   lazy,
+  Suspense,
 } from 'react';
 import { useDocument } from '../hooks/useDocument.js';
 import type { DocumentProps } from '../api/Document.js';
-import { useLazyComplete } from '../hooks/useLazy.js';
+import { ClientSuspense, useLazyComplete } from '../hooks/useLazy.js';
 import hash from 'object-hash';
 
 const HeadContext = createContext<boolean>(true);
@@ -83,11 +84,14 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
 
   useDocument(props);
 
-  const Head = useLazyComplete(async () => {
-    return () => {
+  if (!renderHead) {
+    return null;
+  }
+
+  const Head = useLazyComplete(
+    async () => () => {
       const [, setState] = useState({});
       const document = useDocument();
-      const renderHead = useHead();
 
       if (typeof window === 'undefined') {
         useMemo(() => {
@@ -103,10 +107,6 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
         }, []);
       }
 
-      if (!renderHead) {
-        return null;
-      }
-
       return (
         <head>
           <meta charSet="utf-8" />
@@ -114,8 +114,9 @@ export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
           {document.props.children}
         </head>
       );
-    };
-  }, []);
+    },
+    []
+  );
 
   return <Head />;
 };

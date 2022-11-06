@@ -48,7 +48,6 @@ export const Document: FC<PropsWithChildren<{}>> = ({ children }) => {
 };
 
 export const HydratedDocument: FC<PropsWithChildren<{}>> = ({ children }) => {
-  console.info('rendering hydrated document');
   return (
     <HeadProvider>
       {children}
