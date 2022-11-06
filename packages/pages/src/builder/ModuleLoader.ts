@@ -8,6 +8,10 @@ import webpack from 'webpack';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 import type { ModuleContext } from './ModuleContext.js';
+import { FileSystem } from '@grexie/builder/FileSystem.js';
+import { Volume } from 'memfs';
+import { promisify } from '../utils/promisify.js';
+import path from 'path';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -64,12 +68,12 @@ export class ModuleLoader {
   ): Promise<InstantiatedModule> {
     const context = webpackModule.context!;
 
-    webpackModule.buildInfo = {};
-    webpackModule.buildMeta = {};
+    // webpackModule.buildInfo = {};
+    // webpackModule.buildMeta = {};
 
     await new Promise((resolve, reject) => {
       try {
-        this.compilation.buildQueue.add(webpackModule, (err, result) => {
+        this.compilation.buildModule(webpackModule, (err, result) => {
           if (err) {
             reject(err);
             return;
@@ -94,20 +98,22 @@ export class ModuleLoader {
 
     const references = await this.parse(context, source);
 
-    const exports = await new Promise<any>((resolve, reject) => {
-      try {
-        this.compilation.executeModule(webpackModule, {}, (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+    // const exports = await new Promise<any>((resolve, reject) => {
+    //   try {
+    //     this.compilation.executeModule(webpackModule, {}, (err, result) => {
+    //       if (err) {
+    //         reject(err);
+    //         return;
+    //       }
 
-          resolve(result?.exports);
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+    //       resolve(result?.exports);
+    //     });
+    //   } catch (err) {
+    //     reject(err);
+    //   }
+    // });
+
+    const exports = {};
 
     return { context, filename, source, references, webpackModule, exports };
   }
@@ -174,41 +180,49 @@ export class ModuleLoader {
     this.modules[filename] = resolver;
 
     try {
+      const volume = new Volume();
+      const writeFile = promisify(volume, volume.writeFile);
+      const mkdir = promisify(volume, volume.mkdir);
+      await mkdir(path.dirname(filename), { recursive: true });
+      await writeFile(filename, source);
+
+      const fs = new FileSystem()
+        .add('/', this.context.build.fs, false)
+        .add(filename, volume, false);
+
       const webpackModule = await new Promise<webpack.NormalModule>(
-        (resolve, reject) =>
-          this.compilation.params.normalModuleFactory.create(
-            {
-              context,
-              contextInfo: {
-                issuer: 'pages',
-                compiler: 'javascript/auto',
+        (resolve, reject) => {
+          try {
+            this.compilation.params.normalModuleFactory.create(
+              {
+                context,
+                contextInfo: {
+                  issuer: 'pages',
+                  compiler: 'javascript/auto',
+                },
+                dependencies: [
+                  new webpack.dependencies.ModuleDependency(
+                    `./${path.relative(context, filename)}`
+                  ),
+                ],
+                resolveOptions: {
+                  fileSystem: fs,
+                },
               },
-              dependencies: [],
-            },
-            (err, result) => {
-              if (err) {
-                reject(err);
-                return;
+              (err, result) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+
+                resolve(result!.module! as webpack.NormalModule);
               }
-
-              resolve(result!.module! as webpack.NormalModule);
-            }
-          )
+            );
+          } catch (err) {
+            reject(err);
+          }
+        }
       );
-
-      const parser =
-        this.compilation.params.normalModuleFactory.createParser(
-          'javascript/auto'
-        );
-      let state: webpack.ParserState = {
-        source,
-        module: webpackModule,
-        compilation: this.compilation,
-        current: webpackModule,
-        options: {},
-      };
-
-      state = parser.parse(source, state);
 
       resolver.resolve(this.#build(filename, webpackModule));
     } catch (err) {

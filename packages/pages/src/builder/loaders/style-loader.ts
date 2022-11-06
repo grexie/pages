@@ -36,7 +36,6 @@ export default async function StyleLoader(
       )} };\n${content.toString()}`
     );
 
-    await stylesModule.load();
     const styles = stylesModule.exports.default;
     const css = styles.toString();
     const { locals } = styles;
@@ -65,9 +64,9 @@ export default async function StyleLoader(
     callback(err as any);
     resolver.reject(err);
   } finally {
-    await context.modules.evict(factory, this.resourcePath, {
-      recompile: true,
-    });
+    // await context.modules.evict(factory, this.resourcePath, {
+    //   recompile: true,
+    // });
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('style-loader:complete', this.resourcePath);

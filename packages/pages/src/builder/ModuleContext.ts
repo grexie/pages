@@ -13,12 +13,14 @@ export class ModuleContext {
   readonly compilation: Compilation;
   readonly resolver: ModuleResolver;
   readonly loader: ModuleLoader;
+  readonly build: BuildContext;
 
   constructor({
     context,
     compilation,
     ...resolverOptions
   }: ModuleContextOptions & ModuleResolverOptions) {
+    this.build = context;
     this.compilation = compilation;
     this.resolver = new ModuleResolver({
       context,
