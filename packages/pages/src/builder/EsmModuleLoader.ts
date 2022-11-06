@@ -1,3 +1,4 @@
+import path from 'path';
 import vm from 'vm';
 import { Module, ModuleLoader, vmContext } from './ModuleLoader.js';
 
@@ -11,57 +12,18 @@ export class EsmModuleLoader extends ModuleLoader {
       context: vmContext,
       initializeImportMeta: () => {},
       identifier: module.filename,
-      importModuleDynamically: async specified => {
-        const m = await this.require(factory, context, specified);
-        await m.load();
-        return m.module;
+      importModuleDynamically: async request => {
+        const childModule = await this.context.require(module.context, request);
+        return childModule.vmModule;
       },
     });
 
-    await sourceTextModule.link((async (specifier: string) => {
-      const { [specifier]: resolved } = await this.resolver.resolve(
-        factory,
-        context,
-        specifier
-      );
+    await vmModule.link(async (request: string) => {
+      const childModule = await this.context.require(module.context, request);
+      return childModule.vmModule;
+    });
 
-      let modulePromise = this.modules[resolved?.filename ?? specifier];
-
-      if (modulePromise) {
-        const module = await modulePromise;
-        await module.load();
-        return module.module;
-      }
-
-      const resolver = createResolver<Module>();
-      this.modules[resolved?.filename ?? specifier] = resolver;
-
-      const syntheticModule = await this.#createSyntheticModule(
-        factory,
-        context,
-        filename,
-        specifier
-      );
-
-      const ready = createResolver();
-      const module = new Module({
-        context: this,
-        filename: resolved.filename,
-        loader: () => Promise.resolve(syntheticModule),
-        imports: {},
-        stats: { mtime: new Date(0), mtimeMs: 0 } as any,
-        webpackModule: null as any,
-        ready,
-      });
-
-      await ready;
-      this.loadedModules[filename] = module;
-
-      resolver.resolve(module);
-      return syntheticModule;
-    }) as any);
-
-    await sourceTextModule.evaluate({});
-    return sourceTextModule;
+    await vmModule.evaluate({});
+    return { ...module, vmModule };
   }
 }

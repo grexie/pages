@@ -1,12 +1,10 @@
 import { Compilation } from 'webpack';
 import { BuildContext } from './BuildContext.js';
 import { ModuleResolver } from './ModuleResolver.js';
-import {
-  CommonJsModuleLoader,
-  EsmModuleLoader,
-  ModuleLoader,
-} from './ModuleLoader.js';
-import { Module } from 'vm';
+import { InstantiatedModule, Module, ModuleLoader } from './ModuleLoader.js';
+import { EsmModuleLoader } from './EsmModuleLoader.js';
+import { CommonJsModuleLoader } from './CommonJsModuleLoader.js';
+import vm from 'vm';
 import { ModuleResolverOptions } from './ModuleContext.js';
 
 export enum ModuleLoaderType {
@@ -41,21 +39,23 @@ export class ModuleContext {
     this.loaders[ModuleLoaderType.commonjs] = new CommonJsModuleLoader({
       resolver: this.resolver,
       compilation,
+      context: this,
     });
 
-    if (Module) {
+    if (vm.Module) {
       this.loaders[ModuleLoaderType.esm] = new EsmModuleLoader({
         resolver: this.resolver,
         compilation,
+        context: this,
       });
     }
   }
 
-  async require(context: string, request: string): Promise<any> {
+  async require(context: string, request: string): Promise<InstantiatedModule> {
     throw new Error('not implemented');
   }
 
-  async load(filename: string, source: string): Promise<any> {
+  async create(filename: string, source: string): Promise<InstantiatedModule> {
     throw new Error('not implemented');
   }
 }

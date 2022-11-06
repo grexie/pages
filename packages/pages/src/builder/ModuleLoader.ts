@@ -8,6 +8,7 @@ import webpack from 'webpack';
 import path from 'path';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
+import type { ModuleContext } from './ModuleContext.new.js';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -22,40 +23,55 @@ export interface ModuleReference {
 }
 
 export interface ModuleLoaderOptions {
+  context: ModuleContext;
   resolver: ModuleResolver;
   compilation: Compilation;
 }
 
 export interface Module {
+  readonly context: string;
   readonly filename: string;
   readonly source: string;
   readonly webpackModule: webpack.Module;
   readonly references: ModuleReference[];
 }
 
+export interface InstantiatedModule extends Module {
+  readonly vmModule: vm.Module;
+}
+
+const ModulePromiseTable = new WeakMap<
+  ModuleContext,
+  Record<string, Promise<Module> | undefined>
+>();
+
 export abstract class ModuleLoader {
+  readonly context: ModuleContext;
   readonly resolver: ModuleResolver;
   readonly compilation: Compilation;
-  readonly modules: Record<string, Promise<Module> | undefined> = {};
+  readonly modules;
 
-  constructor({ resolver, compilation }: ModuleLoaderOptions) {
+  constructor({ context, resolver, compilation }: ModuleLoaderOptions) {
+    this.context = context;
     this.resolver = resolver;
     this.compilation = compilation;
+    if (!ModulePromiseTable.has(context)) {
+      ModulePromiseTable.set(context, {});
+    }
+    this.modules = ModulePromiseTable.get(context)!;
   }
 
   /**
    * Loads a module from the filesystem
    * @param filename
    */
-  async load(filename: string): Promise<Module> {
+  async load(context: string, filename: string): Promise<Module> {
     if (this.modules[filename]) {
       return this.modules[filename]!;
     }
 
     const resolver = createResolver<Module>();
     this.modules[filename] = resolver;
-
-    const context = path.dirname(filename);
 
     let phase = 'starting';
     const interval = setInterval(() => {
@@ -123,7 +139,13 @@ export abstract class ModuleLoader {
 
       const references = await this.parse(context, source);
 
-      resolver.resolve({ filename, source, webpackModule, references });
+      resolver.resolve({
+        context,
+        filename,
+        source,
+        webpackModule,
+        references,
+      });
     } catch (err) {
       resolver.reject(err);
     } finally {
@@ -200,10 +222,4 @@ export abstract class ModuleLoader {
       requests.map(request => this.resolver.resolve(context, request))
     );
   }
-}
-
-export interface CommonJsModule extends Module {}
-
-export class CommonJsModuleLoader extends ModuleLoader {
-  async instantiate(module: Module): Promise<CommonJsModule> {}
 }

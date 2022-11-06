@@ -17,7 +17,7 @@ declare module 'vm' {
     errored = 'errored',
   }
   export interface ModuleEvaluateOptions {}
-  export type ModuleLinker = () => Promise<Module> | Module;
+  export type ModuleLinker = (request: string) => Promise<Module> | Module;
   export abstract class Module {
     readonly dependencySpecifiers: string[];
     readonly error: any;
