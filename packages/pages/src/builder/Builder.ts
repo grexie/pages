@@ -436,23 +436,14 @@ export class Builder {
     };
 
     if (process.env.WEBPACK_HOT === 'true') {
-      // Object.assign(
-      //   ((config as any).devServer = (config as any).devServer || {}),
-      //   {
-      //     // hotOnly: true,
-      //   }
-      // );
       Object.assign(config.entry!, {
-        '__webpack/hot': {
-          import: 'webpack/hot/dev-server.js',
-          filename: '__webpack/hot.js',
-        },
         '__webpack/react-refresh': {
           import: '@grexie/pages/runtime/hmr.js',
           filename: '__webpack/react-refresh.js',
         },
         '__webpack/client': {
-          import: 'webpack-hot-middleware/client',
+          import:
+            'webpack-hot-middleware/client?reload=true&path=__webpack/hmr',
           filename: '__webpack/client.js',
         },
       });

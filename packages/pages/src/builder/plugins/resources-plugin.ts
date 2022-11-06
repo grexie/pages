@@ -211,7 +211,7 @@ class SourceCompiler {
       { name, stage: Infinity },
       async () => {
         if (changed) {
-          const files: string[] = [];
+          const files = new Set<string>();
 
           let publicPath = compilation.outputOptions.publicPath ?? '/';
           if (publicPath === 'auto') {
@@ -242,12 +242,12 @@ class SourceCompiler {
                   return;
                 }
 
-                files.push(`${publicPath}${file}`);
+                files.add(`${publicPath}${file}`);
               });
             });
           });
 
-          const buffer = await this.render(compilation, files);
+          const buffer = await this.render(compilation, [...files]);
 
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),

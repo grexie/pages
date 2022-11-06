@@ -66,7 +66,11 @@ export class Server {
         serverSideRender: true,
       })
     );
-    app.use(WebpackHotMiddleware(compiler));
+    app.use(
+      WebpackHotMiddleware(compiler, {
+        path: '/__webpack/hmr',
+      })
+    );
     app.use(handler.handle);
 
     const server = http.createServer(app);
