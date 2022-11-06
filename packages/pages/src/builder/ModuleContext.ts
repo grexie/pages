@@ -788,6 +788,7 @@ export interface ModuleContextOptions {
 }
 
 const vmGlobal = { process } as any;
+vmGlobal.global = vmGlobal;
 attachHotReload(vmGlobal);
 
 const vmContext = createContext(vmGlobal);

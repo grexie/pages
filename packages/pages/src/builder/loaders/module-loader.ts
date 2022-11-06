@@ -151,6 +151,24 @@ export default async function ModuleLoader(
 
     const serializedResource = await sourceContext.serialize(resource);
 
+    const hmrHeader = `
+      import __pages_refresh_runtime from 'react-refresh/runtime';
+      const __pages_refresh_global = typeof window === 'undefined' ? global : window;
+      const __pages_previous_refreshreg = __pages_refresh_global.$RefreshReg$;
+      const __pages_previous_refreshsig = __pages_refresh_global.$RefreshSig$;
+
+      __pages_refresh_global.$RefreshReg$ = (type, id) => {
+        const fullId = import.meta.id + ' ' + id;
+        __pages_refresh_runtime.register(type, fullId);
+      };
+      __pages_refresh_global.$RefreshSig$ = __pages_refresh_runtime.createSignatureFunctionForTransform;
+    `;
+
+    const hmrFooter = `
+      __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
+      __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
+    `;
+
     if (options.handler) {
       resolver.resolve();
 
@@ -170,6 +188,7 @@ export default async function ModuleLoader(
         import __pages_handler_component from ${JSON.stringify(
           options.handler
         )};
+        ${hmrHeader}
       `;
 
       const footer = `
@@ -184,6 +203,8 @@ export default async function ModuleLoader(
         __pages_hydrate(resource, __pages_handler);
 
         export default __pages_handler;
+
+        ${hmrFooter}
       `;
 
       const compiled = await transformAsync(serializedResource.code, {
@@ -230,6 +251,8 @@ export default async function ModuleLoader(
             `import __pages_composable_${i} from ${JSON.stringify(id)};`
         )
         .join(',\n')}
+
+        ${hmrHeader}
       `;
 
       const footer = `
@@ -245,6 +268,8 @@ export default async function ModuleLoader(
       __pages_hydrate(resource, __pages_handler);
 
       export default __pages_handler;
+
+      ${hmrFooter}
     `;
 
       return callback(
