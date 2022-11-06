@@ -57,7 +57,7 @@ export class Server {
     const compiler = await this.context.builder.compiler(sources);
 
     this.#server = createResolver<http.Server>();
-    // const handler = new RequestHandler(this.context);
+    const handler = new RequestHandler(this.context);
     const app = express();
 
     app.use(
@@ -65,7 +65,12 @@ export class Server {
         publicPath: compiler.options.output.publicPath,
       })
     );
-    app.use(WebpackHotMiddleware(compiler));
+    app.use(
+      WebpackHotMiddleware(compiler, {
+        path: '__webpack/client.js',
+      })
+    );
+    app.use(handler.handle);
 
     const server = http.createServer(app);
     server.listen(this.context.port, () => {

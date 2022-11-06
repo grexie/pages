@@ -223,6 +223,9 @@ class SourceCompiler {
             chunk.files.forEach(file => files.add(`${publicPath}${file}`));
           });
 
+          files.add('/__webpack/hot.js');
+          files.add('/__webpack/client.js');
+
           const buffer = await this.render(compilation, [...files]);
 
           compilation.emitAsset(

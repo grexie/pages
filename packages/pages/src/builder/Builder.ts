@@ -433,6 +433,9 @@ export class Builder {
     };
 
     if (process.env.WEBPACK_HOT === 'true') {
+      (config as any).devServer = {
+        hot: true,
+      };
       Object.assign(config.entry!, {
         '__webpack/hot': {
           import: 'webpack/hot/dev-server.js',
