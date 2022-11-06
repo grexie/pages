@@ -53,7 +53,7 @@ export class Server {
     }
 
     let sources = await this.context.registry.list();
-    process.env.WEBPACK_HOT = process.env.WEBPACK_HOT ?? 'true';
+    process.env.WEBPACK_HOT = 'true';
     const compiler = await this.context.builder.compiler(sources);
 
     this.#server = createResolver<http.Server>();
@@ -67,12 +67,7 @@ export class Server {
         serverSideRender: true,
       })
     );
-    app.use(
-      WebpackHotMiddleware(compiler, {
-        path: '__webpack',
-        heartbeat: 100,
-      })
-    );
+    app.use(WebpackHotMiddleware(compiler));
     app.use(handler.handle);
 
     const server = http.createServer(app);

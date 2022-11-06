@@ -219,6 +219,11 @@ class SourceCompiler {
             publicPath = '/';
           }
 
+          if (process.env.WEBPACK_HOT === 'true') {
+            //files.push(`${publicPath}__webpack/hot.js`);
+            files.push(`${publicPath}__webpack/client.js`);
+          }
+
           entrypoint.chunks.forEach(chunk => {
             chunk.files.forEach(file => {
               const asset = compilation.getAsset(file);
@@ -237,11 +242,6 @@ class SourceCompiler {
               files.push(`${publicPath}${file}`);
             });
           });
-
-          if (compiler.options.devServer?.hot) {
-            files.push('/__webpack/hot.js');
-            files.push('/__webpack/client.js');
-          }
 
           const buffer = await this.render(compilation, files);
 

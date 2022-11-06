@@ -434,16 +434,13 @@ export class Builder {
     };
 
     if (process.env.WEBPACK_HOT === 'true') {
-      (config as any).devServer = {
-        hot: true,
-      };
       Object.assign(config.entry!, {
         '__webpack/client': {
           import: 'webpack-hot-middleware/client',
           filename: '__webpack/client.js',
         },
-      });
-      config.plugins!.push(new webpack.HotModuleReplacementPlugin());
+      } as EntryObject);
+      //config.plugins!.push(new webpack.HotModuleReplacementPlugin());
     }
 
     return config;
