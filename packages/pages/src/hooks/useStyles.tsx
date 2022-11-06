@@ -3,8 +3,7 @@ import { useEffect, useMemo, useState, startTransition, FC } from 'react';
 import { createContextWithProps } from '../utils/context.js';
 import hash from 'object-hash';
 import { setImmediate, clearImmediate } from 'timers';
-import { start } from 'repl';
-import { Head } from '../index.js';
+import { Head } from '../components/Head.js';
 
 export interface StylesProviderProps {
   styles: StylesContext;
@@ -96,6 +95,7 @@ export const useStyles = () => {
 export const Styles: FC<{}> = () => {
   const styles = useStyles();
 
+  console.info('rendering styles');
   return (
     <Head>
       {[...styles].map(({ hash, css }) => (
