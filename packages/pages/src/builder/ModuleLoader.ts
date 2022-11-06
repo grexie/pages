@@ -8,7 +8,6 @@ import webpack from 'webpack';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 import type { ModuleContext } from './ModuleContext.new.js';
-import { rejects } from 'assert';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -58,9 +57,11 @@ export abstract class ModuleLoader {
     this.modules = ModulePromiseTable.get(context)!;
   }
 
-  async #build(webpackModule: webpack.Module): Promise<InstantiatedModule> {
+  async #build(
+    filename: string,
+    webpackModule: webpack.Module
+  ): Promise<InstantiatedModule> {
     const context = webpackModule.context!;
-    const filename = webpackModule.;
 
     webpackModule.buildInfo = {};
     webpackModule.buildMeta = {};
@@ -122,15 +123,7 @@ export abstract class ModuleLoader {
     const resolver = createResolver<InstantiatedModule>();
     this.modules[filename] = resolver;
 
-    let phase = 'starting';
-    const interval = setInterval(() => {
-      if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-        console.info(`module-loader:${phase}`, filename);
-      }
-    }, 5000);
-
     try {
-      phase = 'create';
       const webpackModule = await new Promise<webpack.Module>(
         (resolve, reject) =>
           this.compilation.params.normalModuleFactory.create(
@@ -155,11 +148,57 @@ export abstract class ModuleLoader {
           )
       );
 
-      resolver.resolve(this.#build(webpackModule));
+      resolver.resolve(this.#build(filename, webpackModule));
     } catch (err) {
       resolver.reject(err);
     } finally {
-      clearInterval(interval);
+      return resolver;
+    }
+  }
+
+  /**
+   * Creates a module from source
+   * @param filename
+   */
+  async create(
+    context: string,
+    filename: string,
+    source: string
+  ): Promise<InstantiatedModule> {
+    if (this.modules[filename]) {
+      return this.modules[filename]!;
+    }
+
+    const resolver = createResolver<InstantiatedModule>();
+    this.modules[filename] = resolver;
+
+    try {
+      const webpackModule = await new Promise<webpack.Module>(
+        (resolve, reject) =>
+          this.compilation.params.contextModuleFactory.create(
+            {
+              context,
+              contextInfo: {
+                issuer: 'pages',
+                compiler: 'javascript/auto',
+              },
+              dependencies: [new webpack.dependencies.NullDependency()],
+            },
+            (err, result) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(result!.module!);
+            }
+          )
+      );
+
+      resolver.resolve(this.#build(filename, webpackModule));
+    } catch (err) {
+      resolver.reject(err);
+    } finally {
       return resolver;
     }
   }
