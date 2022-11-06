@@ -426,6 +426,7 @@ export class Builder {
           name: 'runtime',
         },
       },
+      target: 'web',
       plugins: [
         new ResourcesPlugin({ context: this.context }),
         new webpack.DefinePlugin({ 'process.env': '({})' }),
@@ -437,11 +438,6 @@ export class Builder {
         hot: true,
       };
       Object.assign(config.entry!, {
-        '__webpack/hot': {
-          import: 'webpack/hot/dev-server.js',
-          filename: '__webpack/hot.js',
-        },
-
         '__webpack/client': {
           import: 'webpack-hot-middleware/client',
           filename: '__webpack/client.js',

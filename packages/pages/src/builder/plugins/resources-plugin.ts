@@ -211,7 +211,7 @@ class SourceCompiler {
       { name, stage: Infinity },
       async () => {
         if (changed) {
-          const files = new Set<string>();
+          const files: string[] = [];
 
           const entrypoint = compilation.entrypoints.get(this.source.slug)!;
           let publicPath = compilation.outputOptions.publicPath ?? '/';
@@ -220,13 +220,30 @@ class SourceCompiler {
           }
 
           entrypoint.chunks.forEach(chunk => {
-            chunk.files.forEach(file => files.add(`${publicPath}${file}`));
+            chunk.files.forEach(file => {
+              const asset = compilation.getAsset(file);
+              if (!asset) {
+                return;
+              }
+
+              const assetMetaInformation = asset.info || {};
+              if (
+                assetMetaInformation.hotModuleReplacement ||
+                assetMetaInformation.development
+              ) {
+                return;
+              }
+
+              files.push(`${publicPath}${file}`);
+            });
           });
 
-          files.add('/__webpack/hot.js');
-          files.add('/__webpack/client.js');
+          if (compiler.options.devServer?.hot) {
+            files.push('/__webpack/hot.js');
+            files.push('/__webpack/client.js');
+          }
 
-          const buffer = await this.render(compilation, [...files]);
+          const buffer = await this.render(compilation, files);
 
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),

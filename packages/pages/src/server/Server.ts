@@ -63,11 +63,14 @@ export class Server {
     app.use(
       WebpackDevMiddleware(compiler, {
         publicPath: compiler.options.output.publicPath,
+        writeToDisk: true,
+        serverSideRender: true,
       })
     );
     app.use(
       WebpackHotMiddleware(compiler, {
-        path: '__webpack/client.js',
+        path: '__webpack',
+        heartbeat: 100,
       })
     );
     app.use(handler.handle);
