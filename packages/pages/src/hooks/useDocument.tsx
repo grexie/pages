@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { Document, DocumentProps, DocumentOptions } from '../api/Document.js';
+import {
+  Document,
+  DocumentProps,
+  DocumentOptions,
+  mergeDocumentProps,
+} from '../api/Document.js';
 import { createContextWithProps } from '../utils/context.js';
 import hash from 'object-hash';
 
@@ -24,9 +29,7 @@ export const useDocument = (props?: DocumentProps) => {
 
   useMemo(() => {
     if (props) {
-      const { children, ..._props } = props;
-      Object.assign(document.props, _props);
-      document.props.children = [...document.props.children, ...children];
+      mergeDocumentProps(document.props, props);
       document.update();
     }
   }, [document, hash(props ?? null, { ignoreUnknown: true })]);

@@ -16,7 +16,11 @@ import {
 } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useDocument } from '../hooks/useDocument.js';
-import type { DocumentProps } from '../api/Document.js';
+import {
+  Document,
+  DocumentProps,
+  mergeDocumentProps,
+} from '../api/Document.js';
 import { ClientSuspense, useLazyComplete } from '../hooks/useLazy.js';
 import hash from 'object-hash';
 import { useMountId } from '../hooks/useMountId.js';
@@ -77,54 +81,57 @@ const processElement = (
 
   switch (element.type) {
     case 'title': {
-      props.title = nodeToString(element.props.children);
+      mergeDocumentProps(props, {
+        title: nodeToString(element.props.children),
+      });
       break;
     }
     default: {
-      const index = props.children.findIndex(
-        child =>
-          child.props['data-pages-head'] === element.props['data-pages-head']
-      );
-      if (index !== -1) {
-        props.children.splice(index, 1, element);
-      } else {
-        props.children.push(element);
-      }
+      mergeDocumentProps(props, { children: [element] });
     }
   }
 };
 
-export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const renderHead = useHead();
+const updateHead = (document: Document) => {
+  const elements = Array.from(
+    window.document.querySelectorAll('head [data-pages-head]')
+  );
+
+  const html = renderToStaticMarkup(<>{document.props.children}</>);
+  const fragment = window.document.createDocumentFragment();
+  const div = window.document.createElement('div');
+  div.innerHTML = html;
+  for (const el of Array.from(div.children)) {
+    fragment.appendChild(el);
+  }
+
+  window.document.head.insertBefore(fragment, elements[0]);
+  elements.forEach(element => element.parentNode?.removeChild(element));
+};
+
+const HeadContent: FC<PropsWithChildren<{}>> = ({ children }) => {
   const id = useMountId();
 
   const props = useMemo(() => {
     const props = { children: [] };
     processChildren(children, id, props);
     return props;
-  }, [renderHead, hash({ children }, { ignoreUnknown: true })]);
+  }, [hash({ children }, { ignoreUnknown: true })]);
 
   const document = useDocument(props);
 
   useEffect(() => {
-    const elements = Array.from(
-      window.document.head.querySelectorAll('[data-pages-head]')
-    );
-    const children = document.props.children;
-
-    const html = renderToStaticMarkup(<>{children}</>);
-    const fragment = window.document.createDocumentFragment();
-    const div = window.document.createElement('div');
-    div.innerHTML = html;
-    for (const el of Array.from(div.children)) {
-      fragment.appendChild(el);
-    }
-    window.document.head.insertBefore(fragment, elements[0]);
-    elements.forEach(element => element.remove());
+    updateHead(document);
   }, [hash(document.props, { ignoreUnknown: true })]);
 
+  return null;
+};
+
+export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
+  const renderHead = useHead();
+
   if (!renderHead) {
-    return null;
+    return <HeadContent>{children}</HeadContent>;
   }
 
   const Head = useLazyComplete(
