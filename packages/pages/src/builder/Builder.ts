@@ -444,8 +444,12 @@ export class Builder {
       // );
       Object.assign(config.entry!, {
         '__webpack/hot': {
-          import: ['@grexie/pages/runtime/hmr.js', 'webpack/hot/dev-server.js'],
+          import: 'webpack/hot/dev-server.js',
           filename: '__webpack/hot.js',
+        },
+        '__webpack/react-refresh': {
+          import: '@grexie/pages/runtime/hmr.js',
+          filename: '__webpack/react-refresh.js',
         },
         '__webpack/client': {
           import: 'webpack-hot-middleware/client',
@@ -455,8 +459,6 @@ export class Builder {
 
       config.plugins!.push(new webpack.HotModuleReplacementPlugin());
     }
-
-    console.info(config.entry!);
 
     return config;
   }

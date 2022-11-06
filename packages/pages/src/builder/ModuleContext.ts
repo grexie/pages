@@ -24,6 +24,7 @@ import { KeyedMutex } from '../utils/mutex.js';
 import { isPlainObject } from '../utils/object.js';
 import ReactRefreshRuntime from 'react-refresh/runtime';
 import React from 'react';
+import { attach as attachHotReload } from '../runtime/hmr.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -787,14 +788,7 @@ export interface ModuleContextOptions {
 }
 
 const vmGlobal = { process } as any;
-
-ReactRefreshRuntime.injectIntoGlobalHook(vmGlobal);
-vmGlobal.$RefreshReg$ = () => {};
-vmGlobal.$RefreshSig$ = () => (type: any) => type;
-
-ReactRefreshRuntime.injectIntoGlobalHook(global);
-(global as any).$RefreshReg$ = () => {};
-(global as any).$RefreshSig$ = () => (type: any) => type;
+attachHotReload(vmGlobal);
 
 const vmContext = createContext(vmGlobal);
 

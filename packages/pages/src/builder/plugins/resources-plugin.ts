@@ -213,33 +213,37 @@ class SourceCompiler {
         if (changed) {
           const files: string[] = [];
 
-          const entrypoint = compilation.entrypoints.get(this.source.slug)!;
           let publicPath = compilation.outputOptions.publicPath ?? '/';
           if (publicPath === 'auto') {
             publicPath = '/';
           }
 
-          if (process.env.WEBPACK_HOT === 'true') {
-            // files.push(`${publicPath}__webpack/hot.js`);
-            files.push(`${publicPath}__webpack/client.js`);
+          const entrypoints = [this.source.slug];
+
+          if (process.env.WEBPACK_HOT) {
+            entrypoints.unshift('__webpack/react-refresh', '__webpack/client');
           }
 
-          entrypoint.chunks.forEach(chunk => {
-            chunk.files.forEach(file => {
-              const asset = compilation.getAsset(file);
-              if (!asset) {
-                return;
-              }
+          entrypoints.forEach(name => {
+            const entrypoint = compilation.entrypoints.get(name)!;
 
-              const assetMetaInformation = asset.info || {};
-              if (
-                assetMetaInformation.hotModuleReplacement ||
-                assetMetaInformation.development
-              ) {
-                return;
-              }
+            entrypoint.chunks.forEach(chunk => {
+              chunk.files.forEach(file => {
+                const asset = compilation.getAsset(file);
+                if (!asset) {
+                  return;
+                }
 
-              files.push(`${publicPath}${file}`);
+                const assetMetaInformation = asset.info || {};
+                if (
+                  assetMetaInformation.hotModuleReplacement ||
+                  assetMetaInformation.development
+                ) {
+                  return;
+                }
+
+                files.push(`${publicPath}${file}`);
+              });
             });
           });
 

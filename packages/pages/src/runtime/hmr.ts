@@ -1,6 +1,7 @@
 import runtime from 'react-refresh/runtime';
 
 export const attach = (global: any) => {
+  console.info('attaching');
   runtime.injectIntoGlobalHook(global);
   global.$RefreshReg$ = () => {};
   global.$RefreshSig$ = () => (type: any) => type;
