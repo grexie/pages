@@ -930,12 +930,17 @@ export class ModuleContext {
     factory: ModuleFactory,
     context: string,
     filename: string,
-    specifier: string,
-    resolved?: Import
+    specifier: string
   ) {
     let exports: any;
 
-    if (!resolved || resolved.builtin || !resolved.compile) {
+    const { [specifier]: resolved } = await this.resolver.resolve(
+      factory,
+      context,
+      specifier
+    );
+
+    if (!resolved.esm && (!resolved || resolved.builtin || !resolved.compile)) {
       if (resolved?.esm) {
         return this.#createSyntheticImportModule(
           factory,
@@ -956,7 +961,7 @@ export class ModuleContext {
           source.source,
           resolved.filename,
           resolved.filename,
-          true,
+          false,
           this.cache
         );
 
@@ -1037,7 +1042,12 @@ export class ModuleContext {
     });
 
     await sourceTextModule.link((async (specifier: string) => {
-      const resolved = imports[specifier]!;
+      console.info(specifier);
+      const { [specifier]: resolved } = await this.resolver.resolve(
+        factory,
+        context,
+        specifier
+      );
 
       let modulePromise = this.modules[resolved?.filename ?? specifier];
 
@@ -1054,8 +1064,7 @@ export class ModuleContext {
         factory,
         context,
         filename,
-        specifier,
-        resolved
+        specifier
       );
 
       const ready = createResolver();
@@ -1113,7 +1122,7 @@ export class ModuleContext {
       source,
       filename,
       sourceFilename,
-      true,
+      false,
       this.cache
     );
 
@@ -1131,13 +1140,14 @@ export class ModuleContext {
       if (this.modules[require.filename]) {
         const module = await this.modules[require.filename]!;
 
-        const modules = await Promise.all(
-          Object.values(module.imports).map(require => next(require))
-        );
+        // const modules = await Promise.all(
+        //   Object.values(module.imports).map(require => next(require))
+        // );
+        //const modules: string[] = [];
 
         return [
           require.filename,
-          ...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
+          //...modules.reduce((a, b) => [...(a ?? []), ...(b ?? [])], []),
         ];
       }
 
@@ -1190,8 +1200,7 @@ export class ModuleContext {
             factory,
             context,
             filename,
-            imported!.filename,
-            imported!
+            imported!.filename
           );
 
           resolver.resolve(syntheticModule);

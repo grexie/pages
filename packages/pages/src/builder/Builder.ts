@@ -172,7 +172,7 @@ export class Builder {
       stats: {
         children: true,
       },
-      mode: 'development',
+      mode: 'none',
       devtool: 'source-map',
       output: {
         path: this.context.outputDir,
@@ -431,7 +431,7 @@ export class Builder {
       target: 'web',
       plugins: [
         new ResourcesPlugin({ context: this.context }),
-        new webpack.DefinePlugin({ 'process.env': '({})' }),
+        new webpack.DefinePlugin({ 'process.env': `({})` }),
       ],
     };
 
