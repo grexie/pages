@@ -7,7 +7,7 @@ import { createResolver } from '../utils/resolvable.js';
 import webpack from 'webpack';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
-import type { ModuleContext } from './ModuleContext.new.js';
+import type { ModuleContext } from './ModuleContext.js';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -41,7 +41,7 @@ const ModulePromiseTable = new WeakMap<
   Record<string, Promise<InstantiatedModule> | undefined>
 >();
 
-export abstract class ModuleLoader {
+export class ModuleLoader {
   readonly context: ModuleContext;
   readonly resolver: ModuleResolver;
   readonly compilation: Compilation;
@@ -173,16 +173,16 @@ export abstract class ModuleLoader {
     this.modules[filename] = resolver;
 
     try {
-      const webpackModule = await new Promise<webpack.Module>(
+      const webpackModule = await new Promise<webpack.NormalModule>(
         (resolve, reject) =>
-          this.compilation.params.contextModuleFactory.create(
+          this.compilation.params.normalModuleFactory.create(
             {
               context,
               contextInfo: {
                 issuer: 'pages',
                 compiler: 'javascript/auto',
               },
-              dependencies: [new webpack.dependencies.NullDependency()],
+              dependencies: [],
             },
             (err, result) => {
               if (err) {
@@ -190,13 +190,24 @@ export abstract class ModuleLoader {
                 return;
               }
 
-              resolve(result!.module!);
+              resolve(result!.module! as webpack.NormalModule);
             }
           )
       );
 
-      webpackModule.originalSource = () =>
-        new webpack.sources.OriginalSource(source, filename);
+      const parser =
+        this.compilation.params.normalModuleFactory.createParser(
+          'javascript/auto'
+        );
+      let state: webpack.ParserState = {
+        source,
+        module: webpackModule,
+        compilation: this.compilation,
+        current: webpackModule,
+        options: {},
+      };
+
+      state = parser.parse(source, state);
 
       resolver.resolve(this.#build(filename, webpackModule));
     } catch (err) {
@@ -206,7 +217,7 @@ export abstract class ModuleLoader {
     }
   }
 
-  abstract instantiate(module: Module): Promise<InstantiatedModule>;
+  // abstract instantiate(module: Module): Promise<InstantiatedModule>;
 
   /**
    * Parses a module source file
