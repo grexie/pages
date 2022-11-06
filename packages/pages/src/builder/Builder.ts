@@ -172,7 +172,7 @@ export class Builder {
       stats: {
         children: true,
       },
-      mode: 'none',
+      mode: 'development',
       devtool: 'source-map',
       output: {
         path: this.context.outputDir,
@@ -412,12 +412,12 @@ export class Builder {
           cacheGroups: {
             defaultVendors: {
               test: /[\\/]node_modules[\\/]/,
-              // filename: 'assets/js/vendor-[chunkhash].js',
+              filename: 'assets/js/vendor-[chunkhash].js',
               priority: -10,
               reuseExistingChunk: true,
             },
             default: {
-              // filename: 'assets/js/site-[chunkhash].js',
+              filename: 'assets/js/site-[chunkhash].js',
               minChunks: 2,
               priority: -20,
               reuseExistingChunk: true,

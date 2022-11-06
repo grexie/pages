@@ -167,7 +167,10 @@ export default async function ModuleLoader(
     const hmrFooter = `
       __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
       __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
-      import.meta.hot?.accept();
+      if (import.meta.webpackHot) {
+        import.meta.webpackHot.accept();
+        __pages_refresh_runtime.performReactRefresh();
+      }
     `;
 
     if (options.handler) {
