@@ -7,7 +7,7 @@ import {
 import { Builder } from './Builder.js';
 import { ProviderConfig, Registry } from '../api/Registry.js';
 import { Renderer } from './Renderer.js';
-import { ModuleContext, ModuleResolverOptions } from './ModuleContext.js';
+import { ModuleContext } from './ModuleContext.js';
 import os from 'os';
 import { ConfigContext } from './ConfigContext.js';
 import { Volume } from 'memfs';
@@ -23,7 +23,7 @@ export interface BuildOptions extends ContextOptions {
   fs: WritableFileSystem;
   defaultFiles?: WritableFileSystem;
   fsOptions?: FileSystemOptions[];
-  resolver?: ModuleResolverOptions;
+  // resolver?: ModuleResolverOptions;
 }
 
 const defaultOptions = () => ({
@@ -50,7 +50,7 @@ export class BuildContext extends Context {
   readonly modulesDirs: string[];
   readonly builder: Builder;
   readonly renderer: Renderer;
-  readonly modules: ModuleContext;
+  // readonly modules: ModuleContext;
   readonly config: ConfigContext;
   readonly dependencies: ModuleDependencies;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
@@ -96,68 +96,68 @@ export class BuildContext extends Context {
       fs: this.fs,
     });
     this.renderer = new Renderer(this);
-    this.modules = new ModuleContext({
-      context: this,
-      resolver: {
-        extensions: Array.from(
-          new Set([
-            ...(resolver.extensions ?? []),
-            '.yml',
-            '.yaml',
-            '.md',
-            '.js',
-            '.cjs',
-            '.mjs',
-            '.jsx',
-            '.ts',
-            '.tsx',
-          ])
-        ),
-        forceExtensions: Array.from(
-          new Set([
-            ...(resolver.forceExtensions ?? []),
-            '.md',
-            '.pages.yml',
-            '.pages.yaml',
-            '.pages.json',
-            '.pages.js',
-            '.pages.ts',
-            '.jsx',
-            '.ts',
-            '.tsx',
-            '.scss',
-            '.css',
-            '.jpeg',
-            '.jpg',
-            '.png',
-            '.webp',
-            '.gif',
-            '.svg',
-          ])
-        ),
-        esm: [
-          ...new Set([
-            ...(resolver.esm ?? []),
-            '.scss',
-            '.css',
-            '.jpeg',
-            '.jpg',
-            '.png',
-            '.webp',
-            '.gif',
-            '.svg',
-            '.pages.yml',
-            '.pages.yaml',
-            '.md',
-            '.jsx',
-            '.ts',
-            '.tsx',
-            '.mjs',
-          ]),
-        ],
-        forceCompile: Array.from(new Set([...(resolver.forceCompile ?? [])])),
-      },
-    });
+    // this.modules = new ModuleContext({
+    //   context: this,
+    //   resolver: {
+    //     extensions: Array.from(
+    //       new Set([
+    //         ...(resolver.extensions ?? []),
+    //         '.yml',
+    //         '.yaml',
+    //         '.md',
+    //         '.js',
+    //         '.cjs',
+    //         '.mjs',
+    //         '.jsx',
+    //         '.ts',
+    //         '.tsx',
+    //       ])
+    //     ),
+    //     forceExtensions: Array.from(
+    //       new Set([
+    //         ...(resolver.forceExtensions ?? []),
+    //         '.md',
+    //         '.pages.yml',
+    //         '.pages.yaml',
+    //         '.pages.json',
+    //         '.pages.js',
+    //         '.pages.ts',
+    //         '.jsx',
+    //         '.ts',
+    //         '.tsx',
+    //         '.scss',
+    //         '.css',
+    //         '.jpeg',
+    //         '.jpg',
+    //         '.png',
+    //         '.webp',
+    //         '.gif',
+    //         '.svg',
+    //       ])
+    //     ),
+    //     esm: [
+    //       ...new Set([
+    //         ...(resolver.esm ?? []),
+    //         '.scss',
+    //         '.css',
+    //         '.jpeg',
+    //         '.jpg',
+    //         '.png',
+    //         '.webp',
+    //         '.gif',
+    //         '.svg',
+    //         '.pages.yml',
+    //         '.pages.yaml',
+    //         '.md',
+    //         '.jsx',
+    //         '.ts',
+    //         '.tsx',
+    //         '.mjs',
+    //       ]),
+    //     ],
+    //     forceCompile: Array.from(new Set([...(resolver.forceCompile ?? [])])),
+    //   },
+    // });
 
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(

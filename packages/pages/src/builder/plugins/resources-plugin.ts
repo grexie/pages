@@ -31,7 +31,7 @@ class CompilationContext {
   }
 
   get modules() {
-    return this.build.modules;
+    return this.build.getModuleContext(this.compilation);
   }
 
   get renderer() {
@@ -391,7 +391,7 @@ export class ResourcesPlugin {
   }
 
   apply(compiler: Compiler) {
-    compiler.hooks.make.tapPromise('ResourcesPlugin', async ([compilation]) => {
+    compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(
         EntryDependency,
         compilation.params.normalModuleFactory

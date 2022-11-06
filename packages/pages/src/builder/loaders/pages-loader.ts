@@ -2,6 +2,7 @@ import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
 import { createResolver } from '../../utils/resolvable.js';
 import { SourceNode } from 'source-map';
+import path from 'path';
 
 interface PagesLoaderOptions {
   context: BuildContext;
@@ -19,24 +20,23 @@ export default async function PagesLoader(
   const callback = this.async();
 
   const resolver = createResolver();
-  context.modules.addBuild(this.resourcePath, resolver);
+  // context.modules.addBuild(this.resourcePath, resolver);
 
   try {
-    const factory = context.modules.createModuleFactory(this._compilation!);
+    // const factory = modules.createModuleFactory(this._compilation!);
 
-    await context.modules.evict(factory, this.resourcePath, {
-      recompile: true,
-      fail: false,
-    });
+    // await context.modules.evict(factory, this.resourcePath, {
+    //   recompile: true,
+    //   fail: false,
+    // });
 
-    const configModule = await context.modules.create(
-      factory,
-      this._module!,
+    const modules = context.getModuleContext(this._compilation!);
+
+    const configModule = await modules.create(
+      path.dirname(this.resourcePath),
       this.resourcePath,
       content.toString()
     );
-
-    await configModule.load();
 
     let configExports;
     if (typeof configModule.exports.default === 'function') {
@@ -51,9 +51,9 @@ export default async function PagesLoader(
 
     const { metadata = {}, ...config } = configExports;
 
-    await context.modules.evict(factory, this.resourcePath, {
-      recompile: true,
-    });
+    // await context.modules.evict(factory, this.resourcePath, {
+    //   recompile: true,
+    // });
 
     callback(
       null,

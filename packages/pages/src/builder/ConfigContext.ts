@@ -1,13 +1,14 @@
 import { BuildContext } from './BuildContext.js';
 import { ResourceMetadata } from '../api/Resource.js';
 import { Source } from '../api/Source.js';
-import { Module, ModuleFactory } from './ModuleContext.js';
+import type { InstantiatedModule } from './ModuleLoader.js';
 import { ObjectProxy } from '../utils/proxy.js';
 import path from 'path';
+import type { Compilation } from 'webpack';
 
 export interface ConfigOptions {
   parent?: ConfigModule;
-  module: Module;
+  module: InstantiatedModule;
 }
 
 export interface ConfigResolverOptions {
@@ -20,7 +21,7 @@ export interface Config extends Record<string, any> {
 
 export class ConfigModule {
   readonly parent?: ConfigModule;
-  readonly module: Module;
+  readonly module: InstantiatedModule;
 
   constructor({ parent, module }: ConfigOptions) {
     this.parent = parent;
@@ -38,7 +39,6 @@ export class ConfigModule {
 
   async create(extra?: Config): Promise<Config> {
     const parent = await this.parent?.create();
-    await this.module.load();
     const { exports } = this.module;
     if (!exports.config) {
       throw new Error(`${this.module.filename} has no config export`);
@@ -68,9 +68,13 @@ export class ConfigModule {
       }
     } else {
       const metadataFactory = `__pages_metadata_${index}`;
-      
+
       if (this.parent) {
-        return `${metadataFactory}(${this.parent.serialize(context, false, index + 1)})`;
+        return `${metadataFactory}(${this.parent.serialize(
+          context,
+          false,
+          index + 1
+        )})`;
       } else {
         return `${metadataFactory}()`;
       }
@@ -86,25 +90,26 @@ export class ConfigContext {
   }
 
   async #createConfigModule(
-    factory: ModuleFactory,
+    compilation: Compilation,
     parent: ConfigModule | undefined,
     source: Source
   ): Promise<ConfigModule> {
-    const _module = await this.context.modules.require(
-      factory,
-      source.dirname,
-      source.filename
-    );
+    const _module = await this.context
+      .getModuleContext(compilation)
+      .require(source.dirname, source.filename);
     return new ConfigModule({ parent, module: _module });
   }
 
-  async create(factory: ModuleFactory, path: string[]): Promise<ConfigModule> {
+  async create(
+    compilation: Compilation,
+    path: string[]
+  ): Promise<ConfigModule> {
     const sources = await this.context.registry.listConfig({ path });
     sources.sort((a, b) => a.path.length - b.path.length);
     let configModule: ConfigModule | undefined;
     for (const source of sources) {
       configModule = await this.#createConfigModule(
-        factory,
+        compilation,
         configModule,
         source
       );

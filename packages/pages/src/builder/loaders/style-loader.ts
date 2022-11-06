@@ -4,6 +4,7 @@ import { createHash } from 'crypto';
 import { SourceNode } from 'source-map';
 import { offsetLines } from '../../utils/source-maps.js';
 import { createResolver } from '../../utils/resolvable.js';
+import path from 'path';
 
 interface StyleLoaderOptions {
   context: BuildContext;
@@ -19,14 +20,16 @@ export default async function StyleLoader(
   }
   const { context } = this.getOptions();
   const resolver = createResolver();
-  context.modules.addBuild(this.resourcePath, resolver);
+  // context.modules.addBuild(this.resourcePath, resolver);
   const callback = this.async();
-  const factory = context.modules.createModuleFactory(this._compilation!);
+
+  const modules = context.getModuleContext(this._compilation!);
+
+  // const factory = context.modules.createModuleFactory(this._compilation!);
 
   try {
-    const stylesModule = await context.modules.create(
-      factory,
-      this._module!,
+    const stylesModule = await modules.create(
+      path.dirname(this.resourcePath),
       this.resourcePath,
       `const module = { id: ${JSON.stringify(
         this.resourcePath

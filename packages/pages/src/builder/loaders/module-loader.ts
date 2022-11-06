@@ -1,6 +1,6 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
-import { Module } from '../ModuleContext.js';
+import { InstantiatedModule } from '../ModuleLoader.js';
 import _path from 'path';
 import { Resource } from '../../api/Resource.js';
 import { Handler } from '../../api/Handler.js';
@@ -11,7 +11,6 @@ import * as babel from '@babel/core';
 import { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
 import reactRefreshPlugin from 'react-refresh/babel';
-import { SourceMap } from 'module';
 import { offsetLines } from '../../utils/source-maps.js';
 
 interface ModuleLoaderOptions {
@@ -32,43 +31,35 @@ export default async function ModuleLoader(
 
   const { context, ...options } = this.getOptions();
   const resolver = createResolver();
-  await context.modules.addBuild(this.resourcePath, resolver);
+  // await context.modules.addBuild(this.resourcePath, resolver);
 
   try {
-    const factory = context.modules.createModuleFactory(this._compilation!);
+    // const factory = context.modules.createModuleFactory(this._compilation!);
+    const modules = context.getModuleContext(this._compilation!);
 
-    await context.modules.evict(factory, `${this.resourcePath}$original`, {
-      recompile: true,
-      fail: false,
-    });
-    await context.modules.evict(factory, this.resourcePath, {
-      recompile: true,
-      fail: false,
-    });
+    // await context.modules.evict(factory, `${this.resourcePath}$original`, {
+    //   recompile: true,
+    //   fail: false,
+    // });
+    // await context.modules.evict(factory, this.resourcePath, {
+    //   recompile: true,
+    //   fail: false,
+    // });
 
     const path = context.builder.filenameToPath(this.resourcePath);
 
     const createHandler = async () => {
-      let handlerModule: Module;
+      let handlerModule: InstantiatedModule;
       if (typeof options.handler === 'string') {
-        handlerModule = await context.modules.require(
-          factory,
+        handlerModule = await modules.require(
           this._module!.context!,
           options.handler
         );
       } else {
-        handlerModule = await context.modules.create(
-          factory,
-          this._module!,
+        handlerModule = await modules.create(
+          this._module!.context!,
           `${this.resourcePath}$original`,
-          content.toString(),
-          this.resourcePath,
-          {
-            filename: content.toString(),
-            compile: true,
-            builtin: false,
-            esm: true,
-          }
+          content.toString()
         );
       }
       return handlerModule;
@@ -76,13 +67,12 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
-    const configModule = await context.config.create(factory, path);
+    const configModule = await context.config.create(this._compilation!, path);
     configModule.ancestors.forEach(({ module }) => {
       if (module) {
         this.addDependency(module.filename);
       }
     });
-    await handlerModule.load();
 
     const handler = handlerModule.exports as Handler;
     const handlerConfig = { metadata: {} };
@@ -94,7 +84,7 @@ export default async function ModuleLoader(
     let resource: Resource | undefined = undefined;
 
     const sourceContext = new SourceContext({
-      factory,
+      compilation: this._compilation!,
       context,
       module: handlerModule,
       content,
@@ -134,15 +124,12 @@ export default async function ModuleLoader(
         composablesRequires.push(layout);
       }
 
-      const layoutModule = await context.modules.require(
-        factory,
+      const layoutModule = await modules.require(
         _path.dirname(this.resourcePath),
         layout
       );
 
       this.addDependency(layoutModule.filename);
-
-      await layoutModule.load();
 
       composables.push(createComposable(layoutModule.exports.default));
     }
@@ -237,9 +224,9 @@ export default async function ModuleLoader(
         sourceMaps: this.sourceMap,
       });
 
-      await context.modules.evict(factory, `${this.resourcePath}$original`, {
-        recompile: true,
-      });
+      // await context.modules.evict(factory, `${this.resourcePath}$original`, {
+      //   recompile: true,
+      // });
 
       resolver.resolve();
 
