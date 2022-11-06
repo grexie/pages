@@ -8,6 +8,7 @@ import webpack from 'webpack';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 import type { ModuleContext } from './ModuleContext.new.js';
+import { rejects } from 'assert';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -33,7 +34,7 @@ export interface Module {
 }
 
 export interface InstantiatedModule extends Module {
-  readonly vmModule: vm.Module;
+  readonly exports: any;
 }
 
 const ModulePromiseTable = new WeakMap<
@@ -55,6 +56,58 @@ export abstract class ModuleLoader {
       ModulePromiseTable.set(context, {});
     }
     this.modules = ModulePromiseTable.get(context)!;
+  }
+
+  async #build(webpackModule: webpack.Module): Promise<InstantiatedModule> {
+    const context = webpackModule.context!;
+    const filename = webpackModule.;
+
+    webpackModule.buildInfo = {};
+    webpackModule.buildMeta = {};
+
+    await new Promise((resolve, reject) => {
+      try {
+        this.compilation.buildQueue.add(webpackModule, (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve(result);
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    if (webpackModule.getNumberOfErrors()) {
+      throw Array.from(webpackModule.getErrors() as any)[0];
+    }
+
+    const source = webpackModule.originalSource()?.buffer().toString();
+
+    if (typeof source !== 'string') {
+      throw new Error(`unable to load module ${filename}`);
+    }
+
+    const references = await this.parse(context, source);
+
+    const exports = await new Promise<any>((resolve, reject) => {
+      try {
+        this.compilation.executeModule(webpackModule, {}, (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve(result?.exports);
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    return { context, filename, source, references, exports };
   }
 
   /**
@@ -102,56 +155,13 @@ export abstract class ModuleLoader {
           )
       );
 
-      webpackModule.buildInfo = {};
-      webpackModule.buildMeta = {};
-
-      phase = 'build';
-      await new Promise((resolve, reject) => {
-        try {
-          this.compilation.buildQueue.add(webpackModule, (err, result) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            resolve(result);
-          });
-        } catch (err) {
-          reject(err);
-        }
-      });
-
-      phase = 'built';
-
-      if (webpackModule.getNumberOfErrors()) {
-        throw Array.from(webpackModule.getErrors() as any)[0];
-      }
-
-      const source = webpackModule.originalSource()?.buffer().toString();
-
-      if (typeof source !== 'string') {
-        throw new Error(`unable to load module ${filename}`);
-      }
-
-      const references = await this.parse(context, source);
-
-      phase = 'instantiating';
-      delete this.modules[filename];
-      resolver.resolve(
-        this.instantiate({
-          context,
-          filename,
-          source,
-          references,
-        })
-      );
+      resolver.resolve(this.#build(webpackModule));
     } catch (err) {
       resolver.reject(err);
     } finally {
       clearInterval(interval);
+      return resolver;
     }
-
-    return resolver;
   }
 
   abstract instantiate(module: Module): Promise<InstantiatedModule>;
