@@ -44,6 +44,15 @@ export class Builder {
 
   constructor({}: BuilderOptions = {}) {}
 
+  compiler({ config }: BuildOptions): webpack.Compiler {
+    const compiler = webpack(config);
+
+    compiler.inputFileSystem = this.fs;
+    compiler.outputFileSystem = this.fs;
+
+    return compiler;
+  }
+
   async build({ config }: BuildOptions): Promise<WebpackStats> {
     const compiler = webpack(config);
 

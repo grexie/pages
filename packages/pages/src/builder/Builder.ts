@@ -162,7 +162,7 @@ export class Builder {
   async config(sources: Source[]): Promise<Configuration> {
     const require = createRequire(import.meta.url);
 
-    return {
+    const config: webpack.Configuration = {
       context: this.context.rootDir,
       entry: {
         ...sources
@@ -431,6 +431,23 @@ export class Builder {
         new webpack.DefinePlugin({ 'process.env': '({})' }),
       ],
     };
+
+    if (process.env.WEBPACK_HOT === 'true') {
+      Object.assign(config.entry!, {
+        '__webpack/hot': {
+          import: 'webpack/hot/dev-server.js',
+          filename: '__webpack/hot.js',
+        },
+
+        '__webpack/client': {
+          import: 'webpack-hot-middleware/client',
+          filename: '__webpack/client.js',
+        },
+      });
+      config.plugins!.push(new webpack.HotModuleReplacementPlugin());
+    }
+
+    return config;
   }
 
   async build(sources: Source[]): Promise<WebpackStats> {
@@ -440,20 +457,12 @@ export class Builder {
 
   async watch(sources: Source[]): Promise<Watcher> {
     const config = await this.config(sources);
-
-    (config.entry! as any)['__webpack/hot'] = {
-      import: 'webpack/hot/dev-server.js',
-      filename: '__webpack/hot.js',
-    };
-
-    (config.entry! as any)['__webpack/client'] = {
-      import: 'webpack-hot-middleware/client',
-      filename: '__webpack/client.js',
-    };
-
-    config.plugins!.push(new webpack.HotModuleReplacementPlugin());
-
     return this.#builder.watch({ config });
+  }
+
+  async compiler(sources: Source[]): Promise<webpack.Compiler> {
+    const config = await this.config(sources);
+    return this.#builder.compiler({ config });
   }
 
   createModuleContext(compilation: Compilation) {

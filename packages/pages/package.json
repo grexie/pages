@@ -23,6 +23,7 @@
     "classnames": "^2.3.2",
     "css-loader": "^6.7.1",
     "es-main": "^1.0.2",
+    "express": "^4.18.2",
     "gray-matter": "^4.0.3",
     "inline-source-map-comment": "^1.0.5",
     "loader-utils": "^3.2.0",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@types/babel__core": "^7.1.19",
     "@types/babel__traverse": "^7.18.2",
+    "@types/express": "^4.17.14",
     "@types/loader-utils": "^2.0.3",
     "@types/nodemon": "^1.19.1",
     "@types/object-hash": "^2.2.1",
