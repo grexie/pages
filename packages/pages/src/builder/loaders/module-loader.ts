@@ -10,6 +10,7 @@ import { createResolver } from '../../utils/resolvable.js';
 import * as babel from '@babel/core';
 import { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
+import reactRefreshPlugin from 'react-refresh/babel';
 import { SourceMap } from 'module';
 import { offsetLines } from '../../utils/source-maps.js';
 
@@ -185,12 +186,19 @@ export default async function ModuleLoader(
         export default __pages_handler;
       `;
 
+      const compiled = await transformAsync(serializedResource.code, {
+        presets: [[babelEnvPreset, { modules: false }]],
+        plugins: [reactRefreshPlugin],
+        inputSourceMap: serializedResource.map,
+        sourceMaps: this.sourceMap,
+      });
+
       return callback(
         null,
-        header + serializedResource.code + footer,
-        serializedResource.map
+        header + compiled!.code + footer,
+        compiled!.map
           ? (offsetLines(
-              serializedResource.map,
+              compiled!.map as any,
               header.split(/\r\n|\n/g).length
             ) as any)
           : undefined
@@ -198,7 +206,7 @@ export default async function ModuleLoader(
     } else {
       const compiled = await transformAsync(content.toString(), {
         presets: [[babelEnvPreset, { modules: false }]],
-        plugins: [handlerModulePlugin],
+        plugins: [handlerModulePlugin, reactRefreshPlugin],
         inputSourceMap: inputSourceMap,
         sourceMaps: this.sourceMap,
       });

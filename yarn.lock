@@ -1936,7 +1936,7 @@
   dependencies:
     "@types/estree" "*"
 
-"@types/babel__core@^7.1.14", "@types/babel__core@^7.1.19":
+"@types/babel__core@*", "@types/babel__core@^7.1.14", "@types/babel__core@^7.1.19":
   version "7.1.19"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.19.tgz#7b497495b7d1b4812bdb9d02804d0576f43ee460"
   integrity sha512-WEOTgRsbYkvA/KCsDwVEGkd7WAr1e3g31VHQ8zy5gul/V1qKullU/BU5I68X5v7V3GnB9eotmom4v5a5gjxorw==
@@ -2197,6 +2197,14 @@
   integrity sha512-OWPWTUrY/NIrjsAPkAk1wW9LZeIjSvkXRhclsFO8CZcZGCOg2G0YZy4ft+rOyYxy8B7ui5iZzi9OkDebZ7/QSA==
   dependencies:
     "@types/react" "*"
+
+"@types/react-refresh@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@types/react-refresh/-/react-refresh-0.14.0.tgz#09fbf0faf4c31086616f9aa5dee981ed5f47c0a8"
+  integrity sha512-Lkn0lde3joqS+Cf1fa1B7ROEeiYi12xmE6VPBEbyJalOE8PkozGNOC1chqXljhM9UXo8SLwtVTBpmmdvzGTbtg==
+  dependencies:
+    "@types/babel__core" "*"
+    csstype "^3.0.2"
 
 "@types/react@*", "@types/react@^18.0.12":
   version "18.0.12"
@@ -6818,6 +6826,11 @@ react-is@^18.0.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.2.0.tgz#199431eeaaa2e09f86427efbb4f1473edb47609b"
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==
+
+react-refresh@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.14.0.tgz#4e02825378a5f227079554d4284889354e5f553e"
+  integrity sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==
 
 react@^18.1.0:
   version "18.1.0"

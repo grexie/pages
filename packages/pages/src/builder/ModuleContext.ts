@@ -22,6 +22,8 @@ import {
 import { promisify } from '../utils/promisify.js';
 import { KeyedMutex } from '../utils/mutex.js';
 import { isPlainObject } from '../utils/object.js';
+import ReactRefreshRuntime from 'react-refresh/runtime';
+import React from 'react';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -784,7 +786,17 @@ export interface ModuleContextOptions {
   resolver?: ModuleResolverOptions;
 }
 
-const vmContext = createContext({ process });
+const vmGlobal = { process } as any;
+
+ReactRefreshRuntime.injectIntoGlobalHook(vmGlobal);
+vmGlobal.$RefreshReg$ = () => {};
+vmGlobal.$RefreshSig$ = () => (type: any) => type;
+
+ReactRefreshRuntime.injectIntoGlobalHook(global);
+(global as any).$RefreshReg$ = () => {};
+(global as any).$RefreshSig$ = () => (type: any) => type;
+
+const vmContext = createContext(vmGlobal);
 
 export class ModuleContext {
   readonly build: BuildContext;

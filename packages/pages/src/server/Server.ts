@@ -53,7 +53,6 @@ export class Server {
     }
 
     let sources = await this.context.registry.list();
-    process.env.WEBPACK_HOT = 'true';
     const compiler = await this.context.builder.compiler(sources);
 
     this.#server = createResolver<http.Server>();

@@ -220,7 +220,7 @@ class SourceCompiler {
           }
 
           if (process.env.WEBPACK_HOT === 'true') {
-            //files.push(`${publicPath}__webpack/hot.js`);
+            // files.push(`${publicPath}__webpack/hot.js`);
             files.push(`${publicPath}__webpack/client.js`);
           }
 

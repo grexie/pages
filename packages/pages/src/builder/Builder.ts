@@ -165,9 +165,9 @@ export class Builder {
     const config: webpack.Configuration = {
       context: this.context.rootDir,
       entry: {
-        ...sources
-          .map(source => this.entry(source))
-          .reduce((a, b) => ({ ...a, ...b }), {}),
+        // ...sources
+        //   .map(source => this.entry(source))
+        //   .reduce((a, b) => ({ ...a, ...b }), {}),
       },
       stats: {
         children: true,
@@ -317,6 +317,7 @@ export class Builder {
                       },
                     ],
                   ],
+                  plugins: ['react-refresh/babel'],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                 },
@@ -345,6 +346,7 @@ export class Builder {
                       },
                     ],
                   ],
+                  plugins: ['react-refresh/babel'],
                   cwd: this.context.pagesDir,
                   root: this.context.rootDir,
                   sourceMaps: true,
@@ -410,12 +412,12 @@ export class Builder {
           cacheGroups: {
             defaultVendors: {
               test: /[\\/]node_modules[\\/]/,
-              filename: 'assets/js/vendor-[chunkhash].js',
+              // filename: 'assets/js/vendor-[chunkhash].js',
               priority: -10,
               reuseExistingChunk: true,
             },
             default: {
-              filename: 'assets/js/site-[chunkhash].js',
+              // filename: 'assets/js/site-[chunkhash].js',
               minChunks: 2,
               priority: -20,
               reuseExistingChunk: true,
@@ -434,14 +436,27 @@ export class Builder {
     };
 
     if (process.env.WEBPACK_HOT === 'true') {
+      // Object.assign(
+      //   ((config as any).devServer = (config as any).devServer || {}),
+      //   {
+      //     // hotOnly: true,
+      //   }
+      // );
       Object.assign(config.entry!, {
+        '__webpack/hot': {
+          import: ['@grexie/pages/runtime/hmr.js', 'webpack/hot/dev-server.js'],
+          filename: '__webpack/hot.js',
+        },
         '__webpack/client': {
           import: 'webpack-hot-middleware/client',
           filename: '__webpack/client.js',
         },
-      } as EntryObject);
-      //config.plugins!.push(new webpack.HotModuleReplacementPlugin());
+      });
+
+      config.plugins!.push(new webpack.HotModuleReplacementPlugin());
     }
+
+    console.info(config.entry!);
 
     return config;
   }
