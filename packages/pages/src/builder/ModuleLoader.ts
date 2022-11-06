@@ -195,6 +195,9 @@ export abstract class ModuleLoader {
           )
       );
 
+      webpackModule.originalSource = () =>
+        new webpack.sources.OriginalSource(source, filename);
+
       resolver.resolve(this.#build(filename, webpackModule));
     } catch (err) {
       resolver.reject(err);
