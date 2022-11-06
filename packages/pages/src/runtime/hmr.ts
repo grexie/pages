@@ -8,7 +8,6 @@ export const attach = (() => {
     }
     attached.add(global);
 
-    console.info('attaching');
     runtime.injectIntoGlobalHook(global);
     global.$RefreshReg$ = () => {};
     global.$RefreshSig$ = () => (type: any) => type;
