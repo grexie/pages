@@ -38,7 +38,7 @@ export interface InstantiatedModule extends Module {
 
 const ModulePromiseTable = new WeakMap<
   ModuleContext,
-  Record<string, Promise<Module> | undefined>
+  Record<string, Promise<InstantiatedModule> | undefined>
 >();
 
 export abstract class ModuleLoader {
@@ -61,12 +61,12 @@ export abstract class ModuleLoader {
    * Loads a module from the filesystem
    * @param filename
    */
-  async load(context: string, filename: string): Promise<Module> {
+  async load(context: string, filename: string): Promise<InstantiatedModule> {
     if (this.modules[filename]) {
       return this.modules[filename]!;
     }
 
-    const resolver = createResolver<Module>();
+    const resolver = createResolver<InstantiatedModule>();
     this.modules[filename] = resolver;
 
     let phase = 'starting';
@@ -135,16 +135,19 @@ export abstract class ModuleLoader {
 
       const references = await this.parse(context, source);
 
-      resolver.resolve({
-        context,
-        filename,
-        source,
-        references,
-      });
+      phase = 'instantiating';
+      delete this.modules[filename];
+      resolver.resolve(
+        this.instantiate({
+          context,
+          filename,
+          source,
+          references,
+        })
+      );
     } catch (err) {
       resolver.reject(err);
     } finally {
-      // delete this.modules[filename];
       clearInterval(interval);
     }
 

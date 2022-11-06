@@ -56,13 +56,11 @@ export class ModuleContext {
     loader?: ModuleLoaderType
   ): Promise<InstantiatedModule> {
     const reference = await this.resolver.resolve(context, request);
-
     if (!loader) {
       loader = reference.loader;
     }
     const loaderInstance = this.loaders[loader]!;
-
-    const module = await loaderInstance.load(context, reference.filename);
+    return loaderInstance.load(context, reference.filename);
   }
 
   async instantiate(
@@ -76,9 +74,7 @@ export class ModuleContext {
       loader = reference.loader;
     }
     const loaderInstance = this.loaders[loader]!;
-
     const references = await loaderInstance.parse(context, source);
-
     const module = await loaderInstance.instantiate({
       context,
       filename,

@@ -4,7 +4,7 @@ export interface ResolvablePromise<T = void>
 
 export interface Resolver<T = void> {
   readonly resolved: boolean;
-  readonly resolve: (value: T) => void;
+  readonly resolve: (value: PromiseLike<T> | T) => void;
   readonly reject: (error: any) => void;
 }
 
