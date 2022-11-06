@@ -3,6 +3,9 @@ import { Compilation } from 'webpack';
 import { parseAsync, traverse } from '@babel/core';
 import babelPresetEnv from '@babel/preset-env';
 import * as t from '@babel/types';
+import { createResolver } from '../utils/resolvable.js';
+import webpack from 'webpack';
+import path from 'path';
 
 export interface ModuleReference {
   readonly filename: string;
@@ -19,12 +22,14 @@ export interface ModuleLoaderOptions {
 export interface Module {
   readonly filename: string;
   readonly source: string;
+  readonly webpackModule: webpack.Module;
   readonly references: ModuleReference[];
 }
 
 export abstract class ModuleLoader {
   readonly resolver: ModuleResolver;
   readonly compilation: Compilation;
+  readonly modules: Record<string, Promise<Module> | undefined> = {};
 
   constructor({ resolver, compilation }: ModuleLoaderOptions) {
     this.resolver = resolver;
@@ -36,10 +41,93 @@ export abstract class ModuleLoader {
    * @param filename
    */
   async load(filename: string): Promise<Module> {
-    throw new Error('not implemented');
+    if (this.modules[filename]) {
+      return this.modules[filename]!;
+    }
+
+    const resolver = createResolver<Module>();
+    this.modules[filename] = resolver;
+
+    const context = path.dirname(filename);
+
+    let phase = 'starting';
+    const interval = setInterval(() => {
+      if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+        console.info(`module-loader:${phase}`, filename);
+      }
+    }, 5000);
+
+    try {
+      phase = 'create';
+      const webpackModule = await new Promise<webpack.Module>(
+        (resolve, reject) =>
+          this.compilation.params.normalModuleFactory.create(
+            {
+              context,
+              contextInfo: {
+                issuer: 'pages',
+                compiler: 'javascript/auto',
+              },
+              dependencies: [
+                new webpack.dependencies.ModuleDependency(filename),
+              ],
+            },
+            (err, result) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(result!.module!);
+            }
+          )
+      );
+
+      webpackModule.buildInfo = {};
+      webpackModule.buildMeta = {};
+
+      phase = 'build';
+      await new Promise((resolve, reject) => {
+        try {
+          this.compilation.buildQueue.add(webpackModule, (err, result) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            resolve(result);
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
+
+      phase = 'built';
+
+      if (webpackModule.getNumberOfErrors()) {
+        throw Array.from(webpackModule.getErrors() as any)[0];
+      }
+
+      const source = webpackModule.originalSource()?.buffer().toString();
+
+      if (typeof source !== 'string') {
+        throw new Error(`unable to load module ${filename}`);
+      }
+
+      const references = await this.parse(context, source);
+
+      resolver.resolve({ filename, source, webpackModule, references });
+    } catch (err) {
+      resolver.reject(err);
+    } finally {
+      // delete this.modules[filename];
+      clearInterval(interval);
+    }
+
+    return resolver;
   }
 
-  abstract instantiate(module: Module): Promise<any>;
+  abstract instantiate(module: Module): Promise<Module>;
 
   /**
    * Parses a module source file
@@ -109,8 +197,10 @@ export abstract class ModuleLoader {
   }
 }
 
+export interface CommonJsModule extends Module {}
+
 export class CommonJsModuleLoader extends ModuleLoader {
-  async instantiate(module: Module): Promise<any> {}
+  async instantiate(module: Module): Promise<CommonJsModule> {}
 }
 
 export class EsmModuleLoader extends ModuleLoader {

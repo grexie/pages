@@ -7,6 +7,7 @@ import {
   ModuleLoader,
 } from './ModuleLoader.js';
 import { Module } from 'vm';
+import { ModuleResolverOptions } from './ModuleContext.js';
 
 export enum ModuleLoaderType {
   commonjs = 'commonjs',
@@ -23,9 +24,17 @@ export class ModuleContext {
   readonly resolver: ModuleResolver;
   readonly loaders: Record<ModuleLoaderType, ModuleLoader | undefined>;
 
-  constructor({ context, compilation }: ModuleContextOptions) {
+  constructor({
+    context,
+    compilation,
+    ...resolverOptions
+  }: ModuleContextOptions & ModuleResolverOptions) {
     this.compilation = compilation;
-    this.resolver = new ModuleResolver({ context, compilation });
+    this.resolver = new ModuleResolver({
+      context,
+      compilation,
+      ...resolverOptions,
+    });
 
     this.loaders = {} as Record<ModuleLoaderType, ModuleLoader>;
 
