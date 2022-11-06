@@ -3,6 +3,8 @@ import type { Stats } from '@grexie/builder/FileSystem.js';
 import { BuildContext, BuildContextOptions } from '../builder/BuildContext.js';
 import { ResolvablePromise, createResolver } from '../utils/resolvable.js';
 import { RequestHandler } from './RequestHandler.js';
+import WebpackHotMiddleware from 'webpack-hot-middleware';
+import WebpackDevMiddleware from 'webpack-dev-middleware';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;

@@ -447,7 +447,7 @@ export class Builder {
     };
 
     (config.entry! as any)['__webpack/client'] = {
-      import: 'webpack/hot/dev-server.js',
+      import: 'webpack-hot-middleware/client',
       filename: '__webpack/client.js',
     };
 
