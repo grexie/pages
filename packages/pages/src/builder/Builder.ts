@@ -440,6 +440,19 @@ export class Builder {
 
   async watch(sources: Source[]): Promise<Watcher> {
     const config = await this.config(sources);
+
+    (config.entry! as any)['__webpack/hot'] = {
+      import: 'webpack/hot/dev-server.js',
+      filename: '__webpack/hot.js',
+    };
+
+    (config.entry! as any)['__webpack/client'] = {
+      import: 'webpack/hot/dev-server.js',
+      filename: '__webpack/client.js',
+    };
+
+    config.plugins!.push(new webpack.HotModuleReplacementPlugin());
+
     return this.#builder.watch({ config });
   }
 
