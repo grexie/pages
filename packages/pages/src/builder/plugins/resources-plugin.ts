@@ -45,17 +45,17 @@ class SourceCompiler {
     this.source = source;
   }
 
-  async render(scripts: string[]) {
-    // const react = await this.context.modules.require(import.meta, 'react');
-    const { ResourceContext } = await this.context.modules.require(
+  async render(compilation: Compilation, scripts: string[]) {
+    const modules = this.context.build.getModuleContext(compilation);
+
+    const react = await modules.require(import.meta, 'react');
+    console.info(react);
+    const { ResourceContext } = await modules.require(
       import.meta,
       '../../hooks/useResource.js'
     );
-    const { Renderer } = await this.context.modules.require(
-      import.meta,
-      '../Renderer.js'
-    );
-    const { WritableBuffer } = await this.context.modules.require(
+    const { Renderer } = await modules.require(import.meta, '../Renderer.js');
+    const { WritableBuffer } = await modules.require(
       import.meta,
       '../../utils/stream.js'
     );
@@ -64,7 +64,7 @@ class SourceCompiler {
       console.info('render', this.source.filename);
     }
 
-    const handlerModule = await this.context.modules.requireModule(
+    const handlerModule = await modules.requireModule(
       path.dirname(this.source.filename),
       this.source.filename
     );
@@ -162,7 +162,7 @@ class SourceCompiler {
         });
 
         console.error('BEGIN PROCESS ASSETS');
-        const buffer = await this.render([...files]);
+        const buffer = await this.render(compilation, [...files]);
 
         compilation.emitAsset(
           path.join(this.source.slug, 'index.html'),

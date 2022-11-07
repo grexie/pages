@@ -188,15 +188,16 @@ export class BuildContext extends Context {
   }
 
   getModuleContext(compilation: Compilation) {
-    if (!this.#moduleContextTable.has(compilation)) {
-      this.#moduleContextTable.set(
-        compilation,
-        new ModuleContext({
-          context: this,
-          compilation,
-        })
-      );
-    }
-    return this.#moduleContextTable.get(compilation)!;
+    // if (!this.#moduleContextTable.has(compilation)) {
+    //   this.#moduleContextTable.set(
+    //     compilation,
+    //     new ModuleContext({
+    //       context: this,
+    //       compilation,
+    //     })
+    //   );
+    // }
+    // return this.#moduleContextTable.get(compilation)!;
+    return new ModuleContext({ context: this, compilation });
   }
 }
