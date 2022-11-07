@@ -58,7 +58,7 @@ export default async function ModuleLoader(
       } else {
         handlerModule = await modules.create(
           this._module!.context!,
-          `${this.resourcePath}$original`,
+          this.resourcePath,
           content.toString()
         );
       }

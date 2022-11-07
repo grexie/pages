@@ -64,22 +64,51 @@ export class ModuleLoader {
 
   async #build(
     filename: string,
-    webpackModule: webpack.Module
+    webpackModule: webpack.Module,
+    dependency: webpack.Dependency
   ): Promise<InstantiatedModule> {
     const context = webpackModule.context!;
 
-    // webpackModule.buildInfo = {};
-    // webpackModule.buildMeta = {};
-
-    await new Promise((resolve, reject) => {
+    const exports = await new Promise<any>((resolve, reject) => {
       try {
-        this.compilation.buildModule(webpackModule, (err, result) => {
+        this.compilation.addModule(webpackModule, (err, result) => {
           if (err) {
             reject(err);
             return;
           }
 
-          resolve(result);
+          this.compilation.buildModule(result!, err => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            // resolve(result!);
+
+            this.compilation.processModuleDependencies(result!, err => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              this.compilation.executeModule(
+                webpackModule,
+                {
+                  entryOptions: {
+                    publicPath: '/',
+                  },
+                },
+                (err, result) => {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+
+                  resolve(result?.exports);
+                }
+              );
+            });
+          });
         });
       } catch (err) {
         reject(err);
@@ -96,26 +125,21 @@ export class ModuleLoader {
       throw new Error(`unable to load module ${filename}`);
     }
 
-    const references = await this.parse(context, source);
+    const exports = await new Promise<any>((resolve, reject) => {
+      try {
+      } catch (err) {
+        reject(err);
+      }
+    });
 
-    // const exports = await new Promise<any>((resolve, reject) => {
-    //   try {
-    //     this.compilation.executeModule(webpackModule, {}, (err, result) => {
-    //       if (err) {
-    //         reject(err);
-    //         return;
-    //       }
-
-    //       resolve(result?.exports);
-    //     });
-    //   } catch (err) {
-    //     reject(err);
-    //   }
-    // });
-
-    const exports = {};
-
-    return { context, filename, source, references, webpackModule, exports };
+    return {
+      context,
+      filename,
+      source,
+      references: [],
+      webpackModule,
+      exports,
+    };
   }
 
   /**
@@ -131,6 +155,7 @@ export class ModuleLoader {
     this.modules[filename] = resolver;
 
     try {
+      const dependency = new webpack.dependencies.ModuleDependency(filename);
       const webpackModule = await new Promise<webpack.Module>(
         (resolve, reject) =>
           this.compilation.params.normalModuleFactory.create(
@@ -140,9 +165,7 @@ export class ModuleLoader {
                 issuer: 'pages',
                 compiler: 'javascript/auto',
               },
-              dependencies: [
-                new webpack.dependencies.ModuleDependency(filename),
-              ],
+              dependencies: [dependency],
             },
             (err, result) => {
               if (err) {
@@ -155,7 +178,7 @@ export class ModuleLoader {
           )
       );
 
-      resolver.resolve(this.#build(filename, webpackModule));
+      resolver.resolve(this.#build(filename, webpackModule, dependency));
     } catch (err) {
       resolver.reject(err);
     } finally {
@@ -184,27 +207,24 @@ export class ModuleLoader {
       const writeFile = promisify(volume, volume.writeFile);
       const mkdir = promisify(volume, volume.mkdir);
       await mkdir(path.dirname(filename), { recursive: true });
-      await writeFile(filename, source);
+      await writeFile(filename, source.toString());
 
       const fs = new FileSystem()
-        .add('/', this.context.build.fs, false)
-        .add(filename, volume, false);
+        .add(filename, volume)
+        .add('/', this.context.build.builder.fs);
 
+      const dependency = new webpack.dependencies.ModuleDependency(filename);
       const webpackModule = await new Promise<webpack.NormalModule>(
         (resolve, reject) => {
           try {
             this.compilation.params.normalModuleFactory.create(
               {
-                context,
+                context: path.dirname(filename),
                 contextInfo: {
                   issuer: 'pages',
                   compiler: 'javascript/auto',
                 },
-                dependencies: [
-                  new webpack.dependencies.ModuleDependency(
-                    `./${path.relative(context, filename)}`
-                  ),
-                ],
+                dependencies: [dependency],
                 resolveOptions: {
                   fileSystem: fs,
                 },
@@ -224,7 +244,7 @@ export class ModuleLoader {
         }
       );
 
-      resolver.resolve(this.#build(filename, webpackModule));
+      resolver.resolve(this.#build(filename, webpackModule, dependency));
     } catch (err) {
       resolver.reject(err);
     } finally {
