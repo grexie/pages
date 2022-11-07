@@ -43,6 +43,7 @@
     "sharp": "^0.31.1",
     "stream-browserify": "^3.0.0",
     "timers-browserify": "^2.0.12",
+    "tty-browserify": "^0.0.1",
     "util": "^0.12.5",
     "webpack-dev-middleware": "^5.3.3",
     "webpack-hot-middleware": "^2.25.2",

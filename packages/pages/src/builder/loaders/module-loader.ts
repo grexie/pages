@@ -1,12 +1,9 @@
-import { LoaderContext } from 'webpack';
-import { BuildContext } from '../BuildContext.js';
-import { InstantiatedModule } from '../ModuleLoader.js';
+import type { LoaderContext } from 'webpack';
+import type { BuildContext } from '../BuildContext.js';
+import type { InstantiatedModule } from '../ModuleLoader.js';
+import type { Handler } from '../../api/Handler.js';
+import type { Resource } from '../../api/Resource.js';
 import _path from 'path';
-import { Resource } from '../../api/Resource.js';
-import { Handler } from '../../api/Handler.js';
-import { SourceContext } from '../SourceContext.js';
-import { createComposable } from '@grexie/compose';
-import { createResolver } from '../../utils/resolvable.js';
 import * as babel from '@babel/core';
 import { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
@@ -30,12 +27,21 @@ export default async function ModuleLoader(
   }
 
   const { context, ...options } = this.getOptions();
-  const resolver = createResolver();
+
   // await context.modules.addBuild(this.resourcePath, resolver);
 
   try {
     // const factory = context.modules.createModuleFactory(this._compilation!);
     const modules = context.getModuleContext(this._compilation!);
+
+    const { createComposable } = await modules.require(
+      import.meta,
+      '@grexie/compose'
+    );
+    const { SourceContext } = await modules.require(
+      import.meta,
+      '../SourceContext.js'
+    );
 
     // await context.modules.evict(factory, `${this.resourcePath}$original`, {
     //   recompile: true,
@@ -52,12 +58,12 @@ export default async function ModuleLoader(
       let handlerModule: InstantiatedModule;
       if (typeof options.handler === 'string') {
         handlerModule = await modules.requireModule(
-          this._module!.context!,
+          _path.dirname(options.handler),
           options.handler
         );
       } else {
         handlerModule = await modules.createModule(
-          this._module!.context!,
+          _path.dirname(this.resourcePath),
           this.resourcePath,
           content.toString()
         );
@@ -164,8 +170,6 @@ export default async function ModuleLoader(
     `;
 
     if (options.handler) {
-      resolver.resolve();
-
       const header = `
         import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages/api/Handler";
         ${
@@ -230,8 +234,6 @@ export default async function ModuleLoader(
       //   recompile: true,
       // });
 
-      resolver.resolve();
-
       const header = `
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages/api/Handler";
       ${
@@ -279,7 +281,6 @@ export default async function ModuleLoader(
     }
   } catch (err) {
     console.error(err);
-    resolver.reject(err);
     return callback(err as any);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {

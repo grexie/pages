@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { createContextWithProps } from '../utils/context.js';
-import {
+import type {
   ContentResource,
   Resource,
   ResourceMetadata,
@@ -8,6 +8,8 @@ import {
 import type { ModuleResource } from '../builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
 import hash from 'object-hash';
+
+console.info('LOADING USERESOURCE.TSX');
 
 const ResourceContextSet = Symbol();
 

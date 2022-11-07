@@ -1,5 +1,5 @@
 import type { ModuleReference, ModuleResolver } from './ModuleResolver.js';
-import type { Compilation } from 'webpack';
+import type { Compiler, Compilation } from 'webpack';
 import { parseAsync, traverse } from '@babel/core';
 import babelPresetEnv from '@babel/preset-env';
 import * as t from '@babel/types';
@@ -8,11 +8,9 @@ import webpack from 'webpack';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 import type { ModuleContext } from './ModuleContext.js';
-import { FileSystem } from '@grexie/builder/FileSystem.js';
 import { Volume } from 'memfs';
 import { promisify } from '../utils/promisify.js';
 import path from 'path';
-import type { BuildContext } from './BuildContext.js';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -43,7 +41,7 @@ export interface InstantiatedModule extends Module {
 }
 
 const ModulePromiseTable = new WeakMap<
-  BuildContext,
+  Compiler,
   Record<string, Promise<InstantiatedModule> | undefined>
 >();
 
@@ -58,10 +56,10 @@ export class ModuleLoader {
     this.context = context;
     this.resolver = resolver;
     this.compilation = compilation;
-    if (!ModulePromiseTable.has(context.build)) {
-      ModulePromiseTable.set(context.build, {});
+    if (!ModulePromiseTable.has(compilation.compiler.root)) {
+      ModulePromiseTable.set(compilation.compiler.root, {});
     }
-    this.modules = ModulePromiseTable.get(context.build)!;
+    this.modules = ModulePromiseTable.get(compilation.compiler.root)!;
   }
 
   async #build(
@@ -101,10 +99,16 @@ export class ModuleLoader {
                   },
                 },
                 (err, executeResult) => {
+                  if (executeResult) {
+                    webpackModule = result!;
+                    resolve(executeResult);
+                    return;
+                  }
                   if (err) {
                     reject(err);
                     return;
                   }
+
                   webpackModule = result!;
                   resolve(executeResult);
                 }

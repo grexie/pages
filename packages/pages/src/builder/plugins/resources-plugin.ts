@@ -1,4 +1,4 @@
-import type { Source } from '../../api/index.js';
+import type { Source } from '../../api/Source.js';
 import type { BuildContext } from '../BuildContext.js';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
@@ -46,15 +46,18 @@ class SourceCompiler {
     this.source = source;
   }
 
-  async render(compilation: Compilation, scripts: string[]) {
-    const modules = this.context.build.getModuleContext(compilation);
-
-    const { ResourceContext } = await modules.require(
+  async render(scripts: string[]) {
+    // const react = await this.context.modules.require(import.meta, 'react');
+    const { ResourceContext } = await this.context.modules.require(
       import.meta,
       '../../hooks/useResource.js'
     );
-    const { Renderer } = await modules.require(import.meta, '../Renderer.js');
-    const { WritableBuffer } = await modules.require(
+    console.info(ResourceContext);
+    const { Renderer } = await this.context.modules.require(
+      import.meta,
+      '../Renderer.js'
+    );
+    const { WritableBuffer } = await this.context.modules.require(
       import.meta,
       '../../utils/stream.js'
     );
@@ -63,7 +66,7 @@ class SourceCompiler {
       console.info('render', this.source.filename);
     }
 
-    const handlerModule = await modules.requireModule(
+    const handlerModule = await this.context.modules.requireModule(
       path.dirname(this.source.filename),
       this.source.filename
     );
@@ -97,135 +100,33 @@ class SourceCompiler {
     return buffer;
   }
 
-  // async hasChanged(
-  //   compiler: Compiler,
-  //   filename: string,
-  //   seen: Record<string, boolean> = {},
-  //   defaultForNoMeta: boolean = true
-  // ): Promise<boolean> {
-  //   if (seen[filename]) {
-  //     return false;
-  //   }
-
-  //   seen[filename] = true;
-
-  //   const meta = await this.context.modules.meta(filename);
-  //   if (!meta) {
-  //     return defaultForNoMeta;
-  //   }
-
-  //   const stat = promisify(
-  //     compiler.inputFileSystem,
-  //     compiler.inputFileSystem.stat
-  //   );
-  //   try {
-  //     const stats = await stat(filename);
-  //     if (stats.mtimeMs > meta.mtime) {
-  //       return true;
-  //     }
-  //   } catch (err) {
-  //     return false;
-  //   }
-
-  //   const results = await Promise.all(
-  //     meta.dependencies.map(dependency =>
-  //       this.hasChanged(compiler, dependency, seen, false)
-  //     )
-  //   );
-  //   return results.reduce((a, b) => a || b, false);
-  // }
-
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
-    const modules = this.context.build.getModuleContext(compilation);
+    // await new Promise<webpack.Module>((resolve, reject) =>
+    //   compilation.addEntry(
+    //     this.context.build.rootDir,
+    //     new EntryDependency(
+    //       `./${path.relative(this.context.build.rootDir, this.source.filename)}`
+    //     ),
+    //     {
+    //       name: this.source.slug,
+    //       filename: this.source.slug
+    //         ? `${this.source.slug}/index.js`
+    //         : 'index.js',
+    //     },
+    //     (err, result) => {
+    //       if (err) {
+    //         reject(err);
+    //         return;
+    //       }
 
-    let changed = false;
-
-    const resolver = createResolver();
-
-    this.context.promises[this.source.filename] = resolver;
-
-    const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
-      compilation.addEntry(
-        compiler.context,
-        new EntryDependency(this.source.filename),
-        {
-          name: this.source.slug,
-          filename: this.source.slug
-            ? `${this.source.slug}/index.js`
-            : 'index.js',
-        },
-        (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          resolve(result!);
-        }
-      )
-    );
-
-    try {
-      compilation.fileDependencies.add(this.source.filename);
-
-      // changed = await this.hasChanged(
-      //   compilation.compiler,
-      //   this.source.filename
-      // );
-
-      // const meta = await this.context.modules.meta(this.source.filename);
-      // if (meta) {
-      //   meta.dependencies.forEach(dependency =>
-      //     compilation.fileDependencies.add(dependency)
-      //   );
-
-      //   await Promise.all(
-      //     meta.dependencies.map(dependency => this.context.promises[dependency])
-      //   );
-
-      //   await Promise.all(
-      //     meta.dependencies.map(dependency =>
-      //       this.context.build.modules.evict(factory, dependency, {
-      //         recompile: true,
-      //         fail: false,
-      //       })
-      //     )
-      //   );
-      // }
-
-      // if (changed) {
-      //   await this.context.build.modules.evict(factory, this.source.filename, {
-      //     recompile: true,
-      //     fail: false,
-      //   });
-
-      //   // await new Promise((resolve, reject) => {
-      //   //   try {
-      //   //     compilation.rebuildModule(entryModule, (err, result) => {
-      //   //       if (err) {
-      //   //         reject(err);
-      //   //         return;
-      //   //       }
-
-      //   //       resolve(result);
-      //   //     });
-      //   //   } catch (err) {
-      //   //     reject(err);
-      //   //   }
-      //   // });
-      // }
-
-      resolver.resolve();
-    } catch (err) {
-      console.error(err);
-      resolver.reject(err);
-      throw err;
-    }
+    //       resolve(result!);
+    //     }
+    //   )
+    // );
 
     compilation.hooks.processAssets.tapPromise(
       { name, stage: Infinity },
       async () => {
-        // if (changed) {
         const files = new Set<string>();
 
         let publicPath = compilation.outputOptions.publicPath ?? '/';
@@ -233,7 +134,7 @@ class SourceCompiler {
           publicPath = '/';
         }
 
-        const entrypoints = [this.source.slug];
+        const entrypoints = []; //[this.source.slug];
 
         if (process.env.WEBPACK_HOT) {
           entrypoints.unshift('__webpack/react-refresh', '__webpack/client');
@@ -262,103 +163,17 @@ class SourceCompiler {
           });
         });
 
-        const buffer = await this.render(compilation, [...files]);
+        console.error('BEGIN PROCESS ASSETS');
+        const buffer = await this.render([...files]);
 
         compilation.emitAsset(
           path.join(this.source.slug, 'index.html'),
           new RawSource(buffer!)
         );
-        // }
       }
     );
   }
 }
-
-// class AssetCompiler {
-//   readonly context: CompilationContext;
-//   readonly resourcePath: string;
-
-//   constructor(context: CompilationContext, resourcePath: string) {
-//     this.context = context;
-//     this.resourcePath = resourcePath;
-//   }
-
-//   async hasChanged(
-//     compiler: Compiler,
-//     filename: string,
-//     seen: Record<string, boolean> = {},
-//     defaultForNoMeta: boolean = true
-//   ): Promise<boolean> {
-//     if (seen[filename]) {
-//       return false;
-//     }
-
-//     seen[filename] = true;
-
-//     const meta = await this.context.modules.meta(filename);
-//     if (!meta) {
-//       return defaultForNoMeta;
-//     }
-
-//     const stat = promisify(
-//       compiler.inputFileSystem,
-//       compiler.inputFileSystem.stat
-//     );
-//     try {
-//       const stats = await stat(filename);
-//       if (stats.mtimeMs > meta.mtime) {
-//         return true;
-//       }
-//     } catch (err) {
-//       return false;
-//     }
-
-//     const results = await Promise.all(
-//       meta.dependencies.map(dependency =>
-//         this.hasChanged(compiler, dependency, seen, false)
-//       )
-//     );
-//     return results.reduce((a, b) => a || b, false);
-//   }
-
-//   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
-//     const resolver = createResolver();
-
-//     this.context.promises[this.resourcePath] = resolver;
-//     let buffer: Buffer | undefined;
-//     try {
-//       compilation.fileDependencies.add(this.resourcePath);
-
-//       const changed = await this.hasChanged(
-//         compilation.compiler,
-//         this.resourcePath
-//       );
-
-//       const meta = await this.context.modules.meta(this.resourcePath);
-//       if (meta) {
-//         meta.dependencies.forEach(dependency =>
-//           compilation.fileDependencies.add(dependency)
-//         );
-
-//         await Promise.all(
-//           meta.dependencies.map(dependency => this.context.promises[dependency])
-//         );
-//       }
-
-//       if (changed) {
-//         const factory = this.context.modules.createModuleFactory(compilation);
-//         await this.context.build.modules.evict(factory, this.resourcePath, {
-//           fail: false,
-//         });
-//       }
-
-//       resolver.resolve();
-//     } catch (err) {
-//       resolver.reject(err);
-//       throw err;
-//     }
-//   }
-// }
 
 export class ResourcesPlugin {
   readonly context: BuildContext;
@@ -366,33 +181,6 @@ export class ResourcesPlugin {
   constructor({ context }: ResourcesPluginOptions) {
     this.context = context;
   }
-
-  // processDependencies(
-  //   context: CompilationContext,
-  //   compiler: Compiler,
-  //   compilation: Compilation,
-  //   _dependencies: Set<string>
-  // ) {
-  //   const resolver = createResolver();
-  //   const process = async () => {
-  //     const dependencies = [..._dependencies];
-  //     _dependencies.clear();
-
-  //     await Promise.all(
-  //       dependencies.map(async dependency => {
-  //         const child = new AssetCompiler(context, dependency);
-
-  //         await (context.promises[dependency] = child.makeHook(
-  //           'ResourcesPlugin',
-  //           compiler,
-  //           compilation
-  //         ));
-  //       })
-  //     );
-  //   };
-
-  //   return { resolver, process };
-  // }
 
   getEntries(compilation: Compilation) {
     return [...compilation.entrypoints].map(([name, entrypoint]) => ({
@@ -414,40 +202,16 @@ export class ResourcesPlugin {
         compilation,
       });
 
-      // const seen = new Set<string>([...sources].map(source => source.filename));
-      // const dependenciesToProcess = new Set<string>();
-      // const { resolver: dependencyResolver, process: processDependencies } =
-      //   this.processDependencies(
-      //     context,
-      //     compiler,
-      //     compilation,
-      //     dependenciesToProcess
-      //   );
-
-      let sourceCount = sources.length;
-
-      await Promise.all([
-        // dependencyResolver,
-        ...sources.map(async source => {
-          const child = new SourceCompiler(context, source);
-
-          // const meta = await this.context.modules.meta(source.filename);
-          // meta?.dependencies.forEach(dependency => {
-          //   if (!seen.has(dependency)) {
-          //     seen.add(dependency);
-          //     dependenciesToProcess.add(dependency);
-          //   }
-          // });
-          // processDependencies();
-          // if (--sourceCount === 0) {
-          //   dependencyResolver.resolve();
-          // }
-
-          // await dependencyResolver;
-
-          await child.makeHook('ResourcesPlugin', compiler, compilation);
-        }),
-      ]);
+      await Promise.all(
+        sources.map(async source => {
+          const sourceCompiler = new SourceCompiler(context, source);
+          await sourceCompiler.makeHook(
+            'ResourcesPlugin',
+            compiler,
+            compilation
+          );
+        })
+      );
     });
   }
 }

@@ -43,6 +43,8 @@ export class Renderer {
     );
 
     const element = createElement(component as any);
+
+    console.info(renderToPipeableStream);
     await new Promise<void>((resolve, reject) => {
       renderToPipeableStream(element, {
         onError: err => reject(err),
