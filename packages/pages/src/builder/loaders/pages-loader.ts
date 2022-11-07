@@ -34,7 +34,7 @@ export default async function PagesLoader(
 
     const configModule = await modules.create(
       path.dirname(this.resourcePath),
-      this.resourcePath + '.original',
+      this.resourcePath,
       content.toString()
     );
 

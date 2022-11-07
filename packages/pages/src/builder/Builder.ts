@@ -27,6 +27,7 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 export class Builder {
   readonly context: BuildContext;
   readonly defaultFiles: WritableFileSystem;
+  readonly buildFiles = new FileSystem();
   readonly #builder: BuilderBase;
   readonly cache: Cache;
 
@@ -56,13 +57,15 @@ export class Builder {
       '{}'
     );
 
+    this.#builder.fs.add('/', this.buildFiles, false, 'buildFiles');
+
     this.#builder.fs.add(
       this.context.rootDir,
       new FileSystem()
         .add('/', this.defaultFiles, false, 'defaultFiles')
         .add(this.context.rootDir, fs, false, 'rootDir'),
       false,
-      'defaultFiles+root'
+      'fs:defaultFiles+root'
     );
 
     if ((process.env.NODE_ENV ?? 'development') === 'development') {

@@ -51,6 +51,7 @@ export class ModuleLoader {
   readonly resolver: ModuleResolver;
   readonly compilation: Compilation;
   readonly modules;
+  #nextId = 0;
 
   constructor({ context, resolver, compilation }: ModuleLoaderOptions) {
     this.context = context;
@@ -187,6 +188,8 @@ export class ModuleLoader {
     filename: string,
     source: string
   ): Promise<InstantiatedModule> {
+    filename = filename + '$' + ++this.#nextId;
+
     if (this.modules[filename]) {
       return this.modules[filename]!;
     }
@@ -201,8 +204,12 @@ export class ModuleLoader {
       await mkdir(path.dirname(filename), { recursive: true });
       await writeFile(filename, source);
 
-      const fs = new FileSystem().add(filename, volume, false, 'ephemeral');
-      //.add('/', this.context.build.builder.fs, false, 'main');
+      this.context.build.builder.buildFiles.add(
+        filename,
+        volume,
+        false,
+        filename
+      );
 
       const dependency = new webpack.dependencies.ModuleDependency(
         `./${path.basename(filename)}`
@@ -218,10 +225,6 @@ export class ModuleLoader {
                   compiler: 'javascript/auto',
                 },
                 dependencies: [dependency],
-                resolveOptions: {
-                  fileSystem: fs,
-                  fullySpecified: true,
-                },
               },
               (err, result) => {
                 if (err) {
@@ -238,7 +241,12 @@ export class ModuleLoader {
         }
       );
 
-      resolver.resolve(this.#build(filename, webpackModule, dependency));
+      resolver.resolve(
+        this.#build(filename, webpackModule, dependency).then(module => {
+          this.context.build.builder.buildFiles.remove(filename);
+          return module;
+        })
+      );
     } catch (err) {
       resolver.reject(err);
     } finally {

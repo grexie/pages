@@ -174,13 +174,16 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
       fileSystems = fileSystems.filter(({ writable }) => writable);
     }
 
-    fileSystems = fileSystems.filter(({ path }) => filename.startsWith(path));
+    fileSystems = fileSystems.filter(
+      ({ path }) => filename === path || filename.startsWith(path)
+    );
 
     fileSystems.sort((a, b) => b.path.length - a.path.length);
 
     if (/defaults.pages.*original/.test(filename)) {
       console.info(
         filename,
+        writable,
         fileSystems.map(({ path, name }) => `${path} ${name}`)
       );
     }
@@ -207,7 +210,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let value = [] as unknown as P;
 
     if (fileSystems.length === 0) {
-      const error = new Error(`no filesystems: ${name} ${filename}`);
+      const error = new Error(`ENOFS: ${name} ${filename}`);
       (error as any).code = 'ENOFS';
 
       if (callback) {
@@ -288,7 +291,9 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let value = undefined as any;
 
     if (fileSystems.length === 0) {
-      throw new Error(`no filesystems: ${name} ${filename}`);
+      const err = new Error(`ENOFS: ${name} ${filename}`);
+      (err as any).code = 'ENOFS';
+      throw err;
     }
 
     for (const fileSystem of fileSystems) {

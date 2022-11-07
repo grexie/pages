@@ -31,9 +31,7 @@ export default async function StyleLoader(
     const stylesModule = await modules.create(
       path.dirname(this.resourcePath),
       this.resourcePath,
-      `const module = { id: ${JSON.stringify(
-        this.resourcePath
-      )} };\n${content.toString()}`
+      content.toString()
     );
 
     const styles = stylesModule.exports.default;
