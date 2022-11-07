@@ -2,9 +2,8 @@ import type { Source } from '../Source.js';
 import type { BuildContext } from '../BuildContext.js';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
-import path, { resolve } from 'path';
+import path from 'path';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
-import { rejects } from 'assert';
 
 const { RawSource } = webpack.sources;
 
@@ -78,7 +77,7 @@ class SourceCompiler {
       console.info('render:rendered', this.source.filename);
     }
 
-    return buffer;
+    return Buffer.from(buffer.toString());
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
@@ -156,14 +155,16 @@ class SourceCompiler {
                     });
                   });
 
-                  console.error('BEGIN PROCESS ASSETS');
-                  //this.context.modules.loader.reset();
                   const buffer = await this.render(compilation, [...files]);
 
-                  compilation.emitAsset(
-                    path.join(this.source.slug, 'index.html'),
-                    new RawSource(buffer!)
-                  );
+                  try {
+                    compilation.emitAsset(
+                      path.join(this.source.slug, 'index.html'),
+                      new RawSource(buffer!)
+                    );
+                  } catch (err) {
+                    console.error(err);
+                  }
                 }
               );
             });

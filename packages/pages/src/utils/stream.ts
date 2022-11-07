@@ -20,6 +20,17 @@ export class WritableBuffer
   readonly #buffers: Buffer[] = [];
   readonly #resolver = createResolver<Buffer>();
 
+  constructor() {
+    super({
+      write: async (buffer: Buffer): Promise<void> => {
+        this.#buffers.push(buffer);
+      },
+      close: async (): Promise<void> => {
+        this.#resolver.resolve(Buffer.concat(this.#buffers));
+      },
+    });
+  }
+
   then<TResult1 = void, TResult2 = never>(
     onfulfilled?:
       | ((value: Buffer) => TResult1 | PromiseLike<TResult1>)
@@ -44,18 +55,5 @@ export class WritableBuffer
 
   finally(onfinally?: (() => void) | null | undefined): Promise<Buffer> {
     return this.then(x => x).finally(onfinally);
-  }
-
-  getWriter(): WritableStreamDefaultWriter<Buffer> {
-    return new WritableStreamDefaultWriter(
-      new WritableStream({
-        write: async (buffer: Buffer): Promise<void> => {
-          this.#buffers.push(buffer);
-        },
-        close: async (): Promise<void> => {
-          this.#resolver.resolve(Buffer.concat(this.#buffers));
-        },
-      })
-    );
   }
 }

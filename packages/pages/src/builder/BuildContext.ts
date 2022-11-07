@@ -87,7 +87,7 @@ export class BuildContext extends Context {
       path.resolve(this.rootDir, 'node_modules'),
       ...pagesModules,
     ];
-    console.info(this.modulesDirs);
+
     this.outputDir = path.resolve(this.rootDir, 'build');
 
     this.registry = new Registry(this);
@@ -189,16 +189,15 @@ export class BuildContext extends Context {
   }
 
   getModuleContext(compilation: Compilation) {
-    // if (!this.#moduleContextTable.has(compilation)) {
-    //   this.#moduleContextTable.set(
-    //     compilation,
-    //     new ModuleContext({
-    //       context: this,
-    //       compilation,
-    //     })
-    //   );
-    // }
-    // return this.#moduleContextTable.get(compilation)!;
-    return new ModuleContext({ context: this, compilation });
+    if (!this.#moduleContextTable.has(compilation)) {
+      this.#moduleContextTable.set(
+        compilation,
+        new ModuleContext({
+          context: this,
+          compilation,
+        })
+      );
+    }
+    return this.#moduleContextTable.get(compilation)!;
   }
 }

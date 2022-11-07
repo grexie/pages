@@ -10,8 +10,6 @@ import type { ModuleResource } from '../builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
 import { hash } from '../utils/hash.js';
 
-console.info('LOADING USERESOURCE.TSX');
-
 export interface ResourceContextProviderProps {
   resourceContext: ResourceContext;
 }
