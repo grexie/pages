@@ -58,18 +58,29 @@ export class Builder {
 
     this.#builder.fs.add(
       this.context.rootDir,
-      new FileSystem().add('/', this.defaultFiles).add(this.context.rootDir, fs)
+      new FileSystem()
+        .add('/', this.defaultFiles, false, 'defaultFiles')
+        .add(this.context.rootDir, fs, false, 'rootDir'),
+      false,
+      'defaultFiles+root'
     );
 
     if ((process.env.NODE_ENV ?? 'development') === 'development') {
       this.#builder.fs.add(
         _path.resolve(this.context.pagesDir, '..', '..'),
-        fs
+        fs,
+        false,
+        'pagesDir'
       );
     }
 
     fsOptions.forEach(options =>
-      this.#builder.fs.add(options.path, options.fs, options.writable)
+      this.#builder.fs.add(
+        options.path,
+        options.fs,
+        options.writable,
+        options.name
+      )
     );
 
     const cacheStorage: CacheStorage = {

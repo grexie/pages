@@ -202,7 +202,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
 
     const filename = args[0] as string;
     fileSystems = fileSystems ?? this.find(filename, writable);
-    console.info(fileSystems);
+
     let err = undefined as unknown as E;
     let value = [] as unknown as P;
 

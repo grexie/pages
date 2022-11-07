@@ -201,9 +201,8 @@ export class ModuleLoader {
       await mkdir(path.dirname(filename), { recursive: true });
       await writeFile(filename, source);
 
-      const fs = new FileSystem()
-        .add(filename, volume, false, 'ephemeral')
-        .add('/', this.context.build.builder.fs, false, 'main');
+      const fs = new FileSystem().add(filename, volume, false, 'ephemeral');
+      //.add('/', this.context.build.builder.fs, false, 'main');
 
       const dependency = new webpack.dependencies.ModuleDependency(
         `./${path.basename(filename)}`
