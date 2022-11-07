@@ -96,7 +96,7 @@ export class ConfigContext {
   ): Promise<ConfigModule> {
     const _module = await this.context
       .getModuleContext(compilation)
-      .require(source.dirname, source.filename);
+      .requireModule(source.dirname, source.filename);
     return new ConfigModule({ parent, module: _module });
   }
 

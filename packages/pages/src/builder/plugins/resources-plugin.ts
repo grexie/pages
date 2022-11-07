@@ -1,10 +1,8 @@
-import { Source } from '../../api/index.js';
-import { BuildContext } from '../BuildContext.js';
+import type { Source } from '../../api/index.js';
+import type { BuildContext } from '../BuildContext.js';
 import webpack from 'webpack';
-import { Compiler, Compilation } from 'webpack';
+import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { ResourceContext } from '../../hooks/index.js';
-import { WritableBuffer } from '../../utils/stream.js';
 import { createResolver } from '../../utils/resolvable.js';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 
@@ -51,11 +49,17 @@ class SourceCompiler {
   async render(compilation: Compilation, scripts: string[]) {
     const modules = this.context.build.getModuleContext(compilation);
 
+    const { ResourceContext } = await modules.require(
+      import.meta,
+      '../../hooks/useResource.js'
+    );
+    const { Renderer } = await modules.require(import.meta, '../Renderer.js');
+
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render', this.source.filename);
     }
 
-    const handlerModule = await modules.require(
+    const handlerModule = await modules.requireModule(
       path.dirname(this.source.filename),
       this.source.filename
     );
@@ -72,7 +76,9 @@ class SourceCompiler {
       console.info('render:rendering', this.source.filename);
     }
 
-    const buffer = await this.context.renderer.render(
+    const renderer = new Renderer(this.context.build);
+
+    const buffer = await renderer.render(
       new WritableBuffer(),
       resourceContext,
       exports.resource,
@@ -215,50 +221,50 @@ class SourceCompiler {
     compilation.hooks.processAssets.tapPromise(
       { name, stage: Infinity },
       async () => {
-        if (changed) {
-          const files = new Set<string>();
+        // if (changed) {
+        const files = new Set<string>();
 
-          let publicPath = compilation.outputOptions.publicPath ?? '/';
-          if (publicPath === 'auto') {
-            publicPath = '/';
-          }
+        let publicPath = compilation.outputOptions.publicPath ?? '/';
+        if (publicPath === 'auto') {
+          publicPath = '/';
+        }
 
-          const entrypoints = [this.source.slug];
+        const entrypoints = [this.source.slug];
 
-          if (process.env.WEBPACK_HOT) {
-            entrypoints.unshift('__webpack/react-refresh', '__webpack/client');
-          }
+        if (process.env.WEBPACK_HOT) {
+          entrypoints.unshift('__webpack/react-refresh', '__webpack/client');
+        }
 
-          entrypoints.forEach(name => {
-            const entrypoint = compilation.entrypoints.get(name)!;
+        entrypoints.forEach(name => {
+          const entrypoint = compilation.entrypoints.get(name)!;
 
-            entrypoint.chunks.forEach(chunk => {
-              chunk.files.forEach(file => {
-                const asset = compilation.getAsset(file);
-                if (!asset) {
-                  return;
-                }
+          entrypoint.chunks.forEach(chunk => {
+            chunk.files.forEach(file => {
+              const asset = compilation.getAsset(file);
+              if (!asset) {
+                return;
+              }
 
-                const assetMetaInformation = asset.info || {};
-                if (
-                  assetMetaInformation.hotModuleReplacement ||
-                  assetMetaInformation.development
-                ) {
-                  return;
-                }
+              const assetMetaInformation = asset.info || {};
+              if (
+                assetMetaInformation.hotModuleReplacement ||
+                assetMetaInformation.development
+              ) {
+                return;
+              }
 
-                files.add(`${publicPath}${file}`);
-              });
+              files.add(`${publicPath}${file}`);
             });
           });
+        });
 
-          const buffer = await this.render(compilation, [...files]);
+        const buffer = await this.render(compilation, [...files]);
 
-          compilation.emitAsset(
-            path.join(this.source.slug, 'index.html'),
-            new RawSource(buffer!)
-          );
-        }
+        compilation.emitAsset(
+          path.join(this.source.slug, 'index.html'),
+          new RawSource(buffer!)
+        );
+        // }
       }
     );
   }

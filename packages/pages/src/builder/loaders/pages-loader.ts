@@ -32,7 +32,7 @@ export default async function PagesLoader(
 
     const modules = context.getModuleContext(this._compilation!);
 
-    const configModule = await modules.create(
+    const configModule = await modules.createModule(
       path.dirname(this.resourcePath),
       this.resourcePath,
       content.toString()

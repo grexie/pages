@@ -51,12 +51,12 @@ export default async function ModuleLoader(
     const createHandler = async () => {
       let handlerModule: InstantiatedModule;
       if (typeof options.handler === 'string') {
-        handlerModule = await modules.require(
+        handlerModule = await modules.requireModule(
           this._module!.context!,
           options.handler
         );
       } else {
-        handlerModule = await modules.create(
+        handlerModule = await modules.createModule(
           this._module!.context!,
           this.resourcePath,
           content.toString()
@@ -68,7 +68,7 @@ export default async function ModuleLoader(
     let handlerModule = await createHandler();
 
     console.info('created handler module');
-    
+
     const configModule = await context.config.create(this._compilation!, path);
     configModule.ancestors.forEach(({ module }) => {
       if (module) {
@@ -126,7 +126,7 @@ export default async function ModuleLoader(
         composablesRequires.push(layout);
       }
 
-      const layoutModule = await modules.require(
+      const layoutModule = await modules.requireModule(
         _path.dirname(this.resourcePath),
         layout
       );

@@ -85,7 +85,7 @@ export class SourceContext extends Source {
   }) {
     const module = await this.context
       .getModuleContext(this.compilation)
-      .create(
+      .createModule(
         path.dirname(this.filename),
         `${this.filename}$${++this.#index}`,
         source

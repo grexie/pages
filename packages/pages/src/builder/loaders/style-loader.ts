@@ -28,7 +28,7 @@ export default async function StyleLoader(
   // const factory = context.modules.createModuleFactory(this._compilation!);
 
   try {
-    const stylesModule = await modules.create(
+    const stylesModule = await modules.createModule(
       path.dirname(this.resourcePath),
       this.resourcePath,
       content.toString()
