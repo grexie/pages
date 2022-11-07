@@ -48,13 +48,6 @@ export class Builder {
   }
 
   #createFileSystem(fs: WritableFileSystem, fsOptions: FileSystemOptions[]) {
-    if ((process.env.NODE_ENV ?? 'development') === 'development') {
-      this.#builder.fs.add(
-        _path.resolve(this.context.pagesDir, '..', '..'),
-        fs
-      );
-    }
-
     this.defaultFiles.mkdirSync(this.context.rootDir, { recursive: true });
     this.defaultFiles.writeFileSync(
       _path.resolve(this.context.rootDir, 'package.json'),
@@ -65,6 +58,13 @@ export class Builder {
       this.context.rootDir,
       new FileSystem().add('/', this.defaultFiles).add(this.context.rootDir, fs)
     );
+
+    if ((process.env.NODE_ENV ?? 'development') === 'development') {
+      this.#builder.fs.add(
+        _path.resolve(this.context.pagesDir, '..', '..'),
+        fs
+      );
+    }
 
     fsOptions.forEach(options =>
       this.#builder.fs.add(options.path, options.fs, options.writable)
@@ -178,6 +178,7 @@ export class Builder {
         path: this.context.outputDir,
         filename: `assets/js/[name].js`,
       },
+      target: 'web',
       // externals: [
       //   nodeExternals({
       //     modulesDir: this.context.modulesDirs[0],
@@ -187,7 +188,7 @@ export class Builder {
       module: {
         rules: [
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.scss$/,
             use: [
               this.#loader('cache-loader'),
@@ -202,7 +203,7 @@ export class Builder {
             include: /\.global\.scss$/,
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.scss$/,
             use: [
               this.#loader('cache-loader'),
@@ -220,7 +221,7 @@ export class Builder {
             include: /\.module\.scss$/,
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.css$/,
             use: [
               this.#loader('cache-loader'),
@@ -232,7 +233,7 @@ export class Builder {
             include: /\.global\.css$/,
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.css$/,
             use: [
               this.#loader('cache-loader'),
@@ -247,7 +248,7 @@ export class Builder {
             include: /\.module\.css$/,
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(png|jpe?g|gif|webp|svg)$/,
             use: [
               this.#loader('cache-loader'),
@@ -256,7 +257,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.pages\.([mc]?js|ts)$/,
             use: [
               this.#loader('cache-loader'),
@@ -275,7 +276,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -285,7 +286,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -296,7 +297,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(jsx?|mjs|cjs)$/,
             include: [this.context.rootDir],
             //include: [/node_modules\/@mdx-js/],
@@ -325,7 +326,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/esm',
+            type: 'javascript/auto',
             test: /\.(ts|tsx)$/,
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
@@ -376,14 +377,17 @@ export class Builder {
           '@grexie/pages': this.context.pagesDir,
           glob: false,
         },
+        conditionNames: ['deno', 'default', 'require', 'import'],
+        mainFields: ['module', 'main'],
+        extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
+        modules: this.context.modulesDirs,
         fallback: {
-          util: false,
           fs: false,
           path: require.resolve('path-browserify'),
           timers: require.resolve('timers-browserify'),
+          crypto: require.resolve('crypto-browserify'),
+          stream: require.resolve('stream-browserify'),
         },
-        extensions: ['.md', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'],
-        modules: this.context.modulesDirs,
         fullySpecified: false,
       },
       resolveLoader: {
@@ -428,7 +432,6 @@ export class Builder {
           name: 'runtime',
         },
       },
-      target: 'web',
       plugins: [
         new ResourcesPlugin({ context: this.context }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),

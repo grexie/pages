@@ -67,6 +67,8 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
+    console.info('created handler module');
+    
     const configModule = await context.config.create(this._compilation!, path);
     configModule.ancestors.forEach(({ module }) => {
       if (module) {

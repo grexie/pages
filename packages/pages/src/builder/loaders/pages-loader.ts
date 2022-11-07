@@ -19,7 +19,7 @@ export default async function PagesLoader(
   const { context } = this.getOptions();
   const callback = this.async();
 
-  const resolver = createResolver();
+  // const resolver = createResolver();
   // context.modules.addBuild(this.resourcePath, resolver);
 
   try {
@@ -34,9 +34,11 @@ export default async function PagesLoader(
 
     const configModule = await modules.create(
       path.dirname(this.resourcePath),
-      this.resourcePath,
+      this.resourcePath + '.original',
       content.toString()
     );
+
+    console.info('pages-loader', 'config module created', this.resourcePath);
 
     let configExports;
     if (typeof configModule.exports.default === 'function') {
@@ -71,12 +73,12 @@ export default async function PagesLoader(
       inputSourceMap
     );
   } catch (err) {
-    resolver.reject(err);
+    // resolver.reject(err);
     callback(err as any);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('pages-loader:complete', this.resourcePath);
     }
-    resolver.resolve();
+    // resolver.resolve();
   }
 }

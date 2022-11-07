@@ -69,7 +69,7 @@ export class ModuleLoader {
   ): Promise<InstantiatedModule> {
     const context = webpackModule.context!;
 
-    const exports = await new Promise<any>((resolve, reject) => {
+    const executeResult = await new Promise<any>((resolve, reject) => {
       try {
         this.compilation.addModule(webpackModule, (err, result) => {
           if (err) {
@@ -92,19 +92,19 @@ export class ModuleLoader {
               }
 
               this.compilation.executeModule(
-                webpackModule,
+                result!,
                 {
                   entryOptions: {
                     publicPath: '/',
                   },
                 },
-                (err, result) => {
+                (err, executeResult) => {
                   if (err) {
                     reject(err);
                     return;
                   }
-
-                  resolve(result?.exports);
+                  webpackModule = result!;
+                  resolve(executeResult);
                 }
               );
             });
@@ -120,17 +120,9 @@ export class ModuleLoader {
     }
 
     const source = webpackModule.originalSource()?.buffer().toString();
-
     if (typeof source !== 'string') {
       throw new Error(`unable to load module ${filename}`);
     }
-
-    const exports = await new Promise<any>((resolve, reject) => {
-      try {
-      } catch (err) {
-        reject(err);
-      }
-    });
 
     return {
       context,
@@ -138,7 +130,7 @@ export class ModuleLoader {
       source,
       references: [],
       webpackModule,
-      exports,
+      exports: executeResult.exports,
     };
   }
 
@@ -207,13 +199,15 @@ export class ModuleLoader {
       const writeFile = promisify(volume, volume.writeFile);
       const mkdir = promisify(volume, volume.mkdir);
       await mkdir(path.dirname(filename), { recursive: true });
-      await writeFile(filename, source.toString());
+      await writeFile(filename, source);
 
       const fs = new FileSystem()
-        .add(filename, volume)
-        .add('/', this.context.build.builder.fs);
+        .add(filename, volume, false, 'ephemeral')
+        .add('/', this.context.build.builder.fs, 'main');
 
-      const dependency = new webpack.dependencies.ModuleDependency(filename);
+      const dependency = new webpack.dependencies.ModuleDependency(
+        `./${path.basename(filename)}`
+      );
       const webpackModule = await new Promise<webpack.NormalModule>(
         (resolve, reject) => {
           try {
@@ -227,6 +221,7 @@ export class ModuleLoader {
                 dependencies: [dependency],
                 resolveOptions: {
                   fileSystem: fs,
+                  fullySpecified: true,
                 },
               },
               (err, result) => {
