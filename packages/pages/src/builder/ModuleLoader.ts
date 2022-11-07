@@ -144,6 +144,97 @@ export class ModuleLoader {
     };
   }
 
+  async #buildMany(
+    filenames: string[],
+    webpackModule: webpack.Module,
+    dependencies: webpack.Dependency[]
+  ): Promise<InstantiatedModule[]> {
+    const context = webpackModule.context!;
+
+    const results = await new Promise<
+      ({ webpackModule: webpack.NormalModule } & any)[]
+    >((resolve, reject) => {
+      try {
+        this.compilation.addModule(webpackModule, (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          this.compilation.buildModule(result!, err => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            this.compilation.processModuleDependencies(result!, err => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(
+                Promise.all(
+                  dependencies.map(
+                    dependency =>
+                      new Promise((resolve, reject) => {
+                        const webpackModule =
+                          this.compilation.moduleGraph.getModule(dependency);
+
+                        this.compilation.executeModule(
+                          result!,
+                          {
+                            entryOptions: {
+                              publicPath: '/',
+                            },
+                          },
+                          (err, executeResult) => {
+                            if (err) {
+                              reject(err);
+                              return;
+                            }
+
+                            resolve({ webpackModule, ...executeResult });
+                            return;
+                          }
+                        );
+                      })
+                  )
+                )
+              );
+            });
+          });
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    const errors = [];
+    for (const { webpackModule } of results) {
+      if (webpackModule.getNumberOfErrors()) {
+        errors.push(...(webpackModule.getErrors() as any));
+      }
+    }
+
+    if (errors.length) {
+      throw errors;
+    }
+
+    const sources = results.map(({ webpackModule }) =>
+      webpackModule.originalSource()!.buffer().toString()
+    );
+
+    return dependencies.map((_, index) => ({
+      context,
+      filename: filenames[index],
+      source: sources[index],
+      references: [],
+      webpackModule: results[index].webpackModule,
+      exports: results[index].exports,
+    }));
+  }
+
   /**
    * Loads a module from the filesystem
    * @param filename
@@ -190,6 +281,80 @@ export class ModuleLoader {
     } finally {
       return resolver;
     }
+  }
+
+  /**
+   * Loads a module from the filesystem
+   * @param filename
+   */
+  async loadMany(
+    context: string,
+    requests: string[]
+  ): Promise<InstantiatedModule[]> {
+    const references = await Promise.all(
+      requests.map(request => this.resolver.resolve(context, request))
+    );
+
+    const resolvers = requests.map(() => createResolver<InstantiatedModule>());
+
+    const modules = references.map((reference, index) => {
+      if (this.modules[reference.filename]) {
+        resolvers[index].resolve(this.modules[reference.filename]!);
+        return this.modules[reference.filename]!;
+      } else {
+        this.modules[reference.filename] = resolvers[index];
+        return null;
+      }
+    });
+
+    const dependencies = requests.map((request, index) =>
+      modules[index] ? null : new webpack.dependencies.ModuleDependency(request)
+    );
+
+    if (dependencies.reduce((a, b) => a || !!b, false)) {
+      const webpackModule = await new Promise<webpack.Module>(
+        (resolve, reject) =>
+          this.compilation.params.normalModuleFactory.create(
+            {
+              context,
+              contextInfo: {
+                issuer: 'pages',
+                compiler: 'javascript/auto',
+              },
+              dependencies: dependencies.filter(
+                x => !!x
+              ) as webpack.Dependency[],
+            },
+            (err, result) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(result!.module!);
+            }
+          )
+      );
+
+      console.info(webpackModule);
+
+      const builtModules = await this.#buildMany(
+        references
+          .filter((_, i) => !!dependencies[i])
+          .map(reference => reference.filename),
+        webpackModule,
+        dependencies.filter(x => !!x) as webpack.Dependency[]
+      );
+
+      for (const module of builtModules) {
+        const index = references.findIndex(
+          ({ filename }) => module.filename === filename
+        );
+        resolvers[index].resolve(module);
+      }
+    }
+
+    return Promise.all(resolvers);
   }
 
   /**

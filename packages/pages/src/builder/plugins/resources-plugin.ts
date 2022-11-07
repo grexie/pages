@@ -46,35 +46,20 @@ class SourceCompiler {
   }
 
   async render(compilation: Compilation, scripts: string[]) {
-    const modules = this.context.build.getModuleContext(compilation);
-
-    const react = await modules.require(import.meta, 'react');
-    react.test = 'hello';
-    console.info(react.test);
-    const { ResourceContext } = await modules.require(
-      import.meta,
-      '../../hooks/useResource.js'
-    );
-    const { Renderer } = await modules.require(import.meta, '../Renderer.js');
-    const { WritableBuffer } = await modules.require(
-      import.meta,
-      '../../utils/stream.js'
-    );
-
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render', this.source.filename);
     }
 
-    const handlerModule = await modules.requireModule(
-      path.dirname(this.source.filename),
+    // const modules = this.context.build.getModuleContext(compilation);
+
+    const results = await this.context.modules.requireMany(
+      import.meta,
+      'react',
+      '../../hooks/useResource.js',
+      '../Renderer.js',
+      '../../utils/stream.js',
       this.source.filename
     );
-
-    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('render:handler', this.source.filename);
-    }
-
-    const { exports } = handlerModule;
 
     const resourceContext = new ResourceContext();
 

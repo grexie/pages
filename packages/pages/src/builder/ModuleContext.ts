@@ -44,14 +44,32 @@ export class ModuleContext {
 
     if ((meta as ImportMeta).url) {
       context = this.getContextFromMeta(meta as ImportMeta);
-    } else if((meta as NodeModule).filename) {
+    } else if ((meta as NodeModule).filename) {
       context = path.dirname((meta as NodeModule).filename);
     } else {
-      throw new Error("unknown meta object");
+      throw new Error('unknown meta object');
     }
 
     const module = await this.requireModule(context, request);
     return module.exports;
+  }
+
+  async requireMany(
+    meta: NodeModule | ImportMeta,
+    ...requests: string[]
+  ): Promise<any[]> {
+    let context: string;
+
+    if ((meta as ImportMeta).url) {
+      context = this.getContextFromMeta(meta as ImportMeta);
+    } else if ((meta as NodeModule).filename) {
+      context = path.dirname((meta as NodeModule).filename);
+    } else {
+      throw new Error('unknown meta object');
+    }
+
+    const modules = await this.loader.loadMany(context, requests);
+    return modules.map(module => module.exports);
   }
 
   async requireModule(

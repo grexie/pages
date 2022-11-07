@@ -14,7 +14,7 @@ import {
   Suspense,
   cloneElement,
 } from 'react';
-// import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { useDocument } from '../hooks/useDocument.js';
 import {
   Document,
