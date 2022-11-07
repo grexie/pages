@@ -1,6 +1,5 @@
 import { createElement } from 'react';
 import { renderToReadableStream } from 'react-dom/server';
-import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
 import { withDocumentComponent } from '../components/Document.js';
 import {
@@ -45,7 +44,7 @@ export class Renderer {
     const element = createElement(component as any);
 
     const stream = await renderToReadableStream(element);
-    
+
     await stream.pipeTo(writable);
     return Promise.resolve(writable);
   }

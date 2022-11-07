@@ -4,18 +4,13 @@ import { createResolver } from './resolvable.js';
 export const toBuffer = async (
   readable: Promise<ReadableStream> | ReadableStream
 ): Promise<Buffer> => {
-  const reader = await readable;
-  return new Promise((resolve, reject) => {
-    const buffers: Buffer[] = [];
-    reader.getReader().read();
-    reader.on('data', buffer => buffers.push(buffer));
-    reader.on('end', () => resolve(Buffer.concat(buffers)));
-    reader.on('error', err => reject(err));
-  });
+  const writable = new WritableBuffer();
+  await (await readable).pipeTo(writable);
+  return writable;
 };
 
 export const toString = async (
-  readable: Promise<Readable> | Readable
+  readable: Promise<ReadableStream> | ReadableStream
 ): Promise<string> => (await toBuffer(readable)).toString();
 
 export class WritableBuffer
