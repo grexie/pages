@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import React, { createElement } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { compose } from '@grexie/compose';
 import { withDocumentComponent } from '../components/Document.js';
@@ -29,7 +29,7 @@ export class Renderer {
     ...composables: any[]
   ): Promise<T> {
     const styles = new StylesContext();
-
+    console.log(React.test);
     const component = compose(
       withLazy,
       withContext({ context: this.context }),

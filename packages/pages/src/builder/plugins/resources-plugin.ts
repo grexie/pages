@@ -49,7 +49,8 @@ class SourceCompiler {
     const modules = this.context.build.getModuleContext(compilation);
 
     const react = await modules.require(import.meta, 'react');
-    console.info(react);
+    react.test = 'hello';
+    console.info(react.test);
     const { ResourceContext } = await modules.require(
       import.meta,
       '../../hooks/useResource.js'
@@ -99,28 +100,28 @@ class SourceCompiler {
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
-    // await new Promise<webpack.Module>((resolve, reject) =>
-    //   compilation.addEntry(
-    //     this.context.build.rootDir,
-    //     new EntryDependency(
-    //       `./${path.relative(this.context.build.rootDir, this.source.filename)}`
-    //     ),
-    //     {
-    //       name: this.source.slug,
-    //       filename: this.source.slug
-    //         ? `${this.source.slug}/index.js`
-    //         : 'index.js',
-    //     },
-    //     (err, result) => {
-    //       if (err) {
-    //         reject(err);
-    //         return;
-    //       }
+    await new Promise<webpack.Module>((resolve, reject) =>
+      compilation.addEntry(
+        this.context.build.rootDir,
+        new EntryDependency(
+          `./${path.relative(this.context.build.rootDir, this.source.filename)}`
+        ),
+        {
+          name: this.source.slug,
+          filename: this.source.slug
+            ? `${this.source.slug}/index.js`
+            : 'index.js',
+        },
+        (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
 
-    //       resolve(result!);
-    //     }
-    //   )
-    // );
+          resolve(result!);
+        }
+      )
+    );
 
     compilation.hooks.processAssets.tapPromise(
       { name, stage: Infinity },

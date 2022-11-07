@@ -401,7 +401,7 @@ export class Builder {
           fs: false,
           path: require.resolve('path-browserify'),
           timers: require.resolve('timers-browserify'),
-          crypto: require.resolve('crypto-browserify'),
+          crypto: false,
           stream: require.resolve('stream-browserify'),
           tty: require.resolve('tty-browserify'),
         },
