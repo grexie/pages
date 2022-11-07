@@ -2,7 +2,7 @@ import { ComponentType, useMemo } from 'react';
 import { SourceTree } from '../api/Source.js';
 import { usePath } from './useResource.js';
 import _path from 'path';
-import hash from 'object-hash';
+import { hash } from '../utils/hash.js';
 
 export type ComponentTree = { [key: string]: ComponentTree | ComponentType };
 
@@ -34,5 +34,5 @@ export const useComponents = (resources: SourceTree): ComponentTree => {
     };
     next(resources, out);
     return out;
-  }, [hash(resources, { ignoreUnknown: true })]);
+  }, [hash(resources)]);
 };

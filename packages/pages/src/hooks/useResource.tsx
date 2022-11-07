@@ -7,7 +7,7 @@ import type {
 } from '../api/Resource.js';
 import type { ModuleResource } from '../builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
-import hash from 'object-hash';
+import { hash } from '../utils/hash.js';
 
 console.info('LOADING USERESOURCE.TSX');
 
@@ -99,7 +99,7 @@ const {
         }
         resourceContext[ResourceContextSet](resource);
         return resourceContext;
-      }, [parentResourceContext, hash(resource, { ignoreUnknown: true })]);
+      }, [parentResourceContext, hash(resource)]);
 
       return (
         <ResourceContextProvider resourceContext={resourceContext}>

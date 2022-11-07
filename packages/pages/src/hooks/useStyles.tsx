@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import { useEffect, useMemo, useState, startTransition, FC } from 'react';
 import { createContextWithProps } from '../utils/context.js';
-import hash from 'object-hash';
+import { hash } from '../utils/hash.js';
 import { setImmediate, clearImmediate } from 'timers';
 import { Head } from '../components/Head.js';
 
@@ -62,10 +62,7 @@ const { with: withStyles, use: _useStyles } = createContextWithProps<
   StylesContext,
   StylesProviderProps
 >(Provider => ({ styles, children }) => {
-  const _styles = useMemo(
-    () => styles,
-    [hash(styles, { ignoreUnknown: true })]
-  );
+  const _styles = useMemo(() => styles, [hash(styles)]);
   return <Provider value={_styles}>{children}</Provider>;
 });
 

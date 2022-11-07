@@ -22,7 +22,7 @@ import {
   mergeDocumentProps,
 } from '../api/Document.js';
 import { ClientSuspense, useLazyComplete } from '../hooks/useLazy.js';
-import hash from 'object-hash';
+import { hash } from '../utils/hash.js';
 import { useMountId } from '../hooks/useMountId.js';
 
 const HeadContext = createContext<boolean>(true);
@@ -116,13 +116,13 @@ const HeadContent: FC<PropsWithChildren<{}>> = ({ children }) => {
     const props = { children: [] };
     processChildren(children, id, props);
     return props;
-  }, [hash({ children }, { ignoreUnknown: true })]);
+  }, [hash({ children })]);
 
   const document = useDocument(props);
 
   useEffect(() => {
     updateHead(document);
-  }, [hash(document.props, { ignoreUnknown: true })]);
+  }, [hash(document.props)]);
 
   return null;
 };

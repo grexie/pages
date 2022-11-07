@@ -45,6 +45,7 @@
     "timers-browserify": "^2.0.12",
     "tty-browserify": "^0.0.1",
     "util": "^0.12.5",
+    "webcrypto": "^0.1.1",
     "webpack-dev-middleware": "^5.3.3",
     "webpack-hot-middleware": "^2.25.2",
     "webpack-node-externals": "^3.0.0",

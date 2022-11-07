@@ -1,9 +1,10 @@
-import { LoaderContext } from 'webpack';
-import { BuildContext } from '../BuildContext.js';
+import type { LoaderContext } from 'webpack';
+import type { BuildContext } from '../BuildContext.js';
 import path from 'path';
 import { createHash } from 'crypto';
 import webpack from 'webpack';
-import sharp, { Metadata } from 'sharp';
+import sharp from 'sharp';
+import type { Metadata } from 'sharp';
 import { transform } from '@svgr/core';
 import { transform as babelTransform } from '@babel/core';
 import babelPresetReact from '@babel/preset-react';

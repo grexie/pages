@@ -41,7 +41,7 @@ export interface InstantiatedModule extends Module {
 }
 
 const ModulePromiseTable = new WeakMap<
-  Compiler,
+  Compilation,
   Record<string, Promise<InstantiatedModule> | undefined>
 >();
 
@@ -56,10 +56,14 @@ export class ModuleLoader {
     this.context = context;
     this.resolver = resolver;
     this.compilation = compilation;
-    if (!ModulePromiseTable.has(compilation.compiler.root)) {
-      ModulePromiseTable.set(compilation.compiler.root, {});
-    }
-    this.modules = ModulePromiseTable.get(compilation.compiler.root)!;
+    // if (!ModulePromiseTable.has(compilation)) {
+    //   ModulePromiseTable.set(compilation, {});
+    // }
+    // this.modules = ModulePromiseTable.get(compilation)!;
+    this.modules = {} as Record<
+      string,
+      Promise<InstantiatedModule> | undefined
+    >;
   }
 
   async #build(

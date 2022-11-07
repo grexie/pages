@@ -6,7 +6,7 @@ import {
   mergeDocumentProps,
 } from '../api/Document.js';
 import { createContextWithProps } from '../utils/context.js';
-import hash from 'object-hash';
+import { hash } from '../utils/hash.js';
 
 const {
   Provider: DocumentProvider,
@@ -32,7 +32,7 @@ export const useDocument = (props?: DocumentProps) => {
       mergeDocumentProps(document.props, props);
       document.update();
     }
-  }, [document, hash(props ?? null, { ignoreUnknown: true })]);
+  }, [document, hash(props ?? null)]);
 
   return document;
 };
