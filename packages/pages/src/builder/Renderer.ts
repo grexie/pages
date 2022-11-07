@@ -8,8 +8,8 @@ import {
   ResourceContext,
   withResourceContext,
 } from '../hooks/index.js';
-import { Resource } from '../api/index.js';
-import { BuildContext } from './index.js';
+import type { Resource } from '../api/index.js';
+import type { BuildContext } from './BuildContext.js';
 import { withStyles, StylesContext } from '../hooks/useStyles.js';
 import { withScripts } from '../hooks/useScripts.js';
 import { withLazy } from '../hooks/useLazy.js';

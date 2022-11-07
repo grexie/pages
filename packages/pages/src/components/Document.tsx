@@ -2,7 +2,7 @@ import { FC, PropsWithChildren } from 'react';
 import { Head, HeadProvider } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles, useStyles } from '../hooks/useStyles.js';
-import { useResource } from '../hooks/index.js';
+import { useResource } from '../hooks/useResource.js';
 import { useScripts } from '../hooks/useScripts.js';
 
 const Scripts: FC<{}> = () => {

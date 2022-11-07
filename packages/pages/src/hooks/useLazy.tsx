@@ -4,8 +4,6 @@ import {
   PropsWithRef,
   FC,
   useMemo,
-  PropsWithChildren,
-  ComponentType,
   Suspense,
   SuspenseProps,
 } from 'react';

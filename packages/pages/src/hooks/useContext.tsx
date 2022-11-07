@@ -1,5 +1,5 @@
 import { createContextWithProps } from '../utils/context.js';
-import { Context } from '../api/Context.js';
+import type { Context } from '../api/Context.js';
 
 interface ContextProviderProps {
   context: Context;

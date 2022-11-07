@@ -14,14 +14,14 @@ import {
   Suspense,
   cloneElement,
 } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+// import { renderToStaticMarkup } from 'react-dom/server';
 import { useDocument } from '../hooks/useDocument.js';
 import {
   Document,
   DocumentProps,
   mergeDocumentProps,
 } from '../api/Document.js';
-import { ClientSuspense, useLazyComplete } from '../hooks/useLazy.js';
+import { useLazyComplete } from '../hooks/useLazy.js';
 import { hash } from '../utils/hash.js';
 import { useMountId } from '../hooks/useMountId.js';
 
