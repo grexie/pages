@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { renderToPipeableStream } from 'react-dom/server';
+import { renderToReadableStream } from 'react-dom/server';
 import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
 import { withDocumentComponent } from '../components/Document.js';
@@ -22,7 +22,7 @@ export class Renderer {
     this.context = context;
   }
 
-  async render<T extends Writable>(
+  async render<T extends WritableStream>(
     writable: T,
     resourceContext: ResourceContext,
     resource: Resource,
@@ -44,15 +44,9 @@ export class Renderer {
 
     const element = createElement(component as any);
 
-    console.info(renderToPipeableStream);
-    await new Promise<void>((resolve, reject) => {
-      renderToPipeableStream(element, {
-        onError: err => reject(err),
-        onShellError: err => reject(err),
-        onAllReady: () => resolve(),
-      }).pipe(writable);
-    });
-
+    const stream = await renderToReadableStream(element);
+    
+    await stream.pipeTo(writable);
     return Promise.resolve(writable);
   }
 }

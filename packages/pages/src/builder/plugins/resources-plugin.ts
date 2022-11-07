@@ -3,7 +3,6 @@ import type { BuildContext } from '../BuildContext.js';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { createResolver } from '../../utils/resolvable.js';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 
 const { RawSource } = webpack.sources;
