@@ -12,6 +12,7 @@ import { FileSystem } from '@grexie/builder/FileSystem.js';
 import { Volume } from 'memfs';
 import { promisify } from '../utils/promisify.js';
 import path from 'path';
+import type { BuildContext } from './BuildContext.js';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -42,7 +43,7 @@ export interface InstantiatedModule extends Module {
 }
 
 const ModulePromiseTable = new WeakMap<
-  ModuleContext,
+  BuildContext,
   Record<string, Promise<InstantiatedModule> | undefined>
 >();
 
@@ -57,10 +58,10 @@ export class ModuleLoader {
     this.context = context;
     this.resolver = resolver;
     this.compilation = compilation;
-    if (!ModulePromiseTable.has(context)) {
-      ModulePromiseTable.set(context, {});
+    if (!ModulePromiseTable.has(context.build)) {
+      ModulePromiseTable.set(context.build, {});
     }
-    this.modules = ModulePromiseTable.get(context)!;
+    this.modules = ModulePromiseTable.get(context.build)!;
   }
 
   async #build(
@@ -139,16 +140,18 @@ export class ModuleLoader {
    * Loads a module from the filesystem
    * @param filename
    */
-  async load(context: string, filename: string): Promise<InstantiatedModule> {
-    if (this.modules[filename]) {
-      return this.modules[filename]!;
+  async load(context: string, request: string): Promise<InstantiatedModule> {
+    const reference = await this.resolver.resolve(context, request);
+
+    if (this.modules[reference.filename]) {
+      return this.modules[reference.filename]!;
     }
 
     const resolver = createResolver<InstantiatedModule>();
-    this.modules[filename] = resolver;
+    this.modules[reference.filename] = resolver;
 
     try {
-      const dependency = new webpack.dependencies.ModuleDependency(filename);
+      const dependency = new webpack.dependencies.ModuleDependency(request);
       const webpackModule = await new Promise<webpack.Module>(
         (resolve, reject) =>
           this.compilation.params.normalModuleFactory.create(
@@ -171,7 +174,9 @@ export class ModuleLoader {
           )
       );
 
-      resolver.resolve(this.#build(filename, webpackModule, dependency));
+      resolver.resolve(
+        this.#build(reference.filename, webpackModule, dependency)
+      );
     } catch (err) {
       resolver.reject(err);
     } finally {

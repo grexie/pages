@@ -54,6 +54,10 @@ class SourceCompiler {
       '../../hooks/useResource.js'
     );
     const { Renderer } = await modules.require(import.meta, '../Renderer.js');
+    const { WritableBuffer } = await modules.require(
+      import.meta,
+      '../../utils/stream.js'
+    );
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render', this.source.filename);

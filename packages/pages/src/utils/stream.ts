@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { Readable, Writable } from 'stream';
 import { createResolver } from './resolvable.js';
 

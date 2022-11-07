@@ -58,8 +58,7 @@ export class ModuleContext {
     context: string,
     request: string
   ): Promise<InstantiatedModule> {
-    const reference = await this.resolver.resolve(context, request);
-    return this.loader.load(context, reference.filename);
+    return this.loader.load(context, request);
   }
 
   async createModule(
