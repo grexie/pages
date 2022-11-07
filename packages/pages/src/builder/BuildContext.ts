@@ -5,7 +5,7 @@ import {
   WritableFileSystem,
 } from '@grexie/builder/FileSystem.js';
 import { Builder } from './Builder.js';
-import { ProviderConfig, Registry } from '../api/Registry.js';
+import { ProviderConfig, Registry } from './Registry.js';
 import { Renderer } from './Renderer.js';
 import { ModuleContext } from './ModuleContext.js';
 import os from 'os';

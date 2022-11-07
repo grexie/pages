@@ -1,6 +1,6 @@
 import { BuildContext } from './BuildContext.js';
 import { ResourceMetadata } from '../api/Resource.js';
-import { Source } from '../api/Source.js';
+import { Source } from './Source.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import { ObjectProxy } from '../utils/proxy.js';
 import path from 'path';

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Provider } from '../api/Provider.js';
+import { Provider } from '../builder/Provider.js';
 import { BuildContext } from '../builder/BuildContext.js';
 
 export default async () => {

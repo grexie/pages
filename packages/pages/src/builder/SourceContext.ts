@@ -1,4 +1,4 @@
-import { Source, SourceOptions } from '../api/Source.js';
+import { Source, SourceOptions } from './Source.js';
 import { ContentResource, Resource } from '../api/Resource.js';
 import type { BuildContext } from '../builder/BuildContext.js';
 import type { InstantiatedModule } from './ModuleLoader.js';

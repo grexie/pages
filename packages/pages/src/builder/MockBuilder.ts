@@ -1,5 +1,5 @@
 import { BuildContext } from './BuildContext.js';
-import { Provider } from '../api/Provider.js';
+import { Provider } from './Provider.js';
 import { ResourceMetadata } from '../api/Resource.js';
 import { Volume } from 'memfs';
 import { WritableFileSystem } from '@grexie/builder/FileSystem.js';

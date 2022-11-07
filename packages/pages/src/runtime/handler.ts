@@ -1,7 +1,5 @@
-import { createElement, ComponentType } from 'react';
-import { Resource, ResourceMetadata } from './Resource.js';
+import { createElement } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import type { SourceContext } from '../builder/SourceContext.js';
 import { compose } from '@grexie/compose';
 import {
   ResourceContext,
@@ -13,17 +11,10 @@ import {
   withStyles,
 } from '../hooks/index.js';
 import { withHydratedDocumentComponent } from '../components/Document.js';
-import { Context } from './Context.js';
+import { Context } from '../api/Context.js';
 import { withLazy } from '../hooks/useLazy.js';
-
-export interface Handler<
-  P = any,
-  M extends ResourceMetadata = any,
-  R extends Resource<M> = Resource<M>
-> {
-  default?: ComponentType<P>;
-  resource?: ((context: SourceContext) => Promise<R>) | Promise<R> | R;
-}
+import type { Resource } from '../api/Resource.js';
+import type { Handler } from '../api/Handler.js';
 
 export const wrapHandler = (
   resource: Resource,

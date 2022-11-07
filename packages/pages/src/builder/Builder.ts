@@ -12,7 +12,7 @@ import {
 } from '@grexie/builder/FileSystem.js';
 import { CacheStorage, Cache } from '@grexie/builder/Cache.js';
 import { BuildContext } from './BuildContext.js';
-import { Source } from '../api/Source.js';
+import { Source } from './Source.js';
 import _path from 'path';
 import { Volume } from 'memfs';
 import { ResourcesPlugin } from './plugins/resources-plugin.js';

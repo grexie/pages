@@ -1,4 +1,4 @@
-import type { Source } from '../../api/Source.js';
+import type { Source } from '../Source.js';
 import type { BuildContext } from '../BuildContext.js';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
@@ -51,7 +51,6 @@ class SourceCompiler {
       import.meta,
       '../../hooks/useResource.js'
     );
-    console.info(ResourceContext);
     const { Renderer } = await this.context.modules.require(
       import.meta,
       '../Renderer.js'
