@@ -5,10 +5,9 @@ import { withDocumentComponent } from '../components/Document.js';
 import {
   withDocument,
   withContext,
-  ResourceContext,
   withResourceContext,
 } from '../hooks/index.js';
-import type { Resource } from '../api/index.js';
+import { Resource, ResourceContext } from '../api/Resource.js';
 import type { BuildContext } from './BuildContext.js';
 import { withStyles, StylesContext } from '../hooks/useStyles.js';
 import { withScripts } from '../hooks/useScripts.js';
@@ -23,13 +22,13 @@ export class Renderer {
 
   async render<T extends WritableStream>(
     writable: T,
-    resourceContext: ResourceContext,
     resource: Resource,
     scripts: string[],
     ...composables: any[]
   ): Promise<T> {
     const styles = new StylesContext();
-    console.log(React.test);
+    const resourceContext = new ResourceContext();
+
     const component = compose(
       withLazy,
       withContext({ context: this.context }),

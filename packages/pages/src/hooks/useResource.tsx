@@ -5,59 +5,12 @@ import type {
   Resource,
   ResourceMetadata,
 } from '../api/Resource.js';
+import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
 import type { ModuleResource } from '../builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
 import { hash } from '../utils/hash.js';
 
 console.info('LOADING USERESOURCE.TSX');
-
-const ResourceContextSet = Symbol();
-
-export class ResourceContext {
-  readonly parent?: ResourceContext;
-  readonly #children: ResourceContext[] = [];
-  #resource?: Resource;
-
-  constructor(parent?: ResourceContext) {
-    this.parent = parent;
-    if (parent) {
-      parent.#children.push(this);
-    }
-  }
-
-  get root() {
-    let self: ResourceContext = this;
-    while (self.parent) {
-      self = self.parent;
-    }
-    return self;
-  }
-
-  get children() {
-    return this.#children.slice();
-  }
-
-  get resource() {
-    return this.#resource!;
-  }
-
-  get resources() {
-    const stack: ResourceContext[] = [this];
-    let el: ResourceContext | undefined;
-    const out: Resource[] = [];
-    while ((el = stack.shift())) {
-      if (el.resource) {
-        out.push(el.resource);
-      }
-      stack.push(...el.#children);
-    }
-    return out;
-  }
-
-  [ResourceContextSet](resource: Resource) {
-    this.#resource = resource;
-  }
-}
 
 export interface ResourceContextProviderProps {
   resourceContext: ResourceContext;

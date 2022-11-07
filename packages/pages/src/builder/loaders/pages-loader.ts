@@ -19,6 +19,8 @@ export default async function PagesLoader(
   const { context } = this.getOptions();
   const callback = this.async();
 
+  this.cacheable(true);
+
   // const resolver = createResolver();
   // context.modules.addBuild(this.resourcePath, resolver);
 

@@ -1,7 +1,6 @@
 import { ReactElement, startTransition } from 'react';
 import EventEmitter from 'events';
-import type { ResourceContext } from '../hooks/index.js';
-import type { Resource } from './Resource.js';
+import type { Resource, ResourceContext } from './Resource.js';
 import { setImmediate, clearImmediate } from 'timers';
 
 export interface DocumentOptions {

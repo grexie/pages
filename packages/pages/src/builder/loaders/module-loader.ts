@@ -21,6 +21,7 @@ export default async function ModuleLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
+  this.cacheable(true);
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
@@ -161,9 +162,16 @@ export default async function ModuleLoader(
     `;
 
     const hmrFooter = `
-      if (import.meta.webpackHot) {
-        import.meta.webpackHot.accept();
-        __pages_refresh_runtime.update();
+      if (typeof module === 'undefined') {
+        if (import.meta.webpackHot) {
+          import.meta.webpackHot.accept();
+          __pages_refresh_runtime.update();
+        }
+      } else {
+        if (module.hot) {
+          module.hot.accept();
+          __pages_refresh_runtime.update();
+        }
       }
       __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
       __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;

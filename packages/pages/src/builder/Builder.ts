@@ -95,6 +95,13 @@ export class Builder {
         .add(this.context.cacheDir, fs, true),
     };
 
+    this.#builder.fs.add(
+      this.context.cacheDir,
+      cacheStorage.persistent,
+      true,
+      'cache:persistent'
+    );
+
     const cache = new Cache({
       storage: cacheStorage,
       cacheDir: this.context.cacheDir,
@@ -399,6 +406,8 @@ export class Builder {
         modules: this.context.modulesDirs,
         fallback: {
           fs: false,
+          os: false,
+          assert: false,
           path: require.resolve('path-browserify'),
           timers: require.resolve('timers-browserify'),
           crypto: false,
@@ -406,6 +415,10 @@ export class Builder {
           tty: require.resolve('tty-browserify'),
         },
         fullySpecified: false,
+      },
+      cache: {
+        type: 'filesystem',
+        cacheDirectory: this.context.cacheDir,
       },
       resolveLoader: {
         extensions: ['.mjs', '.js', '.ts'],
@@ -461,10 +474,10 @@ export class Builder {
           import: '@grexie/pages/runtime/hmr.js',
           filename: '__webpack/react-refresh.js',
         },
-        '__webpack/client': {
+        '__webpack/hot': {
           import:
             'webpack-hot-middleware/client?reload=true&path=__webpack/hmr',
-          filename: '__webpack/client.js',
+          filename: '__webpack/hot.js',
         },
       });
 

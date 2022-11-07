@@ -2,8 +2,9 @@ import type { Source } from '../Source.js';
 import type { BuildContext } from '../BuildContext.js';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
-import path from 'path';
+import path, { resolve } from 'path';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
+import { rejects } from 'assert';
 
 const { RawSource } = webpack.sources;
 
@@ -50,18 +51,15 @@ class SourceCompiler {
       console.info('render', this.source.filename);
     }
 
-    // const modules = this.context.build.getModuleContext(compilation);
+    const modules = this.context.build.getModuleContext(compilation);
 
-    const results = await this.context.modules.requireMany(
-      import.meta,
-      'react',
-      '../../hooks/useResource.js',
-      '../Renderer.js',
-      '../../utils/stream.js',
-      this.source.filename
-    );
-
-    const resourceContext = new ResourceContext();
+    const [{ Renderer }, { WritableBuffer }, exports] =
+      await modules.requireMany(
+        import.meta,
+        '../Renderer.js',
+        '../../utils/stream.js',
+        this.source.filename
+      );
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendering', this.source.filename);
@@ -71,7 +69,6 @@ class SourceCompiler {
 
     const buffer = await renderer.render(
       new WritableBuffer(),
-      resourceContext,
       exports.resource,
       scripts,
       exports.default
@@ -108,53 +105,82 @@ class SourceCompiler {
       )
     );
 
-    compilation.hooks.processAssets.tapPromise(
-      { name, stage: Infinity },
-      async () => {
-        const files = new Set<string>();
+    const childCompiler = compilation.createChildCompiler(
+      'SourceCompiler',
+      {},
+      [
+        {
+          apply: compiler => {
+            compiler.hooks.make.tap('SourceCompiler', compilation => {
+              compilation.hooks.processAssets.tapPromise(
+                { name: 'SourceCompiler', stage: Infinity },
+                async () => {
+                  const files = new Set<string>();
 
-        let publicPath = compilation.outputOptions.publicPath ?? '/';
-        if (publicPath === 'auto') {
-          publicPath = '/';
-        }
+                  let publicPath = compilation.outputOptions.publicPath ?? '/';
+                  if (publicPath === 'auto') {
+                    publicPath = '/';
+                  }
 
-        const entrypoints = []; //[this.source.slug];
+                  let entrypoints: string[] = [this.source.slug];
 
-        if (process.env.WEBPACK_HOT) {
-          entrypoints.unshift('__webpack/react-refresh', '__webpack/client');
-        }
+                  if (process.env.WEBPACK_HOT) {
+                    entrypoints = [
+                      '__webpack/react-refresh',
+                      '__webpack/hot',
+                      ...entrypoints,
+                    ];
+                  }
 
-        entrypoints.forEach(name => {
-          const entrypoint = compilation.entrypoints.get(name)!;
+                  entrypoints.forEach(name => {
+                    const entrypoint =
+                      this.context.compilation.entrypoints.get(name);
 
-          entrypoint.chunks.forEach(chunk => {
-            chunk.files.forEach(file => {
-              const asset = compilation.getAsset(file);
-              if (!asset) {
-                return;
-              }
+                    entrypoint?.chunks.forEach(chunk => {
+                      chunk.files.forEach(file => {
+                        const asset = compilation.getAsset(file);
+                        if (!asset) {
+                          return;
+                        }
 
-              const assetMetaInformation = asset.info || {};
-              if (
-                assetMetaInformation.hotModuleReplacement ||
-                assetMetaInformation.development
-              ) {
-                return;
-              }
+                        const assetMetaInformation = asset.info || {};
+                        if (
+                          assetMetaInformation.hotModuleReplacement ||
+                          assetMetaInformation.development
+                        ) {
+                          return;
+                        }
 
-              files.add(`${publicPath}${file}`);
+                        files.add(`${publicPath}${file}`);
+                      });
+                    });
+                  });
+
+                  console.error('BEGIN PROCESS ASSETS');
+                  //this.context.modules.loader.reset();
+                  const buffer = await this.render(compilation, [...files]);
+
+                  compilation.emitAsset(
+                    path.join(this.source.slug, 'index.html'),
+                    new RawSource(buffer!)
+                  );
+                }
+              );
             });
-          });
-        });
+          },
+        },
+      ]
+    );
 
-        console.error('BEGIN PROCESS ASSETS');
-        const buffer = await this.render(compilation, [...files]);
+    await new Promise<void>((resolve, reject) =>
+      childCompiler.runAsChild(err => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-        compilation.emitAsset(
-          path.join(this.source.slug, 'index.html'),
-          new RawSource(buffer!)
-        );
-      }
+        resolve();
+      })
     );
   }
 }

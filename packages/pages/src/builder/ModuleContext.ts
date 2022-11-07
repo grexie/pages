@@ -36,7 +36,11 @@ export class ModuleContext {
   }
 
   getContextFromMeta(meta: ImportMeta) {
-    return path.dirname(new URL(meta.url).pathname);
+    return path.dirname(this.getFilenameFromMeta(meta));
+  }
+
+  getFilenameFromMeta(meta: ImportMeta) {
+    return new URL(meta.url).pathname;
   }
 
   async require(meta: NodeModule | ImportMeta, request: string): Promise<any> {
@@ -59,17 +63,31 @@ export class ModuleContext {
     ...requests: string[]
   ): Promise<any[]> {
     let context: string;
+    let filename: string;
 
     if ((meta as ImportMeta).url) {
       context = this.getContextFromMeta(meta as ImportMeta);
+      filename = this.getFilenameFromMeta(meta as ImportMeta);
     } else if ((meta as NodeModule).filename) {
       context = path.dirname((meta as NodeModule).filename);
+      filename = (meta as NodeModule).filename;
     } else {
       throw new Error('unknown meta object');
     }
 
-    const modules = await this.loader.loadMany(context, requests);
-    return modules.map(module => module.exports);
+    const module = await this.createModule(
+      context,
+      filename,
+      `
+      module.exports = [
+        ${requests
+          .map(request => `require(${JSON.stringify(request)})`)
+          .join(',\n')}
+      ];
+    `
+    );
+
+    return module.exports;
   }
 
   async requireModule(

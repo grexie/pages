@@ -13,6 +13,7 @@ export default async function YamlLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
+  this.cacheable(true);
 
   const documents = YAML.parseAllDocuments(content.toString());
   const document = documents[documents.length - 1];

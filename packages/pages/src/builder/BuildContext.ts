@@ -87,6 +87,7 @@ export class BuildContext extends Context {
       path.resolve(this.rootDir, 'node_modules'),
       ...pagesModules,
     ];
+    console.info(this.modulesDirs);
     this.outputDir = path.resolve(this.rootDir, 'build');
 
     this.registry = new Registry(this);
