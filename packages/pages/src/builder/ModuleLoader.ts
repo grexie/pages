@@ -203,7 +203,7 @@ export class ModuleLoader {
 
       const fs = new FileSystem()
         .add(filename, volume, false, 'ephemeral')
-        .add('/', this.context.build.builder.fs, 'main');
+        .add('/', this.context.build.builder.fs, false, 'main');
 
       const dependency = new webpack.dependencies.ModuleDependency(
         `./${path.basename(filename)}`

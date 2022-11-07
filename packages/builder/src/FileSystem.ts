@@ -137,7 +137,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     return this.#fileSystems
       .slice()
       .sort((a, b) => b.path.length - a.path.length)
-      .map(({ path, writable }) => ({ path, writable }));
+      .map(({ path, writable, name }) => ({ path, writable, name }));
   }
 
   add(
@@ -167,7 +167,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
   }
 
   find(filename: string, writable: boolean = false): FileSystemOptions[] {
-    let fileSystems = this.#fileSystems;
+    let fileSystems = this.#fileSystems.slice();
     filename = path.isAbsolute(filename) ? filename : path.resolve(filename);
 
     if (writable) {
@@ -177,13 +177,15 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     fileSystems = fileSystems.filter(({ path }) => filename.startsWith(path));
 
     fileSystems.sort((a, b) => b.path.length - a.path.length);
+
     if (/defaults.pages.*original/.test(filename)) {
       console.info(
         filename,
         fileSystems.map(({ path, name }) => `${path} ${name}`)
       );
     }
-    return fileSystems;
+
+    return fileSystems.map(obj => ({ ...obj }));
   }
 
   async #call<E, P extends any[], T>(
@@ -200,7 +202,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
 
     const filename = args[0] as string;
     fileSystems = fileSystems ?? this.find(filename, writable);
-
+    console.info(fileSystems);
     let err = undefined as unknown as E;
     let value = [] as unknown as P;
 
@@ -292,7 +294,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     for (const fileSystem of fileSystems) {
       try {
         err = undefined as any;
-        value = (fileSystem as any)[name](...args);
+        value = (fileSystem.fs as any)[name](...args);
 
         break;
       } catch (_err) {
@@ -374,13 +376,12 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let out: string[] = [];
     const fileSystems = this.#fileSystems
       .slice()
-      .sort((a, b) => b.path.length - a.path.length)
-      .map(({ fs }) => fs);
+      .sort((a, b) => b.path.length - a.path.length);
 
     const next = async (): Promise<string[]> => {
-      const fs = fileSystems.shift();
+      const fileSystem = fileSystems.shift();
 
-      if (!fs) {
+      if (!fileSystem) {
         return out;
       }
 
@@ -394,7 +395,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
             dirents.map((file: any) =>
               file.name ? file.name : file.toString()
             ),
-          [fs]
+          [fileSystem]
         );
         out.push(...files);
         return next();
@@ -418,16 +419,14 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let out: string[] = [];
     const fileSystems = this.#fileSystems
       .slice()
-      .sort((a, b) => b.path.length - a.path.length)
-      .map(({ fs }) => fs);
-
-    for (const fs of fileSystems) {
+      .sort((a, b) => b.path.length - a.path.length);
+    for (const fileSystem of fileSystems) {
       try {
         const files = this.#callSync(
           'readdirSync',
           false,
           [dirname],
-          [fs]
+          [fileSystem]
         ) as any;
         out.push(
           ...files.map((file: any) => (file.name ? file.name : file.toString()))

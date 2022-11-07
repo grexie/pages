@@ -48,7 +48,9 @@ export class Builder {
   }
 
   #createFileSystem(fs: WritableFileSystem, fsOptions: FileSystemOptions[]) {
-    this.defaultFiles.mkdirSync(this.context.rootDir, { recursive: true });
+    this.defaultFiles.mkdirSync(this.context.rootDir, {
+      recursive: true,
+    });
     this.defaultFiles.writeFileSync(
       _path.resolve(this.context.rootDir, 'package.json'),
       '{}'
