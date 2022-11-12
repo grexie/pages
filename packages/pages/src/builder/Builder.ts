@@ -371,6 +371,8 @@ export class Builder {
         alias: {
           '@grexie/pages': this.context.pagesDir,
           glob: false,
+          'create-hash/md5': require.resolve('create-hash/md5'),
+          'create-hash': require.resolve('create-hash/browser'),
         },
         conditionNames: ['deno', 'default', 'require', 'import'],
         mainFields: ['module', 'main'],
@@ -382,7 +384,7 @@ export class Builder {
           assert: false,
           path: require.resolve('path-browserify'),
           timers: require.resolve('timers-browserify'),
-          crypto: false,
+          crypto: require.resolve('crypto-browserify'),
           'stream/web': false,
           stream: require.resolve('stream-browserify'),
           tty: require.resolve('tty-browserify'),

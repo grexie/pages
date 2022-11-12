@@ -71,7 +71,7 @@ export class Server {
         path: '/__webpack/hmr',
       })
     );
-    app.use(handler.handle);
+    // app.use(handler.handle);
 
     const server = http.createServer(app);
     server.listen(this.context.port, () => {
