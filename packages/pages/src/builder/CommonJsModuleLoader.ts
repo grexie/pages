@@ -41,7 +41,7 @@ export class CommonJsModuleLoader extends ModuleLoader {
       path.dirname(module.filename)
     );
 
-    exports = scriptModule.exports;
+    const exports = scriptModule.exports;
 
     const vmModule = new vm.SyntheticModule(
       [
@@ -70,6 +70,6 @@ export class CommonJsModuleLoader extends ModuleLoader {
     await vmModule.link(() => {});
     await vmModule.evaluate();
 
-    return { ...module, vmModule };
+    return { ...module, vmModule, exports };
   }
 }

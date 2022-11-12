@@ -14,6 +14,7 @@ import { Volume } from 'memfs';
 import { ModuleDependencies } from './ModuleDependencies.js';
 import { createRequire } from 'module';
 import { Compiler, Compilation } from 'webpack';
+import { ModuleResolverConfig } from './ModuleResolver.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -23,7 +24,7 @@ export interface BuildOptions extends ContextOptions {
   fs: WritableFileSystem;
   defaultFiles?: WritableFileSystem;
   fsOptions?: FileSystemOptions[];
-  // resolver?: ModuleResolverOptions;
+  resolver?: ModuleResolverConfig;
 }
 
 const defaultOptions = () => ({
@@ -55,6 +56,7 @@ export class BuildContext extends Context {
   readonly dependencies: ModuleDependencies;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
+  readonly resolverConfig: Required<ModuleResolverConfig>;
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
     const {
@@ -97,68 +99,6 @@ export class BuildContext extends Context {
       fs: this.fs,
     });
     this.renderer = new Renderer(this);
-    // this.modules = new ModuleContext({
-    //   context: this,
-    //   resolver: {
-    //     extensions: Array.from(
-    //       new Set([
-    //         ...(resolver.extensions ?? []),
-    //         '.yml',
-    //         '.yaml',
-    //         '.md',
-    //         '.js',
-    //         '.cjs',
-    //         '.mjs',
-    //         '.jsx',
-    //         '.ts',
-    //         '.tsx',
-    //       ])
-    //     ),
-    //     forceExtensions: Array.from(
-    //       new Set([
-    //         ...(resolver.forceExtensions ?? []),
-    //         '.md',
-    //         '.pages.yml',
-    //         '.pages.yaml',
-    //         '.pages.json',
-    //         '.pages.js',
-    //         '.pages.ts',
-    //         '.jsx',
-    //         '.ts',
-    //         '.tsx',
-    //         '.scss',
-    //         '.css',
-    //         '.jpeg',
-    //         '.jpg',
-    //         '.png',
-    //         '.webp',
-    //         '.gif',
-    //         '.svg',
-    //       ])
-    //     ),
-    //     esm: [
-    //       ...new Set([
-    //         ...(resolver.esm ?? []),
-    //         '.scss',
-    //         '.css',
-    //         '.jpeg',
-    //         '.jpg',
-    //         '.png',
-    //         '.webp',
-    //         '.gif',
-    //         '.svg',
-    //         '.pages.yml',
-    //         '.pages.yaml',
-    //         '.md',
-    //         '.jsx',
-    //         '.ts',
-    //         '.tsx',
-    //         '.mjs',
-    //       ]),
-    //     ],
-    //     forceCompile: Array.from(new Set([...(resolver.forceCompile ?? [])])),
-    //   },
-    // });
 
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
@@ -170,6 +110,67 @@ export class BuildContext extends Context {
     });
 
     this.config = new ConfigContext({ context: this });
+    this.resolverConfig = {
+      extensions: Array.from(
+        new Set([
+          ...(resolver.extensions ?? []),
+          '.yml',
+          '.yaml',
+          '.md',
+          '.js',
+          '.cjs',
+          '.mjs',
+          '.jsx',
+          '.ts',
+          '.tsx',
+        ])
+      ),
+      forceCompileExtensions: Array.from(
+        new Set([
+          ...(resolver.forceCompileExtensions ?? []),
+          '.md',
+          '.pages.yml',
+          '.pages.yaml',
+          '.pages.json',
+          '.pages.js',
+          '.pages.ts',
+          '.jsx',
+          '.ts',
+          '.tsx',
+          '.scss',
+          '.css',
+          '.jpeg',
+          '.jpg',
+          '.png',
+          '.webp',
+          '.gif',
+          '.svg',
+        ])
+      ),
+      esmExtensions: [
+        ...new Set([
+          ...(resolver.esmExtensions ?? []),
+          '.scss',
+          '.css',
+          '.jpeg',
+          '.jpg',
+          '.png',
+          '.webp',
+          '.gif',
+          '.svg',
+          '.pages.yml',
+          '.pages.yaml',
+          '.md',
+          '.jsx',
+          '.ts',
+          '.tsx',
+          '.mjs',
+        ]),
+      ],
+      forceCompileRoots: Array.from(
+        new Set([...(resolver.forceCompileRoots ?? [])])
+      ),
+    };
   }
 
   get defaultFiles() {
@@ -195,6 +196,7 @@ export class BuildContext extends Context {
         new ModuleContext({
           context: this,
           compilation,
+          ...this.resolverConfig,
         })
       );
     }

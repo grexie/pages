@@ -1,7 +1,5 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
-import { createResolver } from '../../utils/resolvable.js';
-import { SourceNode } from 'source-map';
 import path from 'path';
 
 interface PagesLoaderOptions {
@@ -19,7 +17,7 @@ export default async function PagesLoader(
   const { context } = this.getOptions();
   const callback = this.async();
 
-  this.cacheable(true);
+  this.cacheable();
 
   // const resolver = createResolver();
   // context.modules.addBuild(this.resourcePath, resolver);

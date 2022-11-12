@@ -1,6 +1,6 @@
 import type { LoaderContext } from 'webpack';
 import type { BuildContext } from '../BuildContext.js';
-import type { InstantiatedModule } from '../ModuleLoader.js';
+import { InstantiatedModule } from '../ModuleLoader.js';
 import type { Handler } from '../../api/Handler.js';
 import type { Resource } from '../../api/Resource.js';
 import _path from 'path';
@@ -21,7 +21,7 @@ export default async function ModuleLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
-  this.cacheable(true);
+  this.cacheable();
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
@@ -66,7 +66,7 @@ export default async function ModuleLoader(
         handlerModule = await modules.createModule(
           _path.dirname(this.resourcePath),
           this.resourcePath,
-          content.toString()
+          content.toString(),
         );
       }
       return handlerModule;
@@ -74,6 +74,7 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
+    this.addDependency(this.resourcePath);
     this.addDependency(
       options.handler ? handlerModule.filename : this.resourcePath
     );

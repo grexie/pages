@@ -13,13 +13,16 @@ export interface ModuleReference {
   readonly loader: ModuleLoaderType;
 }
 
-export interface ModuleResolverOptions {
-  context: BuildContext;
-  compilation: Compilation;
+export interface ModuleResolverConfig {
   extensions?: string[];
   forceCompileRoots?: string[];
   forceCompileExtensions?: string[];
   esmExtensions?: string[];
+}
+
+export interface ModuleResolverOptions extends ModuleResolverConfig {
+  context: BuildContext;
+  compilation: Compilation;
 }
 
 interface WebpackResolveInfo {
@@ -129,7 +132,9 @@ export class ModuleResolver {
       descriptionFileData?: any;
     } = {}
   ) {
-    if (loader !== ModuleLoaderType.esm && descriptionFileData) {
+    if (builtin) {
+      loader = ModuleLoaderType.node;
+    } else if (loader !== ModuleLoaderType.esm && descriptionFileData) {
       if (descriptionFileData.type === 'module' || descriptionFileData.module) {
         loader = ModuleLoaderType.esm;
       }

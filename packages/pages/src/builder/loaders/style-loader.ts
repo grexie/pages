@@ -1,7 +1,6 @@
 import { LoaderContext } from 'webpack';
 import { BuildContext } from '../BuildContext.js';
 import { createHash } from 'crypto';
-import { SourceNode } from 'source-map';
 import { offsetLines } from '../../utils/source-maps.js';
 import { createResolver } from '../../utils/resolvable.js';
 import path from 'path';
@@ -15,7 +14,7 @@ export default async function StyleLoader(
   content: Buffer,
   inputSourceMap: any
 ) {
-  this.cacheable(true);
+  this.cacheable();
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('style-loader', this.resourcePath);
@@ -33,7 +32,8 @@ export default async function StyleLoader(
     const stylesModule = await modules.createModule(
       path.dirname(this.resourcePath),
       this.resourcePath,
-      content.toString()
+      `const module = ${JSON.stringify({ id: this.resourcePath })};\n` +
+        content.toString()
     );
 
     const styles = stylesModule.exports.default;

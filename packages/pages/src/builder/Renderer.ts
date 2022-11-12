@@ -1,4 +1,4 @@
-import React, { createElement } from 'react';
+import { createElement } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { compose } from '@grexie/compose';
 import { withDocumentComponent } from '../components/Document.js';

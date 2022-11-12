@@ -51,54 +51,38 @@ class SourceCompiler {
       console.info('render', this.source.filename);
     }
 
-    const compiler = compilation.createChildCompiler('SourceCompiler');
+    const { modules } = this.context;
 
-    return await new Promise<Buffer>((resolve, reject) => {
-      compiler.compile(async (err, compilation) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+    const [{ Renderer }, { WritableBuffer }, exports] =
+      await modules.requireMany(
+        import.meta,
+        '../Renderer.js',
+        '../../utils/stream.js',
+        this.source.filename
+      );
 
-        try {
-          const modules = this.context.build.getModuleContext(compilation!);
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('render:rendering', this.source.filename);
+    }
 
-          const [{ Renderer }, { WritableBuffer }, exports] =
-            await modules.requireMany(
-              import.meta,
-              '../Renderer.js',
-              '../../utils/stream.js',
-              this.source.filename
-            );
+    const renderer = new Renderer(this.context.build);
 
-          if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-            console.info('render:rendering', this.source.filename);
-          }
+    const buffer = await renderer.render(
+      new WritableBuffer(),
+      exports.resource,
+      scripts,
+      exports.default
+    );
 
-          const renderer = new Renderer(this.context.build);
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('render:rendered', this.source.filename);
+    }
 
-          const buffer = await renderer.render(
-            new WritableBuffer(),
-            exports.resource,
-            scripts,
-            exports.default
-          );
-
-          if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-            console.info('render:rendered', this.source.filename);
-          }
-
-          const output = Buffer.from(
-            html.prettyPrint(buffer.toString(), {
-              indent_size: 2,
-            })
-          );
-          resolve(output);
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
+    return Buffer.from(
+      html.prettyPrint(buffer.toString(), {
+        indent_size: 2,
+      })
+    );
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {

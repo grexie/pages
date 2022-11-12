@@ -36,7 +36,7 @@ export default async function ImageLoader(
   }
 
   const { context } = this.getOptions();
-  this.cacheable(true);
+  this.cacheable();
 
   try {
     const basename = path.basename(this.resourcePath).replace(/\.\w+$/i, '');
