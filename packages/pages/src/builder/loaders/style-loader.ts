@@ -59,6 +59,8 @@ export default async function StyleLoader(
         offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length);
     }
 
+    modules.evict(this.resourcePath);
+
     callback(null, chunk, map as any);
   } catch (err) {
     callback(err as any);
@@ -67,8 +69,6 @@ export default async function StyleLoader(
     // await context.modules.evict(factory, this.resourcePath, {
     //   recompile: true,
     // });
-    const modules = context.getModuleContext(this._compilation!);
-    modules.evict(this.resourcePath);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('style-loader:complete', this.resourcePath);

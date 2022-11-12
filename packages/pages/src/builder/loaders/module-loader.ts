@@ -227,6 +227,8 @@ export default async function ModuleLoader(
         .filter(({ builtin }) => !builtin)
         .forEach(({ filename }) => this.addDependency(filename));
 
+      modules.evict(this.resourcePath);
+
       return callback(
         null,
         header + compiled!.code + footer,
@@ -297,6 +299,7 @@ export default async function ModuleLoader(
       ${hmrFooter}
     `;
 
+      modules.evict(this.resourcePath);
       return callback(
         null,
         header + compiled!.code! + footer,
@@ -312,9 +315,6 @@ export default async function ModuleLoader(
     console.error(err);
     return callback(err as any);
   } finally {
-    const modules = context.getModuleContext(this._compilation!);
-    modules.evict(this.resourcePath);
-
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('module-loader:complete', this.resourcePath);
     }

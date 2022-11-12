@@ -55,6 +55,8 @@ export default async function PagesLoader(
     //   recompile: true,
     // });
 
+    modules.evict(this.resourcePath);
+
     callback(
       null,
       `
@@ -74,9 +76,6 @@ export default async function PagesLoader(
     // resolver.reject(err);
     callback(err as any);
   } finally {
-    const modules = context.getModuleContext(this._compilation!);
-    modules.evict(this.resourcePath);
-
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('pages-loader:complete', this.resourcePath);
     }
