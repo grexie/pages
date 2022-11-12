@@ -158,7 +158,10 @@ class SourceCompiler {
         try {
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
-            new RawSource(buffer!)
+            new RawSource(buffer!),
+            {
+              sourceFilename: this.source.filename,
+            }
           );
         } catch (err) {
           console.error(err);

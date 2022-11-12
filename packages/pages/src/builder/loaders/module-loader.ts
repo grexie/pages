@@ -354,26 +354,6 @@ const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
 }) => ({
   visitor: {
-    CallExpression: (path: any) => {
-      if (
-        t.isIdentifier(path.node.callee, {
-          name: 'require',
-        })
-      ) {
-        const id = path.node.arguments[0];
-
-        if (t.isStringLiteral(id)) {
-          requests.push(id.value);
-        }
-      }
-    },
-    ImportDeclaration: (path: any) => {
-      requests.push(path.node.source.value);
-    },
-    ExportAllDeclaration: (path: any) => {
-      requests.push(path.node.source.value);
-    },
-    ExportNamedDeclaration: (path: any) => {},
     ExportDefaultDeclaration(path: any) {
       path.replaceWith(
         t.variableDeclaration('const', [
