@@ -74,6 +74,10 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
+    // handlerModule.webpackModule.dependencies.forEach(dependency =>
+    //   this.addDependency(dependency.getResourceIdentifier()!)
+    // );
+
     console.info('created handler module');
 
     const configModule = await context.config.create(this._compilation!, path);

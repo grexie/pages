@@ -50,34 +50,49 @@ class SourceCompiler {
       console.info('render', this.source.filename);
     }
 
-    const modules = this.context.build.getModuleContext(compilation);
+    const compiler = compilation.createChildCompiler('SourceCompiler');
 
-    const [{ Renderer }, { WritableBuffer }, exports] =
-      await modules.requireMany(
-        import.meta,
-        '../Renderer.js',
-        '../../utils/stream.js',
-        this.source.filename
-      );
+    return await new Promise<Buffer>((resolve, reject) => {
+      compiler.compile(async (err, compilation) => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('render:rendering', this.source.filename);
-    }
+        try {
+          const modules = this.context.build.getModuleContext(compilation!);
 
-    const renderer = new Renderer(this.context.build);
+          const [{ Renderer }, { WritableBuffer }, exports] =
+            await modules.requireMany(
+              import.meta,
+              '../Renderer.js',
+              '../../utils/stream.js',
+              this.source.filename
+            );
 
-    const buffer = await renderer.render(
-      new WritableBuffer(),
-      exports.resource,
-      scripts,
-      exports.default
-    );
+          if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+            console.info('render:rendering', this.source.filename);
+          }
 
-    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('render:rendered', this.source.filename);
-    }
+          const renderer = new Renderer(this.context.build);
 
-    return Buffer.from(buffer.toString());
+          const buffer = await renderer.render(
+            new WritableBuffer(),
+            exports.resource,
+            scripts,
+            exports.default
+          );
+
+          if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+            console.info('render:rendered', this.source.filename);
+          }
+
+          resolve(Buffer.from(buffer.toString()));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
@@ -104,84 +119,61 @@ class SourceCompiler {
       )
     );
 
-    const childCompiler = compilation.createChildCompiler(
-      'SourceCompiler',
-      {},
-      [
-        {
-          apply: compiler => {
-            compiler.hooks.make.tap('SourceCompiler', compilation => {
-              compilation.hooks.processAssets.tapPromise(
-                { name: 'SourceCompiler', stage: Infinity },
-                async () => {
-                  const files = new Set<string>();
+    compilation.hooks.processAssets.tapPromise(
+      { name, stage: Infinity },
+      async assets => {
+        const files = new Set<string>();
 
-                  let publicPath = compilation.outputOptions.publicPath ?? '/';
-                  if (publicPath === 'auto') {
-                    publicPath = '/';
-                  }
-
-                  let entrypoints: string[] = [this.source.slug];
-
-                  if (process.env.WEBPACK_HOT) {
-                    entrypoints = [
-                      '__webpack/react-refresh',
-                      '__webpack/hot',
-                      ...entrypoints,
-                    ];
-                  }
-
-                  entrypoints.forEach(name => {
-                    const entrypoint =
-                      this.context.compilation.entrypoints.get(name);
-
-                    entrypoint?.chunks.forEach(chunk => {
-                      chunk.files.forEach(file => {
-                        const asset = compilation.getAsset(file);
-                        if (!asset) {
-                          return;
-                        }
-
-                        const assetMetaInformation = asset.info || {};
-                        if (
-                          assetMetaInformation.hotModuleReplacement ||
-                          assetMetaInformation.development
-                        ) {
-                          return;
-                        }
-
-                        files.add(`${publicPath}${file}`);
-                      });
-                    });
-                  });
-
-                  const buffer = await this.render(compilation, [...files]);
-
-                  try {
-                    compilation.emitAsset(
-                      path.join(this.source.slug, 'index.html'),
-                      new RawSource(buffer!)
-                    );
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }
-              );
-            });
-          },
-        },
-      ]
-    );
-
-    await new Promise<void>((resolve, reject) =>
-      childCompiler.runAsChild(err => {
-        if (err) {
-          reject(err);
-          return;
+        let publicPath = compilation.outputOptions.publicPath ?? '/';
+        if (publicPath === 'auto') {
+          publicPath = '/';
         }
 
-        resolve();
-      })
+        let entrypoints: string[] = [this.source.slug];
+
+        if (process.env.WEBPACK_HOT) {
+          entrypoints = [
+            '__webpack/react-refresh',
+            '__webpack/hot',
+            ...entrypoints,
+          ];
+        }
+
+        entrypoints.forEach(name => {
+          const entrypoint = compilation.entrypoints.get(name);
+
+          entrypoint?.chunks.forEach(chunk => {
+            chunk.files.forEach(file => {
+              const asset = compilation.getAsset(file);
+              if (!asset) {
+                return;
+              }
+
+              const assetMetaInformation = asset.info || {};
+              if (
+                assetMetaInformation.hotModuleReplacement ||
+                assetMetaInformation.development
+              ) {
+                return;
+              }
+
+              files.add(`${publicPath}${file}`);
+            });
+          });
+        });
+
+        console.info(files);
+        const buffer = await this.render(compilation, [...files]);
+
+        try {
+          compilation.emitAsset(
+            path.join(this.source.slug, 'index.html'),
+            new RawSource(buffer!)
+          );
+        } catch (err) {
+          console.error(err);
+        }
+      }
     );
   }
 }

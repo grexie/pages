@@ -13,7 +13,7 @@ import { ConfigContext } from './ConfigContext.js';
 import { Volume } from 'memfs';
 import { ModuleDependencies } from './ModuleDependencies.js';
 import { createRequire } from 'module';
-import { Compilation } from 'webpack';
+import { Compiler, Compilation } from 'webpack';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -54,7 +54,7 @@ export class BuildContext extends Context {
   readonly config: ConfigContext;
   readonly dependencies: ModuleDependencies;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
-  readonly #moduleContextTable = new WeakMap<Compilation, ModuleContext>();
+  readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
     const {
@@ -189,15 +189,15 @@ export class BuildContext extends Context {
   }
 
   getModuleContext(compilation: Compilation) {
-    if (!this.#moduleContextTable.has(compilation)) {
+    if (!this.#moduleContextTable.has(compilation.compiler.root)) {
       this.#moduleContextTable.set(
-        compilation,
+        compilation.compiler.root,
         new ModuleContext({
           context: this,
           compilation,
         })
       );
     }
-    return this.#moduleContextTable.get(compilation)!;
+    return this.#moduleContextTable.get(compilation.compiler.root)!;
   }
 }

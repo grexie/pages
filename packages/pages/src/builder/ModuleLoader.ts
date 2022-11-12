@@ -70,8 +70,8 @@ export class ModuleLoader {
     for (const k in this.modules) {
       delete this.modules[k];
     }
-    this.compilation.modules.clear();
-    this.compilation.moduleGraph = new webpack.ModuleGraph();
+    // this.compilation.modules.clear();
+    // this.compilation.moduleGraph = new webpack.ModuleGraph();
   }
 
   async #build(
@@ -152,118 +152,6 @@ export class ModuleLoader {
     };
   }
 
-  async #buildMany(
-    filenames: string[],
-    webpackModules: webpack.Module[],
-    dependencies: webpack.Dependency[]
-  ): Promise<InstantiatedModule[]> {
-    const contexts = webpackModules.map(
-      webpackModule => webpackModule.context!
-    );
-
-    const builtModules = await Promise.all(
-      webpackModules.map(
-        (webpackModule, index) =>
-          new Promise<webpack.Module>((resolve, reject) => {
-            try {
-              this.compilation.addModule(webpackModule, (err, result) => {
-                if (err) {
-                  reject(err);
-                  return;
-                }
-
-                try {
-                  this.compilation.buildModule(result!, err => {
-                    if (err) {
-                      reject(err);
-                      return;
-                    }
-
-                    try {
-                      this.compilation.processModuleDependencies(
-                        result!,
-                        err => {
-                          if (err) {
-                            reject(err);
-                            return;
-                          }
-                          resolve(result!);
-                        }
-                      );
-                    } catch (err) {
-                      reject(err);
-                    }
-                  });
-                } catch (err) {
-                  reject(err);
-                }
-              });
-            } catch (err) {
-              reject(err);
-            }
-          })
-      )
-    );
-
-    const results = await Promise.all(
-      builtModules.map(
-        (result, index) =>
-          new Promise<any>((resolve, reject) => {
-            try {
-              this.compilation.executeModule(
-                result,
-                {
-                  entryOptions: {
-                    publicPath: '/',
-                  },
-                },
-                (err, executeResult) => {
-                  if (err) {
-                    reject(err);
-                    return;
-                  }
-
-                  resolve({
-                    webpackModule: result!,
-                    ...executeResult,
-                  });
-                  return;
-                }
-              );
-            } catch (err) {
-              reject(err);
-            }
-          })
-      )
-    );
-
-    console.info(results);
-
-    const errors = [];
-    for (const { webpackModule } of results) {
-      if (webpackModule && webpackModule.getNumberOfErrors()) {
-        errors.push(...(webpackModule.getErrors() as any));
-      }
-    }
-
-    if (errors.length) {
-      throw errors;
-    }
-
-    const sources = results.map(({ webpackModule }) =>
-      webpackModule.originalSource()!.buffer().toString()
-    );
-
-    return dependencies.map((_, index) => ({
-      context: contexts[index],
-      filename: filenames[index],
-      source: sources[index],
-      references: [],
-      webpackModule: results[index].webpackModule,
-      exports: results[index].exports,
-    }));
-  }
-
   /**
    * Loads a module from the filesystem
    * @param filename
@@ -310,82 +198,6 @@ export class ModuleLoader {
     } finally {
       return resolver;
     }
-  }
-
-  /**
-   * Loads a module from the filesystem
-   * @param filename
-   */
-  async loadMany(
-    context: string,
-    requests: string[]
-  ): Promise<InstantiatedModule[]> {
-    const references = await Promise.all(
-      requests.map(request => this.resolver.resolve(context, request))
-    );
-
-    const resolvers = requests.map(() => createResolver<InstantiatedModule>());
-
-    const modules = references.map((reference, index) => {
-      if (this.modules[reference.filename]) {
-        resolvers[index].resolve(this.modules[reference.filename]!);
-        return this.modules[reference.filename]!;
-      } else {
-        this.modules[reference.filename] = resolvers[index];
-        return null;
-      }
-    });
-
-    const dependencies = requests.map((request, index) =>
-      modules[index] ? null : new webpack.dependencies.ModuleDependency(request)
-    );
-
-    if (dependencies.reduce((a, b) => a || !!b, false)) {
-      const webpackModules = await Promise.all(
-        dependencies
-          .filter(x => !!x)
-          .map(
-            dependency =>
-              new Promise<webpack.Module>((resolve, reject) =>
-                this.compilation.params.normalModuleFactory.create(
-                  {
-                    context,
-                    contextInfo: {
-                      issuer: 'pages',
-                      compiler: 'javascript/auto',
-                    },
-                    dependencies: [dependency!],
-                  },
-                  (err, result) => {
-                    if (err) {
-                      reject(err);
-                      return;
-                    }
-
-                    resolve(result!.module!);
-                  }
-                )
-              )
-          )
-      );
-
-      const builtModules = await this.#buildMany(
-        references
-          .filter((_, i) => !!dependencies[i])
-          .map(reference => reference.filename),
-        webpackModules,
-        dependencies.filter(x => !!x) as webpack.Dependency[]
-      );
-
-      for (const module of builtModules) {
-        const index = references.findIndex(
-          ({ filename }) => module.filename === filename
-        );
-        resolvers[index].resolve(module);
-      }
-    }
-
-    return Promise.all(resolvers);
   }
 
   /**
