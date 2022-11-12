@@ -92,7 +92,6 @@ export const useStyles = () => {
 export const Styles: FC<{}> = () => {
   const styles = useStyles();
 
-  console.info('rendering styles');
   return (
     <Head>
       {[...styles].map(({ hash, css }) => (

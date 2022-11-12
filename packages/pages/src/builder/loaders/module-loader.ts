@@ -74,11 +74,9 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
-    // handlerModule.webpackModule.dependencies.forEach(dependency =>
-    //   this.addDependency(dependency.getResourceIdentifier()!)
-    // );
-
-    console.info('created handler module');
+    this.addDependency(
+      options.handler ? handlerModule.filename : this.resourcePath
+    );
 
     const configModule = await context.config.create(this._compilation!, path);
     configModule.ancestors.forEach(({ module }) => {
@@ -167,15 +165,9 @@ export default async function ModuleLoader(
 
     const hmrFooter = `
       if (typeof module === 'undefined') {
-        if (import.meta.webpackHot) {
-          import.meta.webpackHot.accept();
-          __pages_refresh_runtime.update();
-        }
+        __pages_refresh_runtime.update(import.meta.webpackHot);
       } else {
-        if (module.hot) {
-          module.hot.accept();
-          __pages_refresh_runtime.update();
-        }
+          __pages_refresh_runtime.update(module.hot);
       }
       __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
       __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
@@ -198,7 +190,7 @@ export default async function ModuleLoader(
         import __pages_handler_component from ${JSON.stringify(
           options.handler
         )};
-        ${hmrHeader}
+        ${this.hot ? hmrHeader : ''}
       `;
 
       const footer = `
@@ -214,7 +206,7 @@ export default async function ModuleLoader(
 
         export default __pages_handler;
 
-        ${hmrFooter}
+        ${this.hot ? hmrFooter : ''}
       `;
 
       const compiled = await transformAsync(serializedResource.code, {

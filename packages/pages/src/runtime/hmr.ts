@@ -5,11 +5,14 @@ export const createSignatureFunctionForTransform =
 export const register = runtime.register;
 
 let timeout: NodeJS.Timer;
-export const update = () => {
-  clearTimeout(timeout);
-  timeout = setTimeout(() => {
-    runtime.performReactRefresh();
-  }, 30);
+export const update = (hot: any) => {
+  if (hot) {
+    hot.accept();
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      runtime.performReactRefresh();
+    }, 30);
+  }
 };
 
 export const attach = (() => {

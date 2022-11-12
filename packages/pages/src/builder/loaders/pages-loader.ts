@@ -40,8 +40,6 @@ export default async function PagesLoader(
       content.toString()
     );
 
-    console.info('pages-loader', 'config module created', this.resourcePath);
-
     let configExports;
     if (typeof configModule.exports.default === 'function') {
       configExports = configModule.exports.default();

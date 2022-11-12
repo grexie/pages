@@ -75,6 +75,7 @@ export class ModuleLoader {
   }
 
   async #build(
+    compilation: webpack.Compilation,
     filename: string,
     webpackModule: webpack.Module,
     dependency: webpack.Dependency
@@ -83,27 +84,25 @@ export class ModuleLoader {
 
     const executeResult = await new Promise<any>((resolve, reject) => {
       try {
-        this.compilation.addModule(webpackModule, (err, result) => {
+        compilation.addModule(webpackModule, (err, result) => {
           if (err) {
             reject(err);
             return;
           }
 
-          this.compilation.buildModule(result!, err => {
+          compilation.buildModule(result!, err => {
             if (err) {
               reject(err);
               return;
             }
 
-            // resolve(result!);
-
-            this.compilation.processModuleDependencies(result!, err => {
+            compilation.processModuleDependencies(result!, err => {
               if (err) {
                 reject(err);
                 return;
               }
 
-              this.compilation.executeModule(
+              compilation.executeModule(
                 result!,
                 {
                   entryOptions: {
@@ -159,45 +158,52 @@ export class ModuleLoader {
   async load(context: string, request: string): Promise<InstantiatedModule> {
     const reference = await this.resolver.resolve(context, request);
 
-    if (this.modules[reference.filename]) {
-      return this.modules[reference.filename]!;
-    }
+    const compiler = this.compilation.createChildCompiler('ModuleLoader');
 
-    const resolver = createResolver<InstantiatedModule>();
-    this.modules[reference.filename] = resolver;
+    return new Promise<InstantiatedModule>((resolve, reject) => {
+      compiler.compile(async (err, compilation) => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-    try {
-      const dependency = new webpack.dependencies.ModuleDependency(request);
-      const webpackModule = await new Promise<webpack.Module>(
-        (resolve, reject) =>
-          this.compilation.params.normalModuleFactory.create(
-            {
-              context,
-              contextInfo: {
-                issuer: 'pages',
-                compiler: 'javascript/auto',
-              },
-              dependencies: [dependency],
-            },
-            (err, result) => {
-              if (err) {
-                reject(err);
-                return;
-              }
+        try {
+          const dependency = new webpack.dependencies.ModuleDependency(request);
+          const webpackModule = await new Promise<webpack.Module>(
+            (resolve, reject) =>
+              this.compilation.params.normalModuleFactory.create(
+                {
+                  context,
+                  contextInfo: {
+                    issuer: 'pages',
+                    compiler: 'javascript/auto',
+                  },
+                  dependencies: [dependency],
+                },
+                (err, result) => {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
 
-              resolve(result!.module!);
-            }
-          )
-      );
+                  resolve(result!.module!);
+                }
+              )
+          );
 
-      resolver.resolve(
-        this.#build(reference.filename, webpackModule, dependency)
-      );
-    } catch (err) {
-      resolver.reject(err);
-    } finally {
-      return resolver;
-    }
+          resolve(
+            this.#build(
+              compilation!,
+              reference.filename,
+              webpackModule,
+              dependency
+            )
+          );
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
   }
 
   /**
@@ -211,68 +217,72 @@ export class ModuleLoader {
   ): Promise<InstantiatedModule> {
     filename = filename + '$' + ++this.#nextId;
 
-    if (this.modules[filename]) {
-      return this.modules[filename]!;
-    }
+    const compiler = this.compilation.createChildCompiler('ModuleLoader');
 
-    const resolver = createResolver<InstantiatedModule>();
-    this.modules[filename] = resolver;
-
-    try {
-      const volume = new Volume();
-      const writeFile = promisify(volume, volume.writeFile);
-      const mkdir = promisify(volume, volume.mkdir);
-      await mkdir(path.dirname(filename), { recursive: true });
-      await writeFile(filename, source);
-
-      this.context.build.builder.buildFiles.add(
-        filename,
-        volume,
-        false,
-        filename
-      );
-
-      const dependency = new webpack.dependencies.ModuleDependency(
-        `./${path.basename(filename)}`
-      );
-      const webpackModule = await new Promise<webpack.NormalModule>(
-        (resolve, reject) => {
-          try {
-            this.compilation.params.normalModuleFactory.create(
-              {
-                context: path.dirname(filename),
-                contextInfo: {
-                  issuer: 'pages',
-                  compiler: 'javascript/auto',
-                },
-                dependencies: [dependency],
-              },
-              (err, result) => {
-                if (err) {
-                  reject(err);
-                  return;
-                }
-
-                resolve(result!.module! as webpack.NormalModule);
-              }
-            );
-          } catch (err) {
-            reject(err);
-          }
+    return new Promise<InstantiatedModule>((resolve, reject) => {
+      compiler.compile(async (err, compilation) => {
+        if (err) {
+          reject(err);
+          return;
         }
-      );
 
-      resolver.resolve(
-        this.#build(filename, webpackModule, dependency).then(module => {
-          this.context.build.builder.buildFiles.remove(filename);
-          return module;
-        })
-      );
-    } catch (err) {
-      resolver.reject(err);
-    } finally {
-      return resolver;
-    }
+        try {
+          const volume = new Volume();
+          const writeFile = promisify(volume, volume.writeFile);
+          const mkdir = promisify(volume, volume.mkdir);
+          await mkdir(path.dirname(filename), { recursive: true });
+          await writeFile(filename, source);
+
+          this.context.build.builder.buildFiles.add(
+            filename,
+            volume,
+            false,
+            filename
+          );
+
+          const dependency = new webpack.dependencies.ModuleDependency(
+            `./${path.basename(filename)}`
+          );
+          const webpackModule = await new Promise<webpack.NormalModule>(
+            (resolve, reject) => {
+              try {
+                this.compilation.params.normalModuleFactory.create(
+                  {
+                    context: path.dirname(filename),
+                    contextInfo: {
+                      issuer: 'pages',
+                      compiler: 'javascript/auto',
+                    },
+                    dependencies: [dependency],
+                  },
+                  (err, result) => {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+
+                    resolve(result!.module! as webpack.NormalModule);
+                  }
+                );
+              } catch (err) {
+                reject(err);
+              }
+            }
+          );
+
+          resolve(
+            this.#build(compilation!, filename, webpackModule, dependency).then(
+              module => {
+                this.context.build.builder.buildFiles.remove(filename);
+                return module;
+              }
+            )
+          );
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
   }
 
   // abstract instantiate(module: Module): Promise<InstantiatedModule>;

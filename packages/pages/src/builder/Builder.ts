@@ -163,15 +163,6 @@ export class Builder {
     }
   }
 
-  entry(source: Source): EntryObject {
-    return {
-      // [source.slug]: {
-      //   import: `./${_path.relative(this.context.rootDir, source.filename)}`,
-      //   filename: source.slug ? `${source.slug}/index.js` : 'index.js',
-      // },
-    };
-  }
-
   #loader(loader: string, options: any = {}): webpack.RuleSetUseItem {
     return {
       loader: loader,
@@ -187,11 +178,7 @@ export class Builder {
 
     const config: webpack.Configuration = {
       context: this.context.rootDir,
-      entry: {
-        // ...sources
-        //   .map(source => this.entry(source))
-        //   .reduce((a, b) => ({ ...a, ...b }), {}),
-      },
+      entry: {},
       stats: {
         children: true,
       },
@@ -214,7 +201,7 @@ export class Builder {
             type: 'javascript/auto',
             test: /\.scss$/,
             use: [
-              // this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('style-loader'),
               {
                 loader: 'css-loader',
@@ -229,7 +216,7 @@ export class Builder {
             type: 'javascript/auto',
             test: /\.scss$/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('style-loader'),
               {
                 loader: 'css-loader',
@@ -247,7 +234,7 @@ export class Builder {
             type: 'javascript/auto',
             test: /\.css$/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('style-loader'),
               {
                 loader: 'css-loader',
@@ -259,7 +246,7 @@ export class Builder {
             type: 'javascript/auto',
             test: /\.css$/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('style-loader'),
               {
                 loader: 'css-loader',
@@ -274,7 +261,7 @@ export class Builder {
             type: 'javascript/auto',
             test: /\.(png|jpe?g|gif|webp|svg)$/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('image-loader'),
               'raw-loader',
             ],
@@ -283,7 +270,7 @@ export class Builder {
             type: 'javascript/auto',
             test: /\.pages\.([mc]?js|ts)$/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('pages-loader'),
               {
                 loader: 'babel-loader',
@@ -303,7 +290,7 @@ export class Builder {
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('pages-loader'),
               this.#loader('yaml-loader'),
             ],
@@ -313,7 +300,7 @@ export class Builder {
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              //  this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('module-loader', {
                 handler: '@grexie/pages/handlers/markdown',
               }),
@@ -326,7 +313,7 @@ export class Builder {
             //include: [/node_modules\/@mdx-js/],
             exclude: /(node_modules|bower_components)/,
             use: [
-              // this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('module-loader'),
               {
                 loader: 'babel-loader',
@@ -354,7 +341,7 @@ export class Builder {
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
             use: [
-              //   this.#loader('cache-loader'),
+              this.#loader('cache-loader'),
               this.#loader('module-loader'),
               {
                 loader: 'babel-loader',
@@ -378,21 +365,6 @@ export class Builder {
               },
             ],
           },
-          // {
-          //   // INCLUDED for TESTS
-          //   // TODO: move out to plugins / config on context
-          //   test: /\.(ts|tsx)$/,
-          //   exclude: /(node_modules|bower_components)/,
-          //   use: [
-          //     {
-          //       loader: 'babel-loader',
-          //       options: {
-          //         cwd: this.context.pagesDir,
-          //         root: this.context.pagesDir,
-          //       },
-          //     },
-          //   ],
-          // },
         ],
       },
       resolve: {
@@ -463,6 +435,11 @@ export class Builder {
         },
       },
       plugins: [
+        new webpack.ProgressPlugin({
+          entries: false,
+          modules: false,
+          dependencies: false,
+        }),
         new ResourcesPlugin({ context: this.context }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),
       ],

@@ -4,6 +4,7 @@ import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
+import html from 'html';
 
 const { RawSource } = webpack.sources;
 
@@ -87,7 +88,12 @@ class SourceCompiler {
             console.info('render:rendered', this.source.filename);
           }
 
-          resolve(Buffer.from(buffer.toString()));
+          const output = Buffer.from(
+            html.prettyPrint(buffer.toString(), {
+              indent_size: 2,
+            })
+          );
+          resolve(output);
         } catch (err) {
           reject(err);
         }
@@ -162,7 +168,6 @@ class SourceCompiler {
           });
         });
 
-        console.info(files);
         const buffer = await this.render(compilation, [...files]);
 
         try {
