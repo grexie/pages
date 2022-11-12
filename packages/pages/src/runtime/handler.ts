@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { hydrateRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { compose } from '@grexie/compose';
 import { ResourceContext } from '../api/Resource.js';
 import {
@@ -55,11 +55,11 @@ export const hydrate = (resource: Resource, handler: any) => {
   const element = createElement(component as any);
 
   if ((window as any).__PAGES_ROOT__) {
-    (window as any).__PAGES_ROOT__.render(element);
+    // (window as any).__PAGES_ROOT__.render(element);
   } else {
-    (window as any).__PAGES_ROOT__ = hydrateRoot(
-      document.querySelector('#__pages_root')!,
-      element
-    );
+    const root = ((window as any).__PAGES_ROOT__ = createRoot(
+      document.querySelector('#__pages_root')!
+    ));
+    root.render(element);
   }
 };
