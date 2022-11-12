@@ -383,6 +383,7 @@ export class Builder {
           path: require.resolve('path-browserify'),
           timers: require.resolve('timers-browserify'),
           crypto: false,
+          'stream/web': false,
           stream: require.resolve('stream-browserify'),
           tty: require.resolve('tty-browserify'),
         },

@@ -20,7 +20,7 @@ export class Renderer {
     this.context = context;
   }
 
-  async render<T extends WritableStream>(
+  async render<T extends WritableStream<Buffer>>(
     writable: T,
     resource: Resource,
     scripts: string[],
