@@ -78,6 +78,7 @@ class SourceCompiler {
       console.info('render:rendered', this.source.filename);
     }
 
+    return buffer.toString();
     return Buffer.from(
       html.prettyPrint(buffer.toString(), {
         indent_size: 2,

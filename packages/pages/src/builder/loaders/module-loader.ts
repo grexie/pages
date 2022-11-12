@@ -66,7 +66,7 @@ export default async function ModuleLoader(
         handlerModule = await modules.createModule(
           _path.dirname(this.resourcePath),
           this.resourcePath,
-          content.toString(),
+          content.toString()
         );
       }
       return handlerModule;
@@ -74,7 +74,6 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
-    this.addDependency(this.resourcePath);
     this.addDependency(
       options.handler ? handlerModule.filename : this.resourcePath
     );
@@ -210,12 +209,22 @@ export default async function ModuleLoader(
         ${this.hot ? hmrFooter : ''}
       `;
 
+      const requests: string[] = [];
       const compiled = await transformAsync(serializedResource.code, {
         presets: [[babelEnvPreset, { modules: false }]],
-        plugins: [reactRefreshPlugin],
+        plugins: [extractImportsPlugin(requests), reactRefreshPlugin],
         inputSourceMap: serializedResource.map,
         sourceMaps: this.sourceMap,
       });
+
+      const references = await Promise.all(
+        requests.map(async request =>
+          modules.resolver.resolve(this.context, request)
+        )
+      );
+      references
+        .filter(({ builtin }) => !builtin)
+        .forEach(({ filename }) => this.addDependency(filename));
 
       return callback(
         null,
@@ -228,12 +237,26 @@ export default async function ModuleLoader(
           : undefined
       );
     } else {
+      const requests: string[] = [];
       const compiled = await transformAsync(content.toString(), {
         presets: [[babelEnvPreset, { modules: false }]],
-        plugins: [handlerModulePlugin, reactRefreshPlugin],
+        plugins: [
+          extractImportsPlugin(requests),
+          handlerModulePlugin,
+          reactRefreshPlugin,
+        ],
         inputSourceMap: inputSourceMap,
         sourceMaps: this.sourceMap,
       });
+
+      const references = await Promise.all(
+        requests.map(async request =>
+          modules.resolver.resolve(this.context, request)
+        )
+      );
+      references
+        .filter(({ builtin }) => !builtin)
+        .forEach(({ filename }) => this.addDependency(filename));
 
       // await context.modules.evict(factory, `${this.resourcePath}$original`, {
       //   recompile: true,
@@ -294,10 +317,63 @@ export default async function ModuleLoader(
   }
 }
 
+const extractImportsPlugin: (
+  requests: string[]
+) => (b: typeof babel) => PluginObj<PluginPass> =
+  requests =>
+  ({ types: t }) => ({
+    visitor: {
+      CallExpression: (path: any) => {
+        if (
+          t.isIdentifier(path.node.callee, {
+            name: 'require',
+          })
+        ) {
+          const id = path.node.arguments[0];
+
+          if (t.isStringLiteral(id)) {
+            requests.push(id.value);
+          }
+        }
+      },
+      ImportDeclaration: (path: any) => {
+        requests.push(path.node.source.value);
+      },
+      ExportAllDeclaration: (path: any) => {
+        requests.push(path.node.source.value);
+      },
+      ExportNamedDeclaration: (path: any) => {
+        if (path.node.source) {
+          requests.push(path.node.source.value);
+        }
+      },
+    },
+  });
+
 const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
 }) => ({
   visitor: {
+    CallExpression: (path: any) => {
+      if (
+        t.isIdentifier(path.node.callee, {
+          name: 'require',
+        })
+      ) {
+        const id = path.node.arguments[0];
+
+        if (t.isStringLiteral(id)) {
+          requests.push(id.value);
+        }
+      }
+    },
+    ImportDeclaration: (path: any) => {
+      requests.push(path.node.source.value);
+    },
+    ExportAllDeclaration: (path: any) => {
+      requests.push(path.node.source.value);
+    },
+    ExportNamedDeclaration: (path: any) => {},
     ExportDefaultDeclaration(path: any) {
       path.replaceWith(
         t.variableDeclaration('const', [
@@ -309,6 +385,8 @@ const handlerModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
       );
     },
     ExportNamedDeclaration(path: any) {
+      if (path.node.source) {
+      }
       if (path.node.declaration) {
         if (t.isVariableDeclaration(path.node.declaration)) {
           for (const declaration of path.node.declaration.declarations) {
