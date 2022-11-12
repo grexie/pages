@@ -30,4 +30,7 @@ export default async function YamlLoader(
   }
 
   callback(null, chunk, map ?? inputSourceMap);
+
+  const modules = context.getModuleContext(this._compilation!);
+  modules.evict(this.resourcePath);
 }

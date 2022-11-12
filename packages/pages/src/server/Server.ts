@@ -62,8 +62,8 @@ export class Server {
     app.use(
       WebpackDevMiddleware(compiler, {
         publicPath: compiler.options.output.publicPath,
-        writeToDisk: false,
-        serverSideRender: true,
+        writeToDisk: true,
+        serverSideRender: false,
       })
     );
     app.use(

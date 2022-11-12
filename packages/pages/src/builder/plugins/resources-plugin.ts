@@ -87,7 +87,7 @@ class SourceCompiler {
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
-    await new Promise<webpack.Module>((resolve, reject) =>
+    const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.rootDir,
         new EntryDependency(

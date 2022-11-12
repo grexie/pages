@@ -60,6 +60,10 @@ export class ModuleContext {
     >;
   }
 
+  evict(filename: string) {
+    ModuleLoader.evict(this.compilation, filename);
+  }
+
   protected getContextFromMeta(meta: ImportMeta) {
     return path.dirname(this.getFilenameFromMeta(meta));
   }

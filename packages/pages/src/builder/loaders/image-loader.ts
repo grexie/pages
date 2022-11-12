@@ -88,6 +88,9 @@ export default async function ImageLoader(
 
     return jsCode;
   } finally {
+    const modules = context.getModuleContext(this._compilation!);
+    modules.evict(this.resourcePath);
+    
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('image-loader:complete', this.resourcePath);
     }

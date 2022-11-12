@@ -64,10 +64,16 @@ export abstract class ModuleLoader {
     this.modules = ModuleCacheTable.get(compilation)!;
   }
 
-  reset() {
-    for (const k in this.modules) {
-      delete this.modules[k];
+  static reset(compilation: webpack.Compilation) {
+    const modules = ModuleCacheTable.get(compilation) ?? {};
+    for (const k in modules) {
+      delete modules[k];
     }
+  }
+
+  static evict(compilation: webpack.Compilation, filename: string) {
+    const modules = ModuleCacheTable.get(compilation) ?? {};
+    delete modules[filename];
   }
 
   protected async build(

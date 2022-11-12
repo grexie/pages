@@ -31,9 +31,10 @@ export default async function ModuleLoader(
 
   // await context.modules.addBuild(this.resourcePath, resolver);
 
+  const modules = context.getModuleContext(this._compilation!);
+
   try {
     // const factory = context.modules.createModuleFactory(this._compilation!);
-    const modules = context.getModuleContext(this._compilation!);
 
     const { createComposable } = await modules.require(
       import.meta,
@@ -311,6 +312,9 @@ export default async function ModuleLoader(
     console.error(err);
     return callback(err as any);
   } finally {
+    const modules = context.getModuleContext(this._compilation!);
+    modules.evict(this.resourcePath);
+
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('module-loader:complete', this.resourcePath);
     }
