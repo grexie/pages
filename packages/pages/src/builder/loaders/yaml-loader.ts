@@ -12,6 +12,7 @@ export default async function YamlLoader(
   content: Buffer,
   inputSourceMap: any
 ) {
+  const { context } = this.getOptions();
   const callback = this.async();
   this.cacheable();
 
