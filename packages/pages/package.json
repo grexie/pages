@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "license": "MIT",
   "type": "module",
   "main": "index.js",
@@ -15,8 +15,8 @@
     "@babel/preset-react": "^7.17.12",
     "@babel/preset-typescript": "^7.17.12",
     "@grexie/compose": "^0.1.10",
-    "@grexie/builder": "^0.0.8",
-    "@grexie/pages-cli": "^0.0.8",
+    "@grexie/builder": "^0.0.9",
+    "@grexie/pages-cli": "^0.0.9",
     "@mdx-js/mdx": "^2.1.1",
     "@svgr/babel-plugin-transform-svg-component": "^6.5.0",
     "@svgr/core": "^6.5.0",
