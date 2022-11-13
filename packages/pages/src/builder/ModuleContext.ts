@@ -128,7 +128,7 @@ export class ModuleContext {
   requireModule = timedAsync(
     async (context: string, request: string): Promise<InstantiatedModule> => {
       const reference = await this.resolver.resolve(context, request);
-      return this.loaders[reference.loader].load(context, request);
+      return this.loaders[reference.loader].require(context, request);
     }
   );
 

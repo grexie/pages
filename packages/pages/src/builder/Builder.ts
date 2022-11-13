@@ -197,7 +197,18 @@ export class Builder {
       //     additionalModuleDirs: this.context.modulesDirs.slice(1),
       //   }),
       // ]
-
+      // devServer: {
+      //   watchFiles: {
+      //     paths: [this.context.rootDir, ]
+      //   }
+      // },
+      watchOptions: {
+        ignored: [
+          this.context.outputDir,
+          this.context.cacheDir,
+          path.resolve(this.context.rootDir, 'node_modules', '.cache'),
+        ],
+      },
       module: {
         rules: [
           {

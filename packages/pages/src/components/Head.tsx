@@ -1,168 +1,243 @@
 import {
   ReactNode,
   ReactElement,
-  Children,
   FC,
   PropsWithChildren,
   useMemo,
-  Fragment,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  lazy,
-  Suspense,
   cloneElement,
 } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { useDocument } from '../hooks/useDocument.js';
-import {
-  Document,
-  DocumentProps,
-  mergeDocumentProps,
-} from '../api/Document.js';
-import { useLazyComplete } from '../hooks/useLazy.js';
+import { isElement, isFragment } from 'react-is';
 import { hash } from '../utils/hash.js';
-import { useMountId } from '../hooks/useMountId.js';
+import { createContext } from '../utils/context.js';
 
-const HeadContext = createContext<boolean>(true);
+class HeadContext {
+  readonly parent?: HeadContext;
+  props: HeadProps = {};
+  children: HeadContext[] = [];
 
-export const HeadProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
-  return <HeadContext.Provider value={false}>{children}</HeadContext.Provider>;
-};
+  constructor(parent?: HeadContext) {
+    this.parent = parent;
+    parent?.children.push(this);
+  }
 
-const useHead = () => useContext(HeadContext);
+  setProps(props: { children?: ReactNode }) {
+    let fragment;
 
-const nodeToString = (children: ReactNode) => {
-  const out: string[] = [];
-
-  Children.toArray(children).forEach(child => {
-    if (typeof child === 'boolean') {
-      return;
-    } else if (typeof child === 'string' || typeof child === 'number') {
-      out.push(child.toString());
-      return;
-    } else if (Array.isArray(child)) {
-      out.push(nodeToString(child));
-      return;
-    } else if (typeof child === 'object' && child !== null) {
-      if ((child as any).type === Fragment) {
-        out.push(nodeToString((child as any).props.children));
-        return;
-      }
+    if (Array.isArray(props.children)) {
+      fragment = <>{props.children.map(child => cloneElement(child))}</>;
+    } else if (isFragment(props.children)) {
+      fragment = <>{cloneElement(props.children.props.children)}</>;
+    } else if (isElement(props.children)) {
+      fragment = <>{cloneElement(props.children)}</>;
+    } else {
+      fragment = <>{props.children}</>;
     }
 
-    throw new Error('children must be fragments, strings or numbers');
-  });
+    this.props = { children: fragment };
+  }
 
-  return out.join('');
-};
-
-const processChildren = (
-  children: ReactNode,
-  id: string,
-  props: DocumentProps
-) => {
-  Children.toArray(children).forEach((child, index) => {
-    if (Array.isArray(child)) {
-      processChildren(child, `${id}:${index}`, props);
-    } else if (typeof child === 'object' && child !== null) {
-      processElement(child as ReactElement, `${id}:${index}`, props);
+  get root() {
+    let context = this as HeadContext;
+    while (context.parent) {
+      context = context.parent!;
     }
-  });
-};
+    return context;
+  }
 
-const processElement = (
-  element: ReactElement,
-  id: string,
-  props: DocumentProps
-) => {
-  element = cloneElement(element, { 'data-pages-head': id });
+  render(): ReactElement {
+    return (
+      <>
+        {this.props.children}
+        {this.children.map(child => child.render())}
+      </>
+    );
+  }
+}
 
-  switch (element.type) {
-    case 'title': {
-      mergeDocumentProps(props, {
-        title: nodeToString(element.props.children),
-      });
-      break;
-    }
-    default: {
-      mergeDocumentProps(props, { children: [element] });
-    }
+export const {
+  Provider: HeadProvider,
+  use: useHead,
+  with: withHead,
+} = createContext<HeadContext>(Provider => ({ children }) => {
+  const parentContext = useHead();
+  const context = useMemo(() => new HeadContext(parentContext), []);
+  return <Provider value={context}>{children}</Provider>;
+});
+
+export interface HeadProps extends PropsWithChildren<{}> {}
+
+export const Head: FC<HeadProps> = ({ children, ...props }) => {
+  if (typeof window === 'undefined') {
+    return <ServerHead {...props}>{children}</ServerHead>;
+  } else {
+    return <BrowserHead {...props}>{children}</BrowserHead>;
   }
 };
 
-const updateHead = (document: Document) => {
-  const elements = Array.from(
-    window.document.querySelectorAll('head [data-pages-head]')
-  );
+export const { with: withHeadRendering, use: useHeadRendering } =
+  createContext<boolean>(Provider => ({ children }) => (
+    <Provider value={true}>{children}</Provider>
+  ));
 
-  const html = renderToStaticMarkup(<>{document.props.children}</>);
-  const fragment = window.document.createDocumentFragment();
-  const div = window.document.createElement('div');
-  div.innerHTML = html;
-  for (const el of Array.from(div.children)) {
-    fragment.appendChild(el);
-  }
+interface ServerHeadProps extends HeadProps {}
 
-  window.document.head.insertBefore(fragment, elements[0]);
-  elements.forEach(element => element.parentNode?.removeChild(element));
-};
+const ServerHead: FC<ServerHeadProps> = withHead(({ ...props }) => {
+  const head = useHead();
 
-const HeadContent: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const id = useMountId();
-
-  const props = useMemo(() => {
-    const props = { children: [] };
-    processChildren(children, id, props);
-    return props;
-  }, [hash({ children })]);
-
-  const document = useDocument(props);
-
-  useEffect(() => {
-    updateHead(document);
-  }, [hash(document.props)]);
+  useMemo(() => {
+    head.setProps(props);
+  }, [hash(props)]);
 
   return null;
-};
+});
 
-export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const renderHead = useHead();
+interface BrowserHeadProps extends HeadProps {}
 
-  if (!renderHead) {
-    return <HeadContent>{children}</HeadContent>;
-  }
+const BrowserHead: FC<BrowserHeadProps> = withHead(({ ...props }) => {
+  const head = useHead();
 
-  const Head = useLazyComplete(
-    async () => () => {
-      const [, setState] = useState({});
-      const document = useDocument();
+  useMemo(() => {
+    head.setProps(props);
+    console.info(head);
+  }, [hash(props)]);
 
-      if (typeof window === 'undefined') {
-        useMemo(() => {
-          document.on('update', () => setState({}));
-        }, []);
-      } else {
-        useEffect(() => {
-          const handler = () => setState({});
-          document.on('update', handler);
-          return () => {
-            document.removeListener('update', handler);
-          };
-        }, []);
-      }
+  return null;
+});
 
-      return (
-        <head>
-          <meta charSet="utf-8" />
-          {document.props.title && <title>{document.props.title}</title>}
-          {document.props.children}
-        </head>
-      );
-    },
-    []
-  );
+// const nodeToString = (children: ReactNode) => {
+//   const out: string[] = [];
 
-  return <Head />;
-};
+//   Children.toArray(children).forEach(child => {
+//     if (typeof child === 'boolean') {
+//       return;
+//     } else if (typeof child === 'string' || typeof child === 'number') {
+//       out.push(child.toString());
+//       return;
+//     } else if (Array.isArray(child)) {
+//       out.push(nodeToString(child));
+//       return;
+//     } else if (typeof child === 'object' && child !== null) {
+//       if ((child as any).type === Fragment) {
+//         out.push(nodeToString((child as any).props.children));
+//         return;
+//       }
+//     }
+
+//     throw new Error('children must be fragments, strings or numbers');
+//   });
+
+//   return out.join('');
+// };
+
+// const processChildren = (
+//   children: ReactNode,
+//   id: string,
+//   props: DocumentProps
+// ) => {
+//   Children.toArray(children).forEach((child, index) => {
+//     if (Array.isArray(child)) {
+//       processChildren(child, `${id}:${index}`, props);
+//     } else if (typeof child === 'object' && child !== null) {
+//       processElement(child as ReactElement, `${id}:${index}`, props);
+//     }
+//   });
+// };
+
+// const processElement = (
+//   element: ReactElement,
+//   id: string,
+//   props: DocumentProps
+// ) => {
+//   element = cloneElement(element, { 'data-pages-head': id });
+
+//   switch (element.type) {
+//     case 'title': {
+//       mergeDocumentProps(props, {
+//         title: nodeToString(element.props.children),
+//       });
+//       break;
+//     }
+//     default: {
+//       mergeDocumentProps(props, { children: [element] });
+//     }
+//   }
+// };
+
+// const updateHead = (document: Document) => {
+//   const elements = Array.from(
+//     window.document.querySelectorAll('head [data-pages-head]')
+//   );
+
+//   const html = renderToStaticMarkup(<>{document.props.children}</>);
+//   const fragment = window.document.createDocumentFragment();
+//   const div = window.document.createElement('div');
+//   div.innerHTML = html;
+//   for (const el of Array.from(div.children)) {
+//     fragment.appendChild(el);
+//   }
+
+//   window.document.head.insertBefore(fragment, elements[0]);
+//   elements.forEach(element => element.parentNode?.removeChild(element));
+// };
+
+// const HeadContent: FC<PropsWithChildren<{}>> = ({ children }) => {
+//   const id = useMountId();
+
+//   const props = useMemo(() => {
+//     const props = { children: [] };
+//     processChildren(children, id, props);
+//     return props;
+//   }, [hash({ children })]);
+
+//   const document = useDocument(props);
+
+//   useEffect(() => {
+//     updateHead(document);
+//   }, [hash(document.props)]);
+
+//   return null;
+// };
+
+// export const Head: FC<PropsWithChildren<{}>> = ({ children }) => {
+//   const renderHead = useHead();
+
+//   if (!renderHead) {
+//     return <HeadContent>{children}</HeadContent>;
+//   }
+
+//   const Head = useLazyComplete(
+//     async () => () => {
+//       const [, setState] = useState({});
+//       const document = useDocument();
+
+//       if (typeof window === 'undefined') {
+//         useMemo(() => {
+//           document.on('update', () => setState({}));
+//         }, []);
+//       } else {
+//         useEffect(() => {
+//           const handler = () => setState({});
+//           document.on('update', handler);
+//           return () => {
+//             document.removeListener('update', handler);
+//           };
+//         }, []);
+//       }
+
+//       const html = renderToStaticMarkup(
+//         <div data-pages-head>
+//           <meta charSet="utf-8" />
+//           {document.props.title && <title>{document.props.title}</title>}
+//           {document.props.children}
+//         </div>
+//       );
+
+//       console.info(html);
+
+//       return <head dangerouslySetInnerHTML={{ __html: html }} />;
+//     },
+//     []
+//   );
+
+//   return <Head />;
+// };

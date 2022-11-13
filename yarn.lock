@@ -2203,6 +2203,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-is@^17.0.3":
+  version "17.0.3"
+  resolved "https://registry.yarnpkg.com/@types/react-is/-/react-is-17.0.3.tgz#2d855ba575f2fc8d17ef9861f084acc4b90a137a"
+  integrity sha512-aBTIWg1emtu95bLTLx0cpkxwGW3ueZv71nE2YFBpL8k/z5czEW8yYpOo8Dp+UUAFAtKwNaOsh/ioSeQnWlZcfw==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react-refresh@^0.14.0":
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/@types/react-refresh/-/react-refresh-0.14.0.tgz#09fbf0faf4c31086616f9aa5dee981ed5f47c0a8"
@@ -7183,7 +7190,7 @@ react-dom@^18.1.0:
     loose-envify "^1.1.0"
     scheduler "^0.22.0"
 
-react-is@^18.0.0:
+react-is@^18.0.0, react-is@^18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.2.0.tgz#199431eeaaa2e09f86427efbb4f1473edb47609b"
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==

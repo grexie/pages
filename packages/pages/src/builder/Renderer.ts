@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import ReactDOMServer from 'react-dom/server';
+import { renderToPipeableStream } from 'react-dom/server';
 import { compose } from '@grexie/compose';
 import { withDocumentComponent } from '../components/Document.js';
 import {
@@ -12,6 +12,7 @@ import type { BuildContext } from './BuildContext.js';
 import { withStyles, StylesContext } from '../hooks/useStyles.js';
 import { withScripts } from '../hooks/useScripts.js';
 import { withLazy } from '../hooks/useLazy.js';
+import { Writable } from 'stream';
 
 export class Renderer {
   readonly context: BuildContext;
@@ -42,9 +43,14 @@ export class Renderer {
 
     const element = createElement(component as any);
 
-    const stream = await ReactDOMServer.renderToReadableStream(element);
+    await new Promise<void>((resolve, reject) => {
+      renderToPipeableStream(element, {
+        onError: err => reject(err),
+        onShellError: err => reject(err),
+        onAllReady: () => resolve(),
+      }).pipe((Writable as any).fromWeb(writable));
+    });
 
-    await stream.pipeTo(writable);
     return Promise.resolve(writable);
   }
 }

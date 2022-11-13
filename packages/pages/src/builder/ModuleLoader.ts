@@ -1,16 +1,14 @@
 import type { ModuleReference, ModuleResolver } from './ModuleResolver.js';
-import type { Compiler, Compilation } from 'webpack';
-import { parseAsync, traverse } from '@babel/core';
-import babelPresetEnv from '@babel/preset-env';
-import * as t from '@babel/types';
+import type { Compilation } from 'webpack';
 import { createResolver } from '../utils/resolvable.js';
 import webpack from 'webpack';
 import vm from 'vm';
 import { attach as attachHotReload } from '../runtime/hmr.js';
 import type { ModuleContext } from './ModuleContext.js';
-import { Volume } from 'memfs';
-import { promisify } from '../utils/promisify.js';
 import path from 'path';
+import { isPlainObject } from '../utils/object.js';
+import type { BuildContext } from './BuildContext.js';
+import { file } from '@babel/types';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;
@@ -46,22 +44,30 @@ export interface InstantiatedModule extends Module {
 type ModuleCache = Record<string, Promise<InstantiatedModule> | undefined>;
 
 const ModuleCacheTable = new WeakMap<Compilation, ModuleCache>();
+const GlobalModuleCacheTable = new WeakMap<BuildContext, ModuleCache>();
 
 export abstract class ModuleLoader {
   readonly context: ModuleContext;
   readonly resolver: ModuleResolver;
   readonly compilation: Compilation;
   readonly modules: ModuleCache;
+  readonly globalModules: ModuleCache;
   #nextId = 0;
 
   constructor({ context, resolver, compilation }: ModuleLoaderOptions) {
     this.context = context;
     this.resolver = resolver;
     this.compilation = compilation;
+
     if (!ModuleCacheTable.has(compilation)) {
       ModuleCacheTable.set(compilation, {});
     }
     this.modules = ModuleCacheTable.get(compilation)!;
+
+    if (!GlobalModuleCacheTable.has(context.build)) {
+      GlobalModuleCacheTable.set(context.build, {});
+    }
+    this.globalModules = GlobalModuleCacheTable.get(context.build)!;
   }
 
   static reset(compilation: webpack.Compilation) {
@@ -105,17 +111,18 @@ export abstract class ModuleLoader {
       throw new Error(`unable to load module ${filename}`);
     }
 
-    // const references = await this.parse(context, source);
-
     return this.instantiate({
       context,
       filename,
       source,
-      // references,
     });
   }
 
   protected abstract instantiate(module: Module): Promise<InstantiatedModule>;
+
+  protected lookup(filename: string): Promise<InstantiatedModule> | undefined {
+    return this.globalModules[filename] ?? this.modules[filename];
+  }
 
   /**
    * Loads a module from the filesystem
@@ -124,7 +131,7 @@ export abstract class ModuleLoader {
   async load(context: string, request: string): Promise<InstantiatedModule> {
     const reference = await this.resolver.resolve(context, request);
 
-    const module = this.modules[reference.filename];
+    const module = this.lookup(reference.filename);
     if (module) {
       return module;
     }
@@ -171,6 +178,73 @@ export abstract class ModuleLoader {
     return resolver;
   }
 
+  async require(context: string, request: string): Promise<InstantiatedModule> {
+    const reference = await this.resolver.resolve(context, request);
+
+    const module = this.lookup(reference.filename);
+    if (module) {
+      return module;
+    }
+
+    if (reference.compile) {
+      return this.load(context, request);
+    }
+
+    const resolver = createResolver<InstantiatedModule>();
+    this.globalModules[reference.filename] = resolver;
+
+    try {
+      const exports = await import(reference.filename);
+
+      let usedExports: string[];
+
+      if (reference.loader === ModuleLoaderType.esm) {
+        usedExports = Object.keys(exports);
+      } else {
+        usedExports = [
+          ...new Set([
+            'default',
+            ...(isPlainObject(exports) ? Object.keys(exports) : []),
+          ]),
+        ];
+      }
+
+      const vmModule = new vm.SyntheticModule(
+        usedExports,
+        function (this: any) {
+          if (isPlainObject(exports)) {
+            usedExports.forEach(name => {
+              if (name === 'default' && !('default' in exports)) {
+                this.setExport('default', exports);
+              } else {
+                this.setExport(name, exports[name]);
+              }
+            });
+          } else {
+            this.setExport('default', exports);
+          }
+        },
+        {
+          context: vmContext,
+        }
+      );
+
+      await vmModule.link(() => {});
+      await vmModule.evaluate();
+
+      resolver.resolve({
+        context,
+        filename: reference.filename,
+        source: '',
+        vmModule,
+        exports,
+      });
+    } catch (err) {
+      resolver.reject(err);
+    }
+    return resolver;
+  }
+
   /**
    * Creates a module from source
    * @param filename
@@ -182,125 +256,10 @@ export abstract class ModuleLoader {
   ): Promise<InstantiatedModule> {
     filename = filename + '$' + ++this.#nextId;
 
-    const volume = new Volume();
-    const writeFile = promisify(volume, volume.writeFile);
-    const mkdir = promisify(volume, volume.mkdir);
-    await mkdir(path.dirname(filename), { recursive: true });
-    await writeFile(filename, source);
-
-    this.context.build.builder.buildFiles.add(
+    return this.instantiate({
+      context,
       filename,
-      volume,
-      false,
-      filename
-    );
-
-    const dependency = new webpack.dependencies.ModuleDependency(
-      `./${path.basename(filename)}`
-    );
-    const webpackModule = await new Promise<webpack.NormalModule>(
-      (resolve, reject) => {
-        try {
-          this.compilation.params.normalModuleFactory.create(
-            {
-              context: path.dirname(filename),
-              contextInfo: {
-                issuer: 'pages',
-                compiler: 'javascript/auto',
-              },
-              dependencies: [dependency],
-            },
-            (err, result) => {
-              if (err) {
-                reject(err);
-                return;
-              }
-
-              resolve(result!.module! as webpack.NormalModule);
-            }
-          );
-        } catch (err) {
-          reject(err);
-        }
-      }
-    );
-
-    const module = await this.build(
-      path.dirname(filename),
-      filename,
-      webpackModule
-    );
-    this.context.build.builder.buildFiles.remove(filename);
-    return module;
-  }
-
-  /**
-   * Parses a module source file
-   * @param context the context of the request
-   * @param source the source code
-   */
-  async parse(context: string, source: string): Promise<ModuleReferenceTable> {
-    const transpiled = await parseAsync(source, {
-      ast: true,
-      presets: [
-        [
-          babelPresetEnv,
-          {
-            modules: false,
-          },
-        ],
-      ],
-      plugins: [],
-      include: () => true,
-      exclude: [],
+      source,
     });
-
-    const requests: string[] = [];
-
-    traverse(transpiled, {
-      CallExpression: (path: any) => {
-        if (
-          t.isIdentifier(path.node.callee, {
-            name: 'require',
-          })
-        ) {
-          const id = path.node.arguments[0];
-
-          if (t.isStringLiteral(id)) {
-            requests.push(id.value);
-          }
-        }
-      },
-      ImportDeclaration: (path: any) => {
-        requests.push(path.node.source.value);
-      },
-      ExportAllDeclaration: (path: any) => {
-        requests.push(path.node.source.value);
-      },
-      ExportNamedDeclaration: (path: any) => {
-        if (path.node.source) {
-          requests.push(path.node.source.value);
-        }
-      },
-    });
-
-    return this.resolve(context, ...requests);
-  }
-
-  /**
-   * Resolves modules
-   * @param context the context of the requests
-   * @param requests an array of requests
-   */
-  protected async resolve(
-    context: string,
-    ...requests: string[]
-  ): Promise<ModuleReferenceTable> {
-    const references = await Promise.all(
-      requests.map(async request => ({
-        [request]: await this.resolver.resolve(context, request),
-      }))
-    );
-    return references.reduce((a, b) => ({ ...a, ...b }), {});
   }
 }

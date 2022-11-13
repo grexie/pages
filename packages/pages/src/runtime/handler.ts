@@ -10,7 +10,7 @@ import {
   withResourceContext,
   withStyles,
 } from '../hooks/index.js';
-import { withHydratedDocumentComponent } from '../components/Document.js';
+import { withDocumentContent } from '../components/Document.js';
 import { Context } from '../api/Context.js';
 import { withLazy } from '../hooks/useLazy.js';
 import type { Resource } from '../api/Resource.js';
@@ -48,7 +48,7 @@ export const hydrate = (resource: Resource, handler: any) => {
     withStyles({ styles }),
     withResourceContext({ resourceContext }),
     withDocument({ resourceContext, resource }),
-    withHydratedDocumentComponent,
+    withDocumentContent,
     handler
   );
 

@@ -168,7 +168,7 @@ export class BuildContext extends Context {
         ]),
       ],
       forceCompileRoots: Array.from(
-        new Set([...(resolver.forceCompileRoots ?? [])])
+        new Set([...(resolver.forceCompileRoots ?? [this.pagesDir])])
       ),
     };
   }

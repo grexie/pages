@@ -264,12 +264,12 @@ export class ResourcesPlugin {
         })
       );
 
-      compilation.hooks.afterChunks.tap('ResourcesPlugin', () => {
+      compiler.hooks.afterDone.tap('ResourcesPlugin', () => {
         context.modules.log();
       });
-      compilation.hooks.afterProcessAssets.tap('ResourcesPlugin', () => {
-        context.modules.log();
-      });
+      // compilation.hooks.afterProcessAssets.tap('ResourcesPlugin', () => {
+      //   context.modules.log();
+      // });
     });
   }
 }
