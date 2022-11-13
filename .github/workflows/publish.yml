@@ -6,10 +6,7 @@ name: Publish to NPM
 
 jobs:
   test:
-    runs-on:
-      - veritas
-      - linux
-      - arm64
+    runs-on: ubuntu-latest
     container: grexie/node-docker:lts
     steps:
       - uses: actions/checkout@v2
@@ -27,10 +24,7 @@ jobs:
   publish:
     name: publish
     needs: test
-    runs-on:
-      - veritas
-      - linux
-      - arm64
+    runs-on: ubuntu-latest
     container: grexie/node-docker:lts
     steps:
       - run: |

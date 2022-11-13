@@ -4,10 +4,7 @@ name: Build and Test
 
 jobs:
   test:
-    runs-on:
-      - veritas
-      - linux
-      - arm64
+    runs-on: ubuntu-latest
     container: grexie/node-docker:lts
     steps:
       - uses: actions/checkout@v2
