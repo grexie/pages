@@ -178,7 +178,7 @@ export class Cache implements ICache {
     return this.#readLock(filename, cb, fail);
   }
 
-  async #set(
+  protected async doSet(
     filename: string,
     content: Buffer | string,
     modified: Date | number = Date.now()
@@ -220,10 +220,10 @@ export class Cache implements ICache {
     content: Buffer | string,
     modified: Date | number = Date.now()
   ) {
-    return this.lock(filename, () => this.#set(filename, content, modified));
+    return this.lock(filename, () => this.doSet(filename, content, modified));
   }
 
-  async #get(filename: string): Promise<Buffer> {
+  protected async doGet(filename: string): Promise<Buffer> {
     const key = this.#key(filename);
 
     return new Promise((resolve, reject) => {
@@ -239,10 +239,10 @@ export class Cache implements ICache {
   }
 
   async get(filename: string) {
-    return this.lock(filename, () => this.#get(filename));
+    return this.readLock(filename, () => this.doGet(filename));
   }
 
-  async #has(filename: string): Promise<boolean> {
+  protected async doHas(filename: string): Promise<boolean> {
     const key = this.#key(filename);
     return new Promise(resolve => {
       this.#fs.stat(key, (err, stats) => {
@@ -257,10 +257,10 @@ export class Cache implements ICache {
   }
 
   async has(filename: string): Promise<boolean> {
-    return this.lock(filename, () => this.#has(filename));
+    return this.readLock(filename, () => this.doHas(filename));
   }
 
-  async #remove(filename: string): Promise<void> {
+  protected async doRemove(filename: string): Promise<void> {
     const key = this.#key(filename);
 
     await Promise.all([
@@ -288,10 +288,10 @@ export class Cache implements ICache {
   }
 
   async remove(filename: string) {
-    return this.lock(filename, () => this.#remove(filename));
+    return this.lock(filename, () => this.doRemove(filename));
   }
 
-  async #modified(filename: string): Promise<Date> {
+  protected async doModified(filename: string): Promise<Date> {
     const key = this.#key(filename);
 
     const json = await new Promise<string>((resolve, reject) => {
@@ -309,7 +309,7 @@ export class Cache implements ICache {
   }
 
   async modified(filename: string): Promise<Date> {
-    return this.lock(filename, () => this.#modified(filename));
+    return this.readLock(filename, () => this.doModified(filename));
   }
 
   async clean(): Promise<void> {
@@ -386,6 +386,18 @@ class LockedCache extends Cache {
       fail
     );
   }
+
+  async get(filename: string): Promise<Buffer> {
+    return this.lock(filename, () => this.doGet(filename));
+  }
+
+  async has(filename: string): Promise<boolean> {
+    return this.lock(filename, () => this.doHas(filename));
+  }
+
+  async modified(filename: string): Promise<Date> {
+    return this.lock(filename, () => this.doModified(filename));
+  }
 }
 
 class ReadOnlyLockedCache extends Cache {
@@ -430,5 +442,17 @@ class ReadOnlyLockedCache extends Cache {
       },
       fail
     );
+  }
+
+  set(
+    filename: string,
+    content: string | Buffer,
+    modified?: number | Date
+  ): Promise<void> {
+    throw new Error('not allowed');
+  }
+
+  remove(filename: string): Promise<void> {
+    throw new Error('not allowed');
   }
 }

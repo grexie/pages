@@ -162,9 +162,7 @@ export default async function CacheLoader(
   }
 }
 
-export const pitch = timedAsync(async function pitch(
-  this: LoaderContext<LoaderOptions>
-) {
+export async function pitch(this: LoaderContext<LoaderOptions>) {
   const { context } = this.getOptions();
   const callback = this.async();
   this.cacheable(false);
@@ -247,7 +245,6 @@ export const pitch = timedAsync(async function pitch(
           }
           return {};
         } catch (err) {
-          console.info(err);
           throw err;
         }
       }
@@ -260,6 +257,4 @@ export const pitch = timedAsync(async function pitch(
       console.info('cache-loader:pitch-complete', this.resourcePath);
     }
   }
-});
-
-pitch.timed.logInterval(2000, 'cache-loader:pitch');
+}

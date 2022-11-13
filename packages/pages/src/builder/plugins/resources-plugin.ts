@@ -192,30 +192,26 @@ class SourceCompiler {
 
         const buffer = await this.render(compilation, [...files]);
 
-        try {
-          const cache = this.context.build.cache.create('html');
-          await cache.set(
-            path.resolve(
-              this.context.build.rootDir,
-              this.source.slug,
-              'index.html'
-            ),
-            buffer!
-          );
-          compilation.emitAsset(
-            path.join(this.source.slug, 'index.html'),
-            new RawSource(buffer!)
-            // {
-            //   sourceFilename: `./${path.relative(
-            //     this.context.build.rootDir,
-            //     this.source.filename
-            //   )}`,
+        const cache = this.context.build.cache.create('html');
+        await cache.set(
+          path.resolve(
+            this.context.build.rootDir,
+            this.source.slug,
+            'index.html'
+          ),
+          buffer!
+        );
+        compilation.emitAsset(
+          path.join(this.source.slug, 'index.html'),
+          new RawSource(buffer!)
+          // {
+          //   sourceFilename: `./${path.relative(
+          //     this.context.build.rootDir,
+          //     this.source.filename
+          //   )}`,
 
-            // }
-          );
-        } catch (err) {
-          console.error(err);
-        }
+          // }
+        );
       }
     );
   }

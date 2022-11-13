@@ -75,7 +75,6 @@ export class Server {
         })
       );
     }
-    // app.use(handler.handle);
 
     const server = http.createServer(app);
     server.listen(this.context.port, () => {

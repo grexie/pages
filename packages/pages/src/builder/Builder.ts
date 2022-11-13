@@ -472,7 +472,6 @@ export class Builder {
 
     Object.assign(config, {});
 
-    console.info(config.devServer);
     return config;
   }
 

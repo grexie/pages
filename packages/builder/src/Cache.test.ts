@@ -89,4 +89,16 @@ describe('Cache', () => {
       await cache.set(filename, 'test1', Date.now());
     });
   });
+
+  it('should allow read locks', async () => {
+    const filename = 'test';
+    await cache.set(filename, 'test1', Date.now());
+    expect(
+      (
+        await cache.readLock(filename, async cache2 => {
+          return await cache2.get(filename);
+        })
+      ).toString()
+    ).toBe('test1');
+  });
 });
