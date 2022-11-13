@@ -43,5 +43,5 @@ jobs:
       - run: yarn build
       - run: npm run release patch --github.release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
