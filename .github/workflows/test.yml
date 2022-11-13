@@ -5,7 +5,7 @@ name: Build and Test
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: grexie/node-docker:lts
+    container: node:lts
     steps:
       - uses: actions/checkout@v2
       - id: cache-modules
