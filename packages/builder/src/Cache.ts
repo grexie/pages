@@ -9,7 +9,19 @@ export enum CacheType {
   persistent,
 }
 
-export interface ICache {
+export interface IReadOnlyCache {
+  readLock<T = any>(
+    filename: string | string[],
+    cb: (cache: IReadOnlyCache) => Promise<T>,
+    fail?: boolean
+  ): Promise<T>;
+  get: (filename: string) => Promise<Buffer>;
+  has: (filename: string) => Promise<boolean>;
+  modified: (filename: string) => Promise<Date>;
+  create: (name: string, storage?: CacheType) => IReadOnlyCache;
+}
+
+export interface ICache extends IReadOnlyCache {
   lock<T = any>(
     filename: string | string[],
     cb: (cache: ICache) => Promise<T>,
@@ -20,10 +32,7 @@ export interface ICache {
     content: Buffer | string,
     modified: Date | number
   ) => Promise<void>;
-  get: (filename: string) => Promise<Buffer>;
-  has: (filename: string) => Promise<boolean>;
   remove: (filename: string) => Promise<void>;
-  modified: (filename: string) => Promise<Date>;
   create: (name: string, storage?: CacheType) => ICache;
 }
 
@@ -128,6 +137,45 @@ export class Cache implements ICache {
     fail: boolean = false
   ) {
     return this.#lock(filename, cb, fail);
+  }
+
+  async #readLock<T = any>(
+    filename: string | string[],
+    cb: (cache: IReadOnlyCache) => Promise<T>,
+    fail: boolean = false,
+    locked: Set<string> = new Set()
+  ): Promise<T> {
+    if (!Array.isArray(filename)) {
+      filename = [filename];
+    }
+
+    const keys = filename
+      .filter(filename => !locked.has(filename))
+      .map(filename => ({ [filename]: this.#key(filename) }))
+      .reduce((a, b) => ({ ...a, ...b }), {});
+
+    const lock = await this.#locks.readLock(Object.values(keys), fail);
+    const cache = new ReadOnlyLockedCache({
+      locked: filename,
+      storage: this.storage,
+      cacheDir: this.cacheDir,
+      cacheType: this.cacheType,
+      parent: this,
+    });
+
+    try {
+      return await cb(cache);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  async readLock<T = any>(
+    filename: string | string[],
+    cb: (cache: IReadOnlyCache) => Promise<T>,
+    fail: boolean = false
+  ) {
+    return this.#readLock(filename, cb, fail);
   }
 
   async #set(
@@ -327,6 +375,51 @@ class LockedCache extends Cache {
       notLocked,
       () => {
         const cache = new LockedCache({
+          locked: filename as string[],
+          storage: this.storage,
+          cacheDir: this.cacheDir,
+          cacheType: this.cacheType,
+          parent: this,
+        });
+        return cb(cache);
+      },
+      fail
+    );
+  }
+}
+
+class ReadOnlyLockedCache extends Cache {
+  readonly #locked: Set<string>;
+
+  constructor({ locked, ...options }: LockedCacheOptions) {
+    super(options);
+    this.#locked = new Set(locked);
+  }
+
+  async readLock<T = any>(
+    filename: string | string[],
+    cb: (cache: IReadOnlyCache) => Promise<T>,
+    fail?: boolean
+  ): Promise<T> {
+    if (typeof filename === 'string') {
+      filename = [filename];
+    }
+
+    if (!filename.length) {
+      return super.readLock(filename, cb, fail);
+    }
+
+    let notLocked: string[] = [];
+    for (const f of filename) {
+      if (!this.#locked.has(f)) {
+        notLocked.push(f);
+      }
+    }
+
+    return super.readLock(
+      notLocked,
+      () => {
+        const cache = new ReadOnlyLockedCache({
           locked: filename as string[],
           storage: this.storage,
           cacheDir: this.cacheDir,

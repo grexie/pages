@@ -1,9 +1,65 @@
 import type { LoaderContext } from 'webpack';
 import type { BuildContext } from '../BuildContext.js';
-import type { ICache } from '@grexie/builder/Cache.js';
+import type { ICache, IReadOnlyCache } from '@grexie/builder/Cache.js';
+import { timedAsync } from '../../utils/timed.js';
+import webpack from 'webpack';
 
 interface LoaderOptions {
   context: BuildContext;
+}
+
+const DependencyTable = new WeakMap<webpack.Compiler, DependencyCache>();
+
+class DependencyCache {
+  readonly cache: Record<string, Record<string, number>> = {};
+
+  static get(compiler: webpack.Compiler) {
+    if (!DependencyTable.has(compiler.root)) {
+      DependencyTable.set(compiler.root, new DependencyCache());
+    }
+    return DependencyTable.get(compiler.root)!;
+  }
+
+  async get(
+    cache: IReadOnlyCache,
+    filename: string
+  ): Promise<Record<string, number>> {
+    if (filename in this.cache) {
+      return this.cache[filename];
+    }
+    const { dependencies } = JSON.parse(
+      (await cache.get(`${filename}.webpack.json`)).toString()
+    );
+    this.cache[filename] = dependencies;
+    return dependencies;
+  }
+
+  async set(
+    cache: ICache,
+    filename: string,
+    {
+      dependencies,
+      ...other
+    }: Record<string, any> & {
+      dependencies: Record<string, number>;
+    },
+    mtime: number
+  ): Promise<void> {
+    this.cache[filename] = dependencies;
+    return cache.set(
+      `${filename}.webpack.json`,
+      JSON.stringify({ dependencies, ...other }),
+      mtime
+    );
+  }
+
+  async has(cache: IReadOnlyCache, filename: string): Promise<boolean> {
+    if (filename in this.cache) {
+      return true;
+    }
+    const has = await cache.has(filename);
+    return has;
+  }
 }
 
 export default async function CacheLoader(
@@ -16,8 +72,10 @@ export default async function CacheLoader(
   const callback = this.async();
   this.cacheable(false);
 
+  const dependencyCache = DependencyCache.get(this._compiler!);
+
   try {
-    const cache = context.cache.create('webpack');
+    const cache = context.cache.create('pages-cache-loader');
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('cache-loader', this.resourcePath);
@@ -76,17 +134,14 @@ export default async function CacheLoader(
 
         await Promise.all([
           cache.set(this.resourcePath, content, stats.mtime),
-          cache.set(
-            `${this.resourcePath}.webpack.json`,
-            JSON.stringify(
-              {
-                map: inputSourceMap,
-                meta: additionalData,
-                dependencies: dependencyMap,
-              },
-              null,
-              2
-            ),
+          dependencyCache.set(
+            cache,
+            this.resourcePath,
+            {
+              map: inputSourceMap,
+              meta: additionalData,
+              dependencies: dependencyMap,
+            },
             stats.mtime
           ),
         ]);
@@ -107,109 +162,104 @@ export default async function CacheLoader(
   }
 }
 
-export async function pitch(this: LoaderContext<LoaderOptions>) {
+export const pitch = timedAsync(async function pitch(
+  this: LoaderContext<LoaderOptions>
+) {
   const { context } = this.getOptions();
   const callback = this.async();
   this.cacheable(false);
 
-  const cache = context.cache.create('webpack');
+  const dependencyCache = DependencyCache.get(this._compiler!);
+
+  const cache = context.cache.create('pages-cache-loader');
   try {
-    const { content, map, meta } = await cache.lock<{
-      content?: Buffer;
-      map?: any;
-      meta?: any;
-    }>('cache-loader', async cache => {
-      if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-        // console.info('cache-loader:pitch', this.resourcePath);
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('cache-loader:pitch', this.resourcePath);
+    }
+
+    const hasChanged = async (
+      cache: IReadOnlyCache,
+      filename: string,
+      mtime: number = Number.MAX_VALUE
+    ): Promise<boolean> => {
+      if (!(await dependencyCache.has(cache, filename))) {
+        return false;
       }
 
-      try {
-        const hasChanged = async (
-          cache: ICache,
-          filename: string,
-          mtime: number = Number.MAX_VALUE
-        ): Promise<boolean> => {
-          if (!(await cache.has(filename))) {
-            return false;
-          }
+      const [cached, stats] = await Promise.all([
+        cache.modified(filename),
+        new Promise<any>(resolve =>
+          this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
+            if (err) {
+              resolve(null);
+              return;
+            }
 
-          const [cached, stats] = await Promise.all([
-            cache.modified(filename),
-            new Promise<any>(resolve =>
-              this._compiler?.inputFileSystem.stat(filename, (err, stats) => {
-                if (err) {
-                  resolve(null);
-                  return;
-                }
+            resolve(stats);
+          })
+        ),
+      ]);
 
-                resolve(stats);
-              })
-            ),
-          ]);
+      if (
+        !stats ||
+        cached.getTime() > mtime ||
+        stats.mtime.getTime() > cached.getTime()
+      ) {
+        return true;
+      }
 
-          if (
-            !stats ||
-            cached.getTime() > mtime ||
-            stats.mtime.getTime() > cached.getTime()
-          ) {
-            return true;
-          }
+      const dependencies = await dependencyCache.get(cache, filename);
 
-          const { dependencies } = JSON.parse(
-            (await cache.get(`${filename}.webpack.json`)).toString()
-          ) as { dependencies: Record<string, number> };
+      if (dependencies[filename]) {
+        delete dependencies[filename];
+      }
 
-          if (dependencies[filename]) {
-            delete dependencies[filename];
-          }
+      const results = await cache.readLock(
+        [
+          ...Object.keys(dependencies),
+          ...Object.keys(dependencies).map(
+            filename => `${filename}.webpack.json`
+          ),
+        ],
+        async cache =>
+          Promise.all(
+            Object.entries(dependencies).map(([filename, mtime]) =>
+              hasChanged(cache, filename, mtime)
+            )
+          )
+      );
 
-          const results = await cache.lock(
-            [
-              ...Object.keys(dependencies),
-              ...Object.keys(dependencies).map(
-                filename => `${filename}.webpack.json`
-              ),
-            ],
-            async cache =>
-              Promise.all(
-                Object.entries(dependencies).map(([filename, mtime]) =>
-                  hasChanged(cache, filename, mtime)
-                )
-              )
-          );
+      return results.reduce((a, b) => a || b, false);
+    };
 
-          return results.reduce((a, b) => a || b, false);
-        };
-
-        const result = await cache.lock(
-          [this.resourcePath, `${this.resourcePath}.webpack.json`],
-          async cache => {
-            try {
-              if (await cache.has(this.resourcePath)) {
-                if (!(await hasChanged(cache, this.resourcePath))) {
-                  const [content, _webpack] = await Promise.all([
-                    cache.get(this.resourcePath),
-                    cache.get(`${this.resourcePath}.webpack.json`),
-                  ]);
-                  return { content, ...JSON.parse(_webpack.toString()) };
-                }
-              }
-              return {};
-            } catch (err) {
-              console.info(err);
-              throw err;
+    const { content, map, meta } = await cache.readLock(
+      [this.resourcePath, `${this.resourcePath}.webpack.json`],
+      async cache => {
+        try {
+          if (await dependencyCache.has(cache, this.resourcePath)) {
+            if (!(await hasChanged(cache, this.resourcePath))) {
+              const [content, _webpack] = await Promise.all([
+                cache.get(this.resourcePath),
+                cache.get(`${this.resourcePath}.webpack.json`),
+              ]);
+              return { content, ...JSON.parse(_webpack.toString()) };
             }
           }
-        );
-        return result;
-      } finally {
-        if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-          // console.info('cache-loader:pitch-complete', this.resourcePath);
+          return {};
+        } catch (err) {
+          console.info(err);
+          throw err;
         }
       }
-    });
-    callback(null, content, map, meta);
+    );
+    return callback(null, content, map, meta);
   } catch (err) {
     callback(err as any);
+  } finally {
+    if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+      console.info('cache-loader:pitch-complete', this.resourcePath);
+    }
   }
-}
+});
+
+pitch.timed.logInterval(2000, 'cache-loader:pitch');

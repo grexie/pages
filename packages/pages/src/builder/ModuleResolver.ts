@@ -5,6 +5,7 @@ import { ModuleLoaderType } from './ModuleLoader.js';
 import type { Compiler } from 'webpack';
 import { createRequire, Module } from 'module';
 import path from 'path';
+import { timedAsync } from '../utils/timed.js';
 
 export interface ModuleReference {
   readonly filename: string;
@@ -153,116 +154,118 @@ export class ModuleResolver {
     return o;
   }
 
-  async resolve(context: string, request: string): Promise<ModuleReference> {
-    if (/\!/.test(request)) {
-      const requests = request.split(/\!/g);
-      const result = (
-        await Promise.all(
-          requests.map(async requestParams => {
-            const [requestPart, query] = requestParams.split('?', 2);
-            if (requestPart) {
-              return {
-                ...(await this.resolve(context, requestPart)),
-                query,
-              };
-            } else {
-              return { filename: '', query };
-            }
-          })
+  resolve = timedAsync<(context: string, request: string) => Promise<ModuleReference>>(
+    async (context: string, request: string): Promise<ModuleReference> => {
+      if (/\!/.test(request)) {
+        const requests = request.split(/\!/g);
+        const result = (
+          await Promise.all(
+            requests.map(async requestParams => {
+              const [requestPart, query] = requestParams.split('?', 2);
+              if (requestPart) {
+                return {
+                  ...(await this.resolve(context, requestPart)),
+                  query,
+                };
+              } else {
+                return { filename: '', query };
+              }
+            })
+          )
         )
-      )
-        .map(
-          result =>
-            `${result.filename ? result.filename : ''}${
-              result.query ? '?' : ''
-            }${result.query ? result.query : ''}`
-        )
-        .join('!');
+          .map(
+            result =>
+              `${result.filename ? result.filename : ''}${
+                result.query ? '?' : ''
+              }${result.query ? result.query : ''}`
+          )
+          .join('!');
 
-      return this.#buildImport(result, { compile: true });
-    }
+        return this.#buildImport(result, { compile: true });
+      }
 
-    let resolved: WebpackResolveInfo;
-    try {
-      resolved = await this.#resolve(context, request);
-    } catch (err) {
-      return this.#buildImport(request, { builtin: true });
-    }
+      let resolved: WebpackResolveInfo;
+      try {
+        resolved = await this.#resolve(context, request);
+      } catch (err) {
+        return this.#buildImport(request, { builtin: true });
+      }
 
-    resolved.filename = await this.#realpath(resolved.filename);
+      resolved.filename = await this.#realpath(resolved.filename);
 
-    const { descriptionFileData } = resolved;
+      const { descriptionFileData } = resolved;
 
-    if (
-      resolved.filename ===
-      this.#require.resolve(
-        path.resolve(this.context.pagesDir, 'defaults.pages.js')
-      )
-    ) {
-      return this.#buildImport(resolved.filename, {
-        compile: true,
-        descriptionFileData,
-      });
-    }
-
-    if (
-      this.#forceCompileExtensions.reduce(
-        (a, b) => a || resolved.filename.endsWith(b),
-        false
-      )
-    ) {
-      return this.#buildImport(resolved.filename, {
-        compile: true,
-        descriptionFileData,
-      });
-    } else if (
-      !this.#extensions.reduce(
-        (a, b) => a || resolved.filename.endsWith(b),
-        false
-      )
-    ) {
-      return this.#buildImport(resolved.filename, {
-        compile: true,
-        descriptionFileData,
-      });
-    }
-
-    const roots = await Promise.all(
-      this.#forceCompileRoots.map(async module => {
-        const filename = path.resolve(context, module);
-        try {
-          await this.#stat(filename);
-          return filename;
-        } catch (err) {
-          const resolved = await this.#resolve(context, module);
-          if (!resolved.descriptionFileRoot) {
-            throw new Error(
-              `couldn't resolve description file for root ${module}`
-            );
-          }
-          return resolved.descriptionFileRoot;
-        }
-      })
-    );
-
-    if (
-      !containsPath(
-        path.resolve(this.context.rootDir, 'node_modules'),
-        resolved.filename
-      )
-    ) {
       if (
-        roots.reduce((a, b) => a || containsPath(b, resolved.filename), false)
+        resolved.filename ===
+        this.#require.resolve(
+          path.resolve(this.context.pagesDir, 'defaults.pages.js')
+        )
       ) {
         return this.#buildImport(resolved.filename, {
           compile: true,
           descriptionFileData,
         });
       }
-    }
 
-    return this.#buildImport(resolved.filename, {
-      descriptionFileData,
-    });
-  }
+      if (
+        this.#forceCompileExtensions.reduce(
+          (a, b) => a || resolved.filename.endsWith(b),
+          false
+        )
+      ) {
+        return this.#buildImport(resolved.filename, {
+          compile: true,
+          descriptionFileData,
+        });
+      } else if (
+        !this.#extensions.reduce(
+          (a, b) => a || resolved.filename.endsWith(b),
+          false
+        )
+      ) {
+        return this.#buildImport(resolved.filename, {
+          compile: true,
+          descriptionFileData,
+        });
+      }
+
+      const roots = await Promise.all(
+        this.#forceCompileRoots.map(async module => {
+          const filename = path.resolve(context, module);
+          try {
+            await this.#stat(filename);
+            return filename;
+          } catch (err) {
+            const resolved = await this.#resolve(context, module);
+            if (!resolved.descriptionFileRoot) {
+              throw new Error(
+                `couldn't resolve description file for root ${module}`
+              );
+            }
+            return resolved.descriptionFileRoot;
+          }
+        })
+      );
+
+      if (
+        !containsPath(
+          path.resolve(this.context.rootDir, 'node_modules'),
+          resolved.filename
+        )
+      ) {
+        if (
+          roots.reduce((a, b) => a || containsPath(b, resolved.filename), false)
+        ) {
+          return this.#buildImport(resolved.filename, {
+            compile: true,
+            descriptionFileData,
+          });
+        }
+      }
+
+      return this.#buildImport(resolved.filename, {
+        descriptionFileData,
+      });
+    }
+  );
 }

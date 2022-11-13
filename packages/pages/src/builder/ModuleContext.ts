@@ -12,6 +12,7 @@ import path from 'path';
 import { EsmModuleLoader } from './EsmModuleLoader.js';
 import { CommonJsModuleLoader } from './CommonJsModuleLoader.js';
 import { NodeModuleLoader } from './NodeModuleLoader.js';
+import { timedAsync } from '../utils/timed.js';
 
 export interface ModuleContextOptions {
   context: BuildContext;
@@ -124,25 +125,41 @@ export class ModuleContext {
     return (module.vmModule.namespace as any).default;
   }
 
-  async requireModule(
-    context: string,
-    request: string
-  ): Promise<InstantiatedModule> {
-    const reference = await this.resolver.resolve(context, request);
-    return this.loaders[reference.loader].load(context, request);
-  }
-
-  async createModule(
-    context: string,
-    filename: string,
-    source: string,
-    loader?: ModuleLoaderType
-  ): Promise<InstantiatedModule> {
-    if (!loader) {
-      const reference = await this.resolver.resolve(context, filename);
-      loader = reference.loader;
+  requireModule = timedAsync(
+    async (context: string, request: string): Promise<InstantiatedModule> => {
+      const reference = await this.resolver.resolve(context, request);
+      return this.loaders[reference.loader].load(context, request);
     }
+  );
 
-    return this.loaders[loader].create(context, filename, source);
+  createModule = timedAsync(
+    async (
+      context: string,
+      filename: string,
+      source: string,
+      loader?: ModuleLoaderType
+    ): Promise<InstantiatedModule> => {
+      if (!loader) {
+        const reference = await this.resolver.resolve(context, filename);
+        loader = reference.loader;
+      }
+
+      return this.loaders[loader!].create(context, filename, source);
+    }
+  );
+
+  log() {
+    console.info('\n---');
+
+    this.resolver.resolve.timed.log('resolve');
+    this.resolver.resolve.timed.reset();
+
+    this.requireModule.timed.log('requireModule');
+    this.requireModule.timed.reset();
+
+    this.createModule.timed.log('createModule');
+    this.createModule.timed.reset();
+
+    console.info('---');
   }
 }

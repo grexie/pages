@@ -302,6 +302,7 @@ export default async function ModuleLoader(
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('module-loader:complete', this.resourcePath);
     }
+    modules.log();
   }
 }
 

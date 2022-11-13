@@ -176,7 +176,9 @@ export class Builder {
   async config(sources: Source[]): Promise<webpack.Configuration> {
     const require = createRequire(import.meta.url);
 
-    const config: webpack.Configuration = {
+    const config: webpack.Configuration & {
+      devServer?: webpack.WebpackOptionsNormalized['devServer'];
+    } = {
       context: this.context.rootDir,
       entry: {},
       stats: {
@@ -195,6 +197,7 @@ export class Builder {
       //     additionalModuleDirs: this.context.modulesDirs.slice(1),
       //   }),
       // ]
+
       module: {
         rules: [
           {
@@ -467,19 +470,9 @@ export class Builder {
       );
     }
 
-    Object.assign(config as any, {
-      devServer: {
-        hot: false,
-        client: false,
-        watchFiles: {
-          options: {
-            ignored: /\/(\.cache|build)\//,
-            cwd: this.context.rootDir,
-          },
-        },
-      },
-    });
+    Object.assign(config, {});
 
+    console.info(config.devServer);
     return config;
   }
 
