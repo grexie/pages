@@ -27,6 +27,7 @@ class LazyContext {
   async complete<T extends unknown>(promise: () => Promise<T> | T): Promise<T> {
     const next = async (): Promise<void> => {
       await new Promise(resolve => setImmediate(resolve));
+      console.info(this.#wrapped.length);
       if (this.#wrapped.length) {
         await Promise.all(this.#wrapped);
         return next();
@@ -74,10 +75,6 @@ export const useLazyBase = (
         });
 
         return Component;
-
-        return (props: Attributes & PropsWithRef<any>) => (
-          <Component {...props} />
-        );
       }),
     dependencies
   );
@@ -100,7 +97,7 @@ export const useLazyComplete = <P extends Object = {}>(
   dependencies: any[]
 ) => {
   const context = useLazyContext();
-
+  console.info(context);
   const Component = useLazyBase(
     [async () => context.complete(cb as () => Promise<any>)],
     dependencies

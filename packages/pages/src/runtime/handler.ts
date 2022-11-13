@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { createRoot, hydrateRoot } from 'react-dom/client';
+import { hydrateRoot } from 'react-dom/client';
 import { compose } from '@grexie/compose';
 import { ResourceContext } from '../api/Resource.js';
 import {

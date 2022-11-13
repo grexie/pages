@@ -1,10 +1,16 @@
-import { FC, PropsWithChildren, Suspense } from 'react';
+import {
+  FC,
+  PropsWithChildren,
+  Suspense,
+  useState,
+  startTransition,
+} from 'react';
 import { HeadProvider, useHead, withHead } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles, useStyles } from '../hooks/useStyles.js';
 import { useResource } from '../hooks/useResource.js';
 import { useScripts } from '../hooks/useScripts.js';
-import { useLazyComplete } from '../index.js';
+import { useLazyComplete } from '../hooks/useLazy.js';
 
 export interface DocumentHeadProps {}
 
@@ -14,16 +20,17 @@ export const DocumentHead: FC<PropsWithChildren<DocumentHeadProps>> = ({
   const Head = useLazyComplete(
     async () => () => {
       const head = useHead().root;
-      return <head>{head.render()}</head>;
+      return (
+        <head>
+          {children}
+          {head.render()}
+        </head>
+      );
     },
     []
   );
 
-  return (
-    <Suspense>
-      <Head />
-    </Suspense>
-  );
+  return <Head />;
 };
 
 const Scripts: FC<{}> = () => {

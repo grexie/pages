@@ -453,6 +453,9 @@ export class Builder {
           entries: false,
           modules: false,
           dependencies: false,
+          handler: (percentage: number, msg: string, ...args) => {
+            console.info((percentage * 100).toFixed(0) + '%', msg, ...args);
+          },
           // profile: true,
         }),
         new ResourcesPlugin({ context: this.context }),

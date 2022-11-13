@@ -5,35 +5,44 @@ import {
   PropsWithChildren,
   useMemo,
   cloneElement,
+  useState,
+  useEffect,
+  startTransition,
 } from 'react';
+import EventEmitter from 'events';
 import { isElement, isFragment } from 'react-is';
 import { hash } from '../utils/hash.js';
 import { createContext } from '../utils/context.js';
+import { setImmediate } from 'timers';
 
-class HeadContext {
+class HeadContext extends EventEmitter {
   readonly parent?: HeadContext;
   props: HeadProps = {};
   children: HeadContext[] = [];
 
   constructor(parent?: HeadContext) {
+    super();
+
     this.parent = parent;
     parent?.children.push(this);
   }
 
   setProps(props: { children?: ReactNode }) {
-    let fragment;
+    let children;
 
     if (Array.isArray(props.children)) {
-      fragment = <>{props.children.map(child => cloneElement(child))}</>;
+      children = props.children.map(child => cloneElement(child));
     } else if (isFragment(props.children)) {
-      fragment = <>{cloneElement(props.children.props.children)}</>;
+      children = cloneElement(props.children.props.children);
     } else if (isElement(props.children)) {
-      fragment = <>{cloneElement(props.children)}</>;
+      children = cloneElement(props.children);
     } else {
-      fragment = <>{props.children}</>;
+      children = props.children;
     }
 
-    this.props = { children: fragment };
+    this.props = { children };
+
+    this.root.emit('update');
   }
 
   get root() {
@@ -56,13 +65,40 @@ class HeadContext {
 
 export const {
   Provider: HeadProvider,
-  use: useHead,
+  use: _useHead,
   with: withHead,
 } = createContext<HeadContext>(Provider => ({ children }) => {
-  const parentContext = useHead();
+  const parentContext = _useHead();
   const context = useMemo(() => new HeadContext(parentContext), []);
   return <Provider value={context}>{children}</Provider>;
 });
+
+export const useHead = () => {
+  const head = _useHead();
+  const [, setState] = useState({});
+
+  if (typeof window === 'undefined') {
+    useMemo(() => {
+      head.root.on('update', () => {
+        setImmediate(() => setState({}));
+      });
+    }, [head.root]);
+  } else {
+    useEffect(() => {
+      const handler = () => {
+        setImmediate(() => {
+          startTransition(() => setState({}));
+        });
+      };
+      head.root.on('update', handler);
+      return () => {
+        head.root.removeListener('update', handler);
+      };
+    }, [head.root]);
+  }
+
+  return head;
+};
 
 export interface HeadProps extends PropsWithChildren<{}> {}
 
@@ -82,7 +118,7 @@ export const { with: withHeadRendering, use: useHeadRendering } =
 interface ServerHeadProps extends HeadProps {}
 
 const ServerHead: FC<ServerHeadProps> = withHead(({ ...props }) => {
-  const head = useHead();
+  const head = _useHead();
 
   useMemo(() => {
     head.setProps(props);
@@ -94,7 +130,7 @@ const ServerHead: FC<ServerHeadProps> = withHead(({ ...props }) => {
 interface BrowserHeadProps extends HeadProps {}
 
 const BrowserHead: FC<BrowserHeadProps> = withHead(({ ...props }) => {
-  const head = useHead();
+  const head = _useHead();
 
   useMemo(() => {
     head.setProps(props);

@@ -1,12 +1,6 @@
 import { useMemo } from 'react';
-import {
-  Document,
-  DocumentProps,
-  DocumentOptions,
-  mergeDocumentProps,
-} from '../api/Document.js';
+import { Document, DocumentOptions } from '../api/Document.js';
 import { createContextWithProps } from '../utils/context.js';
-import { hash } from '../utils/hash.js';
 
 const {
   Provider: DocumentProvider,
@@ -20,19 +14,12 @@ const {
     }
 );
 
-export const useDocument = (props?: DocumentProps) => {
+export const useDocument = () => {
   const document = useDocumentContext();
 
   if (!document) {
     throw new Error('document context not found');
   }
-
-  useMemo(() => {
-    if (props) {
-      mergeDocumentProps(document.props, props);
-      document.update();
-    }
-  }, [document, hash(props ?? null)]);
 
   return document;
 };

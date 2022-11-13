@@ -65,7 +65,7 @@ export class Server {
         publicPath: compiler.options.output.publicPath,
         writeToDisk: false,
         serverSideRender: false,
-        stats: 'errors-warnings',
+        // stats: 'errors-warnings',
       })
     );
     if (process.env.WEBPACK_HOT === 'true') {
