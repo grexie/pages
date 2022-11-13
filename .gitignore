@@ -8,6 +8,7 @@ node_modules/
 /packages/*/*/
 !/packages/*/src/
 !/packages/*/bin/
+!/packages/*/jest.config.js
 /.cache/
 /.test/
 /packages/*/.cache/

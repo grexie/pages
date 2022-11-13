@@ -15,7 +15,7 @@
     "link": "monorepo workspaces yarn link",
     "unlink": "monorepo workspaces yarn unlink",
     "release": "release-it",
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "test": "node --no-warnings --experimental-specifier-resolution=node --experimental-import-meta-resolve --experimental-vm-modules ./node_modules/.bin/jest",
     "postinstall": "patch-package"
   },
   "devDependencies": {
