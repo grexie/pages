@@ -36,7 +36,7 @@ export default async function ImageLoader(
   }
 
   const { context } = this.getOptions();
-  this.cacheable();
+  this.cacheable(true);
 
   try {
     const basename = path.basename(this.resourcePath).replace(/\.\w+$/i, '');
@@ -90,7 +90,7 @@ export default async function ImageLoader(
   } finally {
     const modules = context.getModuleContext(this._compilation!);
     modules.evict(this.resourcePath);
-    
+
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('image-loader:complete', this.resourcePath);
     }

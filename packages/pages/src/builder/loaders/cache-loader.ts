@@ -14,6 +14,7 @@ export default async function CacheLoader(
 ) {
   const { context } = this.getOptions();
   const callback = this.async();
+  this.cacheable(false);
 
   try {
     const cache = context.cache.create('webpack');
@@ -39,7 +40,7 @@ export default async function CacheLoader(
           )
         );
 
-        const dependencies = Array.from(new Set(this.getDependencies()));
+        const dependencies = [...new Set(this.getDependencies())];
         const dependencyStats = (
           await Promise.all(
             dependencies.map(
@@ -92,6 +93,10 @@ export default async function CacheLoader(
       }
     );
 
+    const modules = context.getModuleContext(this._compilation!);
+
+    modules.evict(this.resourcePath);
+
     callback(null, content, inputSourceMap, additionalData);
   } catch (err) {
     callback(err as any);
@@ -105,6 +110,7 @@ export default async function CacheLoader(
 export async function pitch(this: LoaderContext<LoaderOptions>) {
   const { context } = this.getOptions();
   const callback = this.async();
+  this.cacheable(false);
 
   const cache = context.cache.create('webpack');
   try {
@@ -114,7 +120,7 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       meta?: any;
     }>('cache-loader', async cache => {
       if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-        console.info('cache-loader:pitch', this.resourcePath);
+        // console.info('cache-loader:pitch', this.resourcePath);
       }
 
       try {
@@ -198,7 +204,7 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
         return result;
       } finally {
         if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-          console.info('cache-loader:pitch-complete', this.resourcePath);
+          // console.info('cache-loader:pitch-complete', this.resourcePath);
         }
       }
     });

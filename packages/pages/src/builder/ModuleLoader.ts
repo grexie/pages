@@ -33,7 +33,7 @@ export interface Module {
   readonly context: string;
   readonly filename: string;
   readonly source: string;
-  readonly references: ModuleReferenceTable;
+  // readonly references: ModuleReferenceTable;
 }
 
 export type ModuleReferenceTable = Record<string, ModuleReference>;
@@ -105,13 +105,13 @@ export abstract class ModuleLoader {
       throw new Error(`unable to load module ${filename}`);
     }
 
-    const references = await this.parse(context, source);
+    // const references = await this.parse(context, source);
 
     return this.instantiate({
       context,
       filename,
       source,
-      references,
+      // references,
     });
   }
 

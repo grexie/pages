@@ -21,7 +21,7 @@ export default async function ModuleLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
-  this.cacheable();
+  this.cacheable(false);
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
@@ -44,15 +44,6 @@ export default async function ModuleLoader(
       import.meta,
       '../SourceContext.js'
     );
-
-    // await context.modules.evict(factory, `${this.resourcePath}$original`, {
-    //   recompile: true,
-    //   fail: false,
-    // });
-    // await context.modules.evict(factory, this.resourcePath, {
-    //   recompile: true,
-    //   fail: false,
-    // });
 
     const path = context.builder.filenameToPath(this.resourcePath);
 
@@ -227,8 +218,6 @@ export default async function ModuleLoader(
         .filter(({ builtin }) => !builtin)
         .forEach(({ filename }) => this.addDependency(filename));
 
-      modules.evict(this.resourcePath);
-
       return callback(
         null,
         header + compiled!.code + footer,
@@ -260,10 +249,6 @@ export default async function ModuleLoader(
       references
         .filter(({ builtin }) => !builtin)
         .forEach(({ filename }) => this.addDependency(filename));
-
-      // await context.modules.evict(factory, `${this.resourcePath}$original`, {
-      //   recompile: true,
-      // });
 
       const header = `
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages/runtime/handler";
@@ -299,7 +284,6 @@ export default async function ModuleLoader(
       ${hmrFooter}
     `;
 
-      modules.evict(this.resourcePath);
       return callback(
         null,
         header + compiled!.code! + footer,

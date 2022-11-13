@@ -17,19 +17,9 @@ export default async function PagesLoader(
   const { context } = this.getOptions();
   const callback = this.async();
 
-  this.cacheable();
-
-  // const resolver = createResolver();
-  // context.modules.addBuild(this.resourcePath, resolver);
+  this.cacheable(false);
 
   try {
-    // const factory = modules.createModuleFactory(this._compilation!);
-
-    // await context.modules.evict(factory, this.resourcePath, {
-    //   recompile: true,
-    //   fail: false,
-    // });
-
     const modules = context.getModuleContext(this._compilation!);
 
     const configModule = await modules.createModule(
@@ -50,12 +40,6 @@ export default async function PagesLoader(
     }
 
     const { metadata = {}, ...config } = configExports;
-
-    // await context.modules.evict(factory, this.resourcePath, {
-    //   recompile: true,
-    // });
-
-    modules.evict(this.resourcePath);
 
     callback(
       null,

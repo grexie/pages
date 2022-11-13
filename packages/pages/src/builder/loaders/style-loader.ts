@@ -14,7 +14,7 @@ export default async function StyleLoader(
   content: Buffer,
   inputSourceMap: any
 ) {
-  this.cacheable();
+  this.cacheable(false);
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('style-loader', this.resourcePath);
@@ -59,17 +59,11 @@ export default async function StyleLoader(
         offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length);
     }
 
-    modules.evict(this.resourcePath);
-
     callback(null, chunk, map as any);
   } catch (err) {
     callback(err as any);
     resolver.reject(err);
   } finally {
-    // await context.modules.evict(factory, this.resourcePath, {
-    //   recompile: true,
-    // });
-
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('style-loader:complete', this.resourcePath);
     }

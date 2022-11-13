@@ -56,7 +56,6 @@ export class NodeModuleLoader extends ModuleLoader {
     return this.instantiate({
       context,
       filename: request,
-      references: {},
       source: '',
     });
   }

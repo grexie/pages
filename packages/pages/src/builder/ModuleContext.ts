@@ -60,6 +60,10 @@ export class ModuleContext {
     >;
   }
 
+  reset() {
+    ModuleLoader.reset(this.compilation);
+  }
+
   evict(filename: string) {
     ModuleLoader.evict(this.compilation, filename);
   }

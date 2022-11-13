@@ -111,8 +111,45 @@ class SourceCompiler {
     );
 
     compilation.hooks.processAssets.tapPromise(
-      { name, stage: Infinity },
-      async assets => {
+      { name: 'SourceCompiler', stage: Infinity },
+      async () => {
+        // let hasChanged = false;
+        // for (const chunk of compilation.entrypoints.get(this.source.slug)
+        //   ?.chunks ?? []) {
+        //   if (chunk.rendered) {
+        //     hasChanged = true;
+        //     break;
+        //   }
+        // }
+
+        // if (!hasChanged) {
+        //   const cache = this.context.build.cache.create('html');
+        //   try {
+        //     const buffer = await cache.get(
+        //       path.resolve(
+        //         this.context.build.rootDir,
+        //         this.source.slug,
+        //         'index.html'
+        //       )
+        //     );
+
+        //     compilation.emitAsset(
+        //       path.join(this.source.slug, 'index.html'),
+        //       new RawSource(buffer),
+        //       {
+        //         sourceFilename: `./${path.relative(
+        //           this.context.build.rootDir,
+        //           this.source.filename
+        //         )}`,
+        //         related: { entry: path.join(this.source.slug, 'index.js') },
+        //       }
+        //     );
+        //     return;
+        //   } catch (err) {}
+        // }
+
+        // console.info('building', this.source.filename);
+
         const files = new Set<string>();
 
         let publicPath = compilation.outputOptions.publicPath ?? '/';
@@ -156,12 +193,25 @@ class SourceCompiler {
         const buffer = await this.render(compilation, [...files]);
 
         try {
+          const cache = this.context.build.cache.create('html');
+          await cache.set(
+            path.resolve(
+              this.context.build.rootDir,
+              this.source.slug,
+              'index.html'
+            ),
+            buffer!
+          );
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
-            new RawSource(buffer!),
-            {
-              sourceFilename: this.source.filename,
-            }
+            new RawSource(buffer!)
+            // {
+            //   sourceFilename: `./${path.relative(
+            //     this.context.build.rootDir,
+            //     this.source.filename
+            //   )}`,
+
+            // }
           );
         } catch (err) {
           console.error(err);
@@ -197,6 +247,15 @@ export class ResourcesPlugin {
         build: this.context,
         compilation,
       });
+
+      context.modules.reset();
+
+      // compilation.hooks.processAssets.tap(
+      //   { name: 'ResourcesPlugin', stage: Infinity, before: 'SourceCompiler' },
+      //   async () => {
+      //     context.modules.reset();
+      //   }
+      // );
 
       await Promise.all(
         sources.map(async source => {
