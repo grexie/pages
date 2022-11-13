@@ -44,8 +44,8 @@ jobs:
       - name: publish
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          find . -type f -exec chmod 0666 {} \;
-          find . -type d -exec chmod 0777 {} \;
+          find . -type f -exec chmod ugo+rw {} \;
+          find . -type d -exec chmod ugo+rwx {} \;
           npm run release patch --github.release
         env:
           GITHUB_TOKEN: ${{ github.token }}
