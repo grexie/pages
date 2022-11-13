@@ -26,6 +26,7 @@
     "css-loader": "^6.7.1",
     "es-main": "^1.0.2",
     "express": "^4.18.2",
+    "glob": "^8.0.3",
     "gray-matter": "^4.0.3",
     "html": "^1.0.0",
     "inline-source-map-comment": "^1.0.5",
