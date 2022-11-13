@@ -41,7 +41,9 @@ jobs:
       - if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn --frozen-lockfile
       - run: yarn build
-      - run: npm run release patch --github.release
+      - run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          npm run release patch --github.release
         env:
           GITHUB_TOKEN: ${{ github.token }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
