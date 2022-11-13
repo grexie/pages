@@ -11,19 +11,13 @@ jobs:
       - linux
       - arm64
     container: grexie/node-docker:lts
-    strategy:
-      matrix:
-        node-version: [18.x]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
       - id: cache-modules
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ matrix.node-version }}-${{ runner.OS }}-build-${{ hashFiles('package.json', 'yarn.lock') }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('package.json', 'yarn.lock') }}
       - if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn --frozen-lockfile
       - run: yarn build
@@ -39,10 +33,6 @@ jobs:
       - arm64
     container: grexie/node-docker:lts
     steps:
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          registry-url: 'https://registry.npmjs.org'
       - run: |
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git config --global user.name "${GITHUB_ACTOR}"
@@ -53,7 +43,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ matrix.node-version }}--${{ runner.OS }}-build-${{ hashFiles('package.json', 'yarn.lock') }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('package.json', 'yarn.lock') }}
       - if: steps.cache-modules.outputs.cache-hit != 'true'
         run: yarn --frozen-lockfile
       - run: yarn build
