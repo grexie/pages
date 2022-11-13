@@ -391,6 +391,7 @@ export class Builder {
         },
         fullySpecified: false,
       },
+      cache: false,
       resolveLoader: {
         extensions: ['.mjs', '.js', '.ts'],
         modules: [
