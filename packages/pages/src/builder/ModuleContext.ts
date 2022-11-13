@@ -125,41 +125,25 @@ export class ModuleContext {
     return (module.vmModule.namespace as any).default;
   }
 
-  requireModule = timedAsync(
-    async (context: string, request: string): Promise<InstantiatedModule> => {
-      const reference = await this.resolver.resolve(context, request);
-      return this.loaders[reference.loader].require(context, request);
+  async requireModule(
+    context: string,
+    request: string
+  ): Promise<InstantiatedModule> {
+    const reference = await this.resolver.resolve(context, request);
+    return this.loaders[reference.loader].require(context, request);
+  }
+
+  async createModule(
+    context: string,
+    filename: string,
+    source: string,
+    loader?: ModuleLoaderType
+  ): Promise<InstantiatedModule> {
+    if (!loader) {
+      const reference = await this.resolver.resolve(context, filename);
+      loader = reference.loader;
     }
-  );
 
-  createModule = timedAsync(
-    async (
-      context: string,
-      filename: string,
-      source: string,
-      loader?: ModuleLoaderType
-    ): Promise<InstantiatedModule> => {
-      if (!loader) {
-        const reference = await this.resolver.resolve(context, filename);
-        loader = reference.loader;
-      }
-
-      return this.loaders[loader!].create(context, filename, source);
-    }
-  );
-
-  log() {
-    console.info('\n---');
-
-    this.resolver.resolve.timed.log('resolve');
-    this.resolver.resolve.timed.reset();
-
-    this.requireModule.timed.log('requireModule');
-    this.requireModule.timed.reset();
-
-    this.createModule.timed.log('createModule');
-    this.createModule.timed.reset();
-
-    console.info('---');
+    return this.loaders[loader!].create(context, filename, source);
   }
 }

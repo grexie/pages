@@ -65,7 +65,7 @@ export class Server {
         publicPath: compiler.options.output.publicPath,
         writeToDisk: false,
         serverSideRender: false,
-        // stats: 'errors-warnings',
+        stats: 'errors-warnings',
       })
     );
     if (process.env.WEBPACK_HOT === 'true') {
@@ -78,6 +78,8 @@ export class Server {
 
     const server = http.createServer(app);
     server.listen(this.context.port, () => {
+      // const { port } = server.address() as any;
+      // console.error(`🚀 server listening at http://localhost:${port}`);
       this.#server?.resolve(server);
     });
     return this.#server;

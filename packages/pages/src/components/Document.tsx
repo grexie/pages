@@ -4,6 +4,7 @@ import {
   Suspense,
   useState,
   startTransition,
+  createElement,
 } from 'react';
 import { HeadProvider, useHead, withHead } from './Head.js';
 import { createComposable } from '@grexie/compose';
@@ -14,18 +15,12 @@ import { useLazyComplete } from '../hooks/useLazy.js';
 
 export interface DocumentHeadProps {}
 
-export const DocumentHead: FC<PropsWithChildren<DocumentHeadProps>> = ({
-  children,
-}) => {
+export const DocumentHead: FC<DocumentHeadProps> = ({}) => {
   const Head = useLazyComplete(
     async () => () => {
       const head = useHead().root;
-      return (
-        <head>
-          {children}
-          {head.render()}
-        </head>
-      );
+
+      return <head>{head.render()}</head>;
     },
     []
   );
@@ -33,11 +28,16 @@ export const DocumentHead: FC<PropsWithChildren<DocumentHeadProps>> = ({
   return <Head />;
 };
 
-const Scripts: FC<{}> = () => {
+interface ScriptsProps {
+  data?: Record<string, any>;
+}
+
+const Scripts: FC<ScriptsProps> = ({ data = {} }) => {
   const { slug } = useResource();
   const scripts = useScripts();
   const styles = useStyles();
-  const data = {
+  data = {
+    ...data,
     slug,
     styles: [...styles].map(({ hash, css }) => ({ hash, css })),
   };
@@ -57,19 +57,27 @@ const Scripts: FC<{}> = () => {
 };
 
 export interface DocumentRootProps {
+  tag?: string;
   id?: string;
 }
 
 export const DocumentRoot: FC<PropsWithChildren<DocumentRootProps>> = ({
   children,
+  tag = 'div',
   id = '__pages_root',
 }) => {
+  const element = createElement(
+    tag,
+    { id },
+    <DocumentContent>{children}</DocumentContent>
+  );
+
+  const data = { root: { tag, id } };
+
   return (
     <>
-      <div id={id}>
-        <DocumentContent>{children}</DocumentContent>
-      </div>
-      <Scripts />
+      {element}
+      <Scripts data={data} />
     </>
   );
 };
@@ -89,7 +97,7 @@ export const DocumentContent: FC<PropsWithChildren<DocumentContentProps>> =
 export const Document: FC<PropsWithChildren<{}>> = withHead(({ children }) => {
   return (
     <html>
-      <DocumentHead></DocumentHead>
+      <DocumentHead />
       <body>
         <DocumentRoot>{children}</DocumentRoot>
       </body>

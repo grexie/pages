@@ -21,6 +21,8 @@ import { Compilation } from 'webpack';
 import path from 'path';
 import webpack from 'webpack';
 import { createRequire } from 'module';
+import ProgressBarPlugin from 'progress-bar-webpack-plugin';
+import chalk from 'chalk';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -449,15 +451,13 @@ export class Builder {
         },
       },
       plugins: [
-        new webpack.ProgressPlugin({
-          entries: false,
-          modules: false,
-          dependencies: false,
-          handler: (percentage: number, msg: string, ...args) => {
-            console.info((percentage * 100).toFixed(0) + '%', msg, ...args);
-          },
-          // profile: true,
-        }),
+        new ProgressBarPlugin({
+          format:
+            '  build [:bar] ' +
+            chalk.green.bold(':percent') +
+            ' (:elapsed seconds)',
+          clear: true,
+        }) as any,
         new ResourcesPlugin({ context: this.context }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),
       ],
