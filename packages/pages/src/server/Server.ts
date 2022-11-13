@@ -1,12 +1,10 @@
 import http from 'http';
-import { FileSystem, Stats } from '@grexie/builder/FileSystem.js';
+import { Stats } from '@grexie/builder/FileSystem.js';
 import { BuildContext, BuildContextOptions } from '../builder/BuildContext.js';
 import { ResolvablePromise, createResolver } from '../utils/resolvable.js';
-import { RequestHandler } from './RequestHandler.js';
 import WebpackHotMiddleware from 'webpack-hot-middleware';
-import WebpackDevMiddleware, { OutputFileSystem } from 'webpack-dev-middleware';
+import WebpackDevMiddleware from 'webpack-dev-middleware';
 import express from 'express';
-import { Volume } from 'memfs';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;

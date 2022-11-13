@@ -6,7 +6,6 @@ import {
   Resource,
 } from '../api/Resource.js';
 import type * as babel from '@babel/core';
-import { SourceMap } from 'module';
 
 const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,

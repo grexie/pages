@@ -3,9 +3,8 @@ import { promisify } from '../utils/promisify.js';
 import { BuildContext } from './BuildContext.js';
 import { ModuleLoaderType } from './ModuleLoader.js';
 import type { Compiler } from 'webpack';
-import { createRequire, Module } from 'module';
+import { createRequire } from 'module';
 import path from 'path';
-import { timedAsync } from '../utils/timed.js';
 
 export interface ModuleReference {
   readonly filename: string;

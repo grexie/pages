@@ -11,7 +11,6 @@ import { ModuleContext } from './ModuleContext.js';
 import os from 'os';
 import { ConfigContext } from './ConfigContext.js';
 import { Volume } from 'memfs';
-import { ModuleDependencies } from './ModuleDependencies.js';
 import { createRequire } from 'module';
 import { Compiler, Compilation } from 'webpack';
 import { ModuleResolverConfig } from './ModuleResolver.js';
@@ -53,7 +52,6 @@ export class BuildContext extends Context {
   readonly renderer: Renderer;
   // readonly modules: ModuleContext;
   readonly config: ConfigContext;
-  readonly dependencies: ModuleDependencies;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
   readonly resolverConfig: Required<ModuleResolverConfig>;
@@ -94,10 +92,6 @@ export class BuildContext extends Context {
 
     this.registry = new Registry(this);
     this.builder = new Builder(this, fs, defaultFiles, fsOptions);
-    this.dependencies = new ModuleDependencies({
-      cache: this.cache.create('modules'),
-      fs: this.fs,
-    });
     this.renderer = new Renderer(this);
 
     providers.forEach(({ provider, ...config }) => {

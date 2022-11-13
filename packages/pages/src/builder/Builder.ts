@@ -457,6 +457,7 @@ export class Builder {
             chalk.green.bold(':percent') +
             ' (:elapsed seconds)',
           clear: true,
+          total: 0,
         }) as any,
         new ResourcesPlugin({ context: this.context }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),
