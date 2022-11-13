@@ -1,22 +1,18 @@
 import { createElement } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
-import { Writable } from 'stream';
 import { compose } from '@grexie/compose';
-import { withDocumentComponent } from '../components/Document';
+import { withDocumentComponent } from '../components/Document.js';
 import {
   withDocument,
   withContext,
-  ResourceContext,
   withResourceContext,
-} from '../hooks';
-import { Handler, Resource } from '../api';
-import { BuildContext } from '../builder';
-import {
-  withResource,
-  withLazy,
-  withErrorManager,
-  ErrorManager,
-} from '../hooks';
+} from '../hooks/index.js';
+import { Resource, ResourceContext } from '../api/Resource.js';
+import type { BuildContext } from './BuildContext.js';
+import { withStyles, StylesContext } from '../hooks/useStyles.js';
+import { withScripts } from '../hooks/useScripts.js';
+import { withLazy } from '../hooks/useLazy.js';
+import { Writable } from 'stream';
 
 export class Renderer {
   readonly context: BuildContext;
@@ -25,33 +21,36 @@ export class Renderer {
     this.context = context;
   }
 
-  async render<T extends Writable>(
+  async render<T extends WritableStream<Buffer>>(
     writable: T,
-    resourceContext: ResourceContext,
     resource: Resource,
+    scripts: string[],
     ...composables: any[]
   ): Promise<T> {
-    const errorManager = new ErrorManager();
+    const styles = new StylesContext();
+    const resourceContext = new ResourceContext();
 
     const component = compose(
-      withErrorManager({ errorManager }),
-      withLazy({ errorManager }),
+      withLazy,
       withContext({ context: this.context }),
       withResourceContext({ resourceContext }),
+      withStyles({ styles }),
       withDocument({ resourceContext, resource }),
+      withScripts({ scripts }),
       withDocumentComponent,
       ...composables
     );
 
     const element = createElement(component as any);
+
+    console.info('rendering', resource.slug);
     await new Promise<void>((resolve, reject) => {
       renderToPipeableStream(element, {
         onError: err => reject(err),
         onShellError: err => reject(err),
         onAllReady: () => resolve(),
-      }).pipe(writable);
+      }).pipe((Writable as any).fromWeb(writable));
     });
-    errorManager.throwIfErrors();
 
     return Promise.resolve(writable);
   }

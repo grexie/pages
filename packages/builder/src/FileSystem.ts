@@ -118,6 +118,7 @@ export interface Dirent {
 export interface FileSystemOptions<
   T extends ReadableFileSystem | WritableFileSystem = any
 > {
+  name?: string;
   writable: boolean;
   path: string;
   fs: T;
@@ -136,18 +137,20 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     return this.#fileSystems
       .slice()
       .sort((a, b) => b.path.length - a.path.length)
-      .map(({ path, writable }) => ({ path, writable }));
+      .map(({ path, writable, name }) => ({ path, writable, name }));
   }
 
   add(
     path: string,
     fs: ReadableFileSystem | (ReadableFileSystem & WritableFileSystem),
-    writable: boolean = false
+    writable: boolean = false,
+    name?: string
   ) {
     this.#fileSystems.push({
       writable,
       path,
       fs,
+      name,
     });
 
     return this;
@@ -163,22 +166,29 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     this.#fileSystems.splice(index, 1);
   }
 
-  find(
-    filename: string,
-    writable: boolean = false
-  ): (ReadableFileSystem | (ReadableFileSystem & WritableFileSystem))[] {
-    let fileSystems = this.#fileSystems;
-    filename = path.resolve(process.cwd(), filename);
+  find(filename: string, writable: boolean = false): FileSystemOptions[] {
+    let fileSystems = this.#fileSystems.slice();
+    filename = path.isAbsolute(filename) ? filename : path.resolve(filename);
 
     if (writable) {
       fileSystems = fileSystems.filter(({ writable }) => writable);
     }
 
-    fileSystems = fileSystems.filter(({ path }) => filename.startsWith(path));
+    fileSystems = fileSystems.filter(
+      ({ path }) => filename === path || filename.startsWith(path)
+    );
 
     fileSystems.sort((a, b) => b.path.length - a.path.length);
 
-    return fileSystems.map(({ fs }) => fs);
+    if (/defaults.pages.*original/.test(filename)) {
+      console.info(
+        filename,
+        writable,
+        fileSystems.map(({ path, name }) => `${path} ${name}`)
+      );
+    }
+
+    return fileSystems.map(obj => ({ ...obj }));
   }
 
   async #call<E, P extends any[], T>(
@@ -187,23 +197,20 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     callback: ((err: E, ...args: P) => void) | undefined,
     args: any[],
     handler: (...args: P) => T,
-    fileSystems?: (ReadableFileSystem & WritableFileSystem)[]
+    fileSystems?: FileSystemOptions[]
   ): Promise<T> {
     if (this.#debug) {
       console.debug('GREXIE_BUILDER_DEBUG_FS', name, ...args);
     }
 
     const filename = args[0] as string;
-    fileSystems =
-      fileSystems ??
-      (this.find(filename, writable) as (ReadableFileSystem &
-        WritableFileSystem)[]);
+    fileSystems = fileSystems ?? this.find(filename, writable);
 
     let err = undefined as unknown as E;
     let value = [] as unknown as P;
 
     if (fileSystems.length === 0) {
-      const error = new Error(`no filesystems: ${name} ${filename}`);
+      const error = new Error(`ENOFS: ${name} ${filename}`);
       (error as any).code = 'ENOFS';
 
       if (callback) {
@@ -214,12 +221,12 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
       }
     }
 
-    for (const fs of fileSystems) {
+    for (const fileSystem of fileSystems) {
       try {
         err = undefined as any;
         value = await new Promise<P>((resolve, reject) => {
           try {
-            (fs as any)[name](...args, (err: E, ...value: P) => {
+            (fileSystem.fs as any)[name](...args, (err: E, ...value: P) => {
               if (err) {
                 reject(err);
                 return;
@@ -234,7 +241,13 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
         break;
       } catch (_err) {
         err = _err as E;
+        if (/defaults.pages.*original/.test(filename)) {
+          console.info(fileSystem.name, err);
+        }
         if (!['ENOFS', 'ENOENT'].includes((_err as any)?.code)) {
+          if (/defaults.pages.*original/.test(filename)) {
+            console.info('breaking');
+          }
           break;
         }
       }
@@ -265,29 +278,28 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     name: string,
     writable: boolean,
     args: any[],
-    fileSystems?: (ReadableFileSystem & WritableFileSystem)[]
+    fileSystems?: FileSystemOptions[]
   ): T {
     if (this.#debug) {
       console.debug('GREXIE_BUILDER_DEBUG_FS', name, ...args);
     }
 
     const filename = args[0] as string;
-    fileSystems =
-      fileSystems ??
-      (this.find(filename, writable) as (ReadableFileSystem &
-        WritableFileSystem)[]);
+    fileSystems = fileSystems ?? this.find(filename, writable);
 
     let err = undefined as any;
     let value = undefined as any;
 
     if (fileSystems.length === 0) {
-      throw new Error(`no filesystems: ${name} ${filename}`);
+      const err = new Error(`ENOFS: ${name} ${filename}`);
+      (err as any).code = 'ENOFS';
+      throw err;
     }
 
-    for (const fs of fileSystems) {
+    for (const fileSystem of fileSystems) {
       try {
         err = undefined as any;
-        value = (fs as any)[name](...args);
+        value = (fileSystem.fs as any)[name](...args);
 
         break;
       } catch (_err) {
@@ -369,13 +381,12 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let out: string[] = [];
     const fileSystems = this.#fileSystems
       .slice()
-      .sort((a, b) => b.path.length - a.path.length)
-      .map(({ fs }) => fs);
+      .sort((a, b) => b.path.length - a.path.length);
 
     const next = async (): Promise<string[]> => {
-      const fs = fileSystems.shift();
+      const fileSystem = fileSystems.shift();
 
-      if (!fs) {
+      if (!fileSystem) {
         return out;
       }
 
@@ -389,7 +400,7 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
             dirents.map((file: any) =>
               file.name ? file.name : file.toString()
             ),
-          [fs]
+          [fileSystem]
         );
         out.push(...files);
         return next();
@@ -413,16 +424,14 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     let out: string[] = [];
     const fileSystems = this.#fileSystems
       .slice()
-      .sort((a, b) => b.path.length - a.path.length)
-      .map(({ fs }) => fs);
-
-    for (const fs of fileSystems) {
+      .sort((a, b) => b.path.length - a.path.length);
+    for (const fileSystem of fileSystems) {
       try {
         const files = this.#callSync(
           'readdirSync',
           false,
           [dirname],
-          [fs]
+          [fileSystem]
         ) as any;
         out.push(
           ...files.map((file: any) => (file.name ? file.name : file.toString()))

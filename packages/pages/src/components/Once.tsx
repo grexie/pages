@@ -1,5 +1,4 @@
-import { createComposable } from '@grexie/compose';
-import React, {
+import {
   FC,
   PropsWithChildren,
   useMemo,
@@ -9,7 +8,7 @@ import React, {
   FunctionComponent,
   ReactNode,
 } from 'react';
-import { useResource } from '../hooks';
+import { useResource } from '../hooks/useResource.js';
 
 const DefaultKey = Symbol.for('default');
 

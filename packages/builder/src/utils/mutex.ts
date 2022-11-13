@@ -1,4 +1,8 @@
-import { createResolver, ResolvablePromise } from './resolvable';
+import {
+  createResolver,
+  PromiseQueue,
+  ResolvablePromise,
+} from './resolvable.js';
 
 export class Lock {
   readonly #resolver: ResolvablePromise<void>;
@@ -41,7 +45,9 @@ export class Mutex {
 
 export class KeyedMutex {
   readonly #globalLock = new Mutex();
-  readonly #locks: Record<string, Promise<void>> = {};
+  readonly #locks: Record<string, PromiseLike<void>> = {};
+  readonly #readLocks: Record<string, [PromiseLike<void>, PromiseQueue]> = {};
+  readonly #writeLocked: Record<string, boolean> = {};
 
   locked(names: string | string[]): boolean {
     if (typeof names === 'string') {
@@ -49,6 +55,14 @@ export class KeyedMutex {
     }
 
     return names.reduce((a, name) => a || !!this.#locks[name], false);
+  }
+
+  writeLocked(names: string | string[]): boolean {
+    if (typeof names === 'string') {
+      names = [names];
+    }
+
+    return names.reduce((a, name) => a || !!this.#writeLocked[name], false);
   }
 
   lockedAll(names: string[]): boolean {
@@ -93,6 +107,54 @@ export class KeyedMutex {
           delete this.#locks[name];
         }
       });
+    });
+
+    global.unlock();
+    await Promise.all(promises);
+
+    names.forEach(name => {
+      this.#writeLocked[name] = true;
+    });
+
+    return new Lock({
+      ...resolver,
+      resolve: () => {
+        (names as string[]).forEach(name => {
+          this.#writeLocked[name] = false;
+        });
+        resolver.resolve();
+      },
+    });
+  }
+
+  async readLock(names: string | string[], fail: boolean = false) {
+    const global = await this.#globalLock.lock(fail);
+    if (typeof names === 'string') {
+      names = [names];
+    }
+
+    if (fail && this.writeLocked(names)) {
+      throw new Error('lock fail');
+    }
+
+    const resolver = createResolver();
+
+    const promises = names.map(name => {
+      if (!this.#readLocks[name]) {
+        const queue = new PromiseQueue();
+        queue.finally(() => {
+          delete this.#readLocks[name];
+          if (this.#locks[name] === queue) {
+            delete this.#locks[name];
+          }
+        });
+        this.#readLocks[name] = [this.#locks[name], queue];
+        this.#locks[name] = this.#readLocks[name][1];
+      }
+
+      const promise = this.#readLocks[name][0];
+      this.#readLocks[name][1].add(resolver);
+      return promise;
     });
 
     global.unlock();

@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import resolve from 'resolve';
 import chalk from 'chalk';
+import { createRequire } from 'module';
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 type Script = (...args: string[]) => Promise<void>;
 
@@ -9,24 +11,22 @@ const domains = [
   { domain: '@grexie/pages/scripts' },
   {
     domain: '@grexie/pages/scripts',
-    basedir: __dirname,
+    parent: __dirname,
   },
   {
     domain: path.resolve(__dirname, './scripts/'),
-    basedir: __dirname,
+    parent: __dirname,
   },
 ];
 
 const importScript = async (name: string): Promise<Script> => {
-  let module: string | null = null;
+  let module: string | undefined;
 
-  for (const { domain, ...options } of domains) {
+  for (const { domain, parent } of domains) {
     try {
       const modulePath = path.join(domain, name.replace(/:/g, '/'));
-      module = resolve.sync(modulePath, {
-        basedir: process.cwd(),
-        ...options,
-      });
+      const require = createRequire(parent ?? process.cwd());
+      module = require.resolve(modulePath);
       break;
     } catch (err) {
       continue;
@@ -45,19 +45,30 @@ const usage = async () => `${chalk.cyan.bold('Grexie Pages')}
 
 usage: ${chalk.bold('pages COMMAND')}`;
 
-const main = async (name: string, ...args: string[]) => {
+const main = async (...args: string[]) => {
   if (fs.existsSync('node_modules')) {
     try {
-      const localModule = resolve.sync('@grexie/pages-cli', {
-        basedir: process.cwd(),
-      });
+      const require = createRequire(process.cwd());
+      const localModule = require.resolve('@grexie/pages-cli');
       if (fs.realpathSync(localModule) !== __filename) {
-        const localPages = require(localModule).default;
-        localPages();
+        const localPages = require(localModule);
+        localPages.default();
         return;
       }
     } catch (err) {}
   }
+
+  let names = [];
+  for (const arg of args) {
+    if (arg.startsWith('-')) {
+      break;
+    } else {
+      names.push(arg);
+    }
+  }
+
+  args = args.slice(names.length);
+  const name = names.join(':');
 
   if (!name) {
     console.error(await usage());
@@ -69,20 +80,21 @@ const main = async (name: string, ...args: string[]) => {
   try {
     script = await importScript(name);
   } catch (err) {
-    console.info(err);
+    console.error(err);
     console.error(chalk.red(`command ${chalk.bold(name)} not found`));
     console.error();
     console.error(await usage());
+    console.error();
     process.exit(1);
   }
 
   await script(...args);
 };
 
-const [name, ...args] = process.argv.slice(2);
+const [...args] = process.argv.slice(2);
 
 const run = () =>
-  main(name, ...args).catch(err => {
+  main(...args).catch(err => {
     console.error(err);
     process.exit(1);
   });

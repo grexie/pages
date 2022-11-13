@@ -1,9 +1,7 @@
-import type { Provider } from './Provider';
-import { BuildContext } from '../builder/BuildContext';
-import Mime from 'mime/Mime.js';
-import mimetypes from 'mime/types/standard.js';
+import type { Provider } from './Provider.js';
+import { BuildContext } from './BuildContext.js';
 import _path from 'path';
-import { Source, SourceTree } from './Source';
+import { Source, SourceTree } from './Source.js';
 import path from 'path';
 
 export interface GetOptions {
@@ -61,10 +59,6 @@ class List<T> {
 export class Registry {
   readonly context: BuildContext;
   readonly providers: List<Provider> = new List<Provider>();
-  readonly mime: Mime = new Mime(mimetypes, {
-    'text/scss': ['scss'],
-    'text/tsx': ['tsx'],
-  });
   readonly defaultConfig: Source;
 
   constructor(context: BuildContext) {

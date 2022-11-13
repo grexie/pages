@@ -1,55 +1,14 @@
-import React, { useMemo } from 'react';
-import { createContextWithProps } from '../utils/context';
-import { ContentResource, ModuleResource, Resource } from '../api';
-import { useDocument } from './useDocument';
-
-const ResourceContextSet = Symbol();
-
-export class ResourceContext {
-  readonly parent?: ResourceContext;
-  readonly #children: ResourceContext[] = [];
-  #resource?: Resource;
-
-  constructor(parent?: ResourceContext) {
-    this.parent = parent;
-    if (parent) {
-      parent.#children.push(this);
-    }
-  }
-
-  get root() {
-    let self: ResourceContext = this;
-    while (self.parent) {
-      self = self.parent;
-    }
-    return self;
-  }
-
-  get children() {
-    return this.#children.slice();
-  }
-
-  get resource() {
-    return this.#resource!;
-  }
-
-  get resources() {
-    const stack: ResourceContext[] = [this];
-    let el: ResourceContext | undefined;
-    const out: Resource[] = [];
-    while ((el = stack.shift())) {
-      if (el.resource) {
-        out.push(el.resource);
-      }
-      stack.push(...el.#children);
-    }
-    return out;
-  }
-
-  [ResourceContextSet](resource: Resource) {
-    this.#resource = resource;
-  }
-}
+import { useMemo } from 'react';
+import { createContextWithProps } from '../utils/context.js';
+import type {
+  ContentResource,
+  Resource,
+  ResourceMetadata,
+} from '../api/Resource.js';
+import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
+import type { ModuleResource } from '../builder/ModuleResource.js';
+import { useDocument } from './useDocument.js';
+import { hash } from '../utils/hash.js';
 
 export interface ResourceContextProviderProps {
   resourceContext: ResourceContext;
@@ -83,6 +42,7 @@ const {
   Provider =>
     ({ resource, children }) => {
       const parentResourceContext = useResourceContext();
+
       const resourceContext = useMemo(() => {
         let resourceContext = parentResourceContext;
         if (resourceContext.resource) {
@@ -90,7 +50,7 @@ const {
         }
         resourceContext[ResourceContextSet](resource);
         return resourceContext;
-      }, [parentResourceContext, resource]);
+      }, [parentResourceContext, hash(resource)]);
 
       return (
         <ResourceContextProvider resourceContext={resourceContext}>
@@ -104,10 +64,12 @@ export interface ResourceQueryOptions {
   resource?: boolean;
 }
 
-export const useResource = <M = any, T extends Resource<M> = Resource<M>>({
-  resource = false,
-}: ResourceQueryOptions = {}) => {
+export const useResource = <
+  M extends ResourceMetadata = any,
+  T extends Resource<M> = Resource<M>
+>({ resource = false }: ResourceQueryOptions = {}) => {
   const parentResource = useResourceUntyped() as T;
+
   const document = useDocument();
 
   if (resource) {
@@ -117,8 +79,9 @@ export const useResource = <M = any, T extends Resource<M> = Resource<M>>({
   }
 };
 
-export const useMetadata = <M = any,>(options?: ResourceQueryOptions) =>
-  useResource<M>(options).metadata;
+export const useMetadata = <M extends ResourceMetadata = any>(
+  options?: ResourceQueryOptions
+) => useResource<M>(options).metadata;
 export const useContent = <C = any,>(options?: ResourceQueryOptions) =>
   useResource<any, ContentResource<C>>(options).content;
 export const useModule = <X = any,>(options?: ResourceQueryOptions) =>

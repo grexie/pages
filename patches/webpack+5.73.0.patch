@@ -1,0 +1,21 @@
+diff --git a/node_modules/webpack/lib/NormalModuleFactory.js b/node_modules/webpack/lib/NormalModuleFactory.js
+index f02e571..1c1880a 100644
+--- a/node_modules/webpack/lib/NormalModuleFactory.js
++++ b/node_modules/webpack/lib/NormalModuleFactory.js
+@@ -994,7 +994,7 @@ If changing the source code is not an option there is also a resolve options cal
+ 					context,
+ 					item.loader,
+ 					resolveContext,
+-					(err, result) => {
++					(err, result, resolveRequest) => {
+ 						if (
+ 							err &&
+ 							/^[^/]*$/.test(item.loader) &&
+@@ -1023,6 +1023,7 @@ If changing the source code is not an option there is also a resolve options cal
+ 						const parsedResult = this._parseResourceWithoutFragment(result);
+ 						const resolved = {
+ 							loader: parsedResult.path,
++              type: resolveRequest.descriptionFileData.type,
+ 							options:
+ 								item.options === undefined
+ 									? parsedResult.query

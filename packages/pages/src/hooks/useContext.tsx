@@ -1,6 +1,5 @@
-import React from 'react';
-import { createContextWithProps } from '../utils/context';
-import { Context } from '../api';
+import { createContextWithProps } from '../utils/context.js';
+import type { Context } from '../api/Context.js';
 
 interface ContextProviderProps {
   context: Context;
@@ -12,6 +11,7 @@ export const {
   use: useContext,
 } = createContextWithProps<Context, ContextProviderProps>(
   Provider =>
-    ({ context, children }) =>
-      <Provider value={context}>{children}</Provider>
+    ({ context, children }) => {
+      return <Provider value={context}>{children}</Provider>;
+    }
 );

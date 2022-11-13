@@ -3,10 +3,12 @@ export default {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/'],
-  transform: {
-    '\\.tsx?$': 'babel-jest',
-  },
   projects: ['packages/*'],
-  testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/.test/'],
+  testMatch: ['**/?(*.)+(spec|test).js?(x)'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.test/',
+    '.test.ts',
+    '.test.tsx',
+  ],
 };

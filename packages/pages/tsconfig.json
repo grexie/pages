@@ -4,11 +4,12 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "moduleResolution": "node16",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/plugins/module/Handler.ts.bak"
   ],
   "exclude": [
     "**/*.test.ts",

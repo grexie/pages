@@ -4,6 +4,8 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*.ts",

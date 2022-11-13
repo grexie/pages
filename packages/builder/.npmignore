@@ -2,4 +2,8 @@
 .gitignore
 tsconfig.json
 tsconfig.tsbuildinfo
+jest.config.js
 .babelrc
+yarn-error.log
+/index.d.js
+/types.d.js

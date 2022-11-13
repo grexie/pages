@@ -1,3 +1,3 @@
-export { Document } from './Document';
-export { Head } from './Head';
-export { Once, withOnce } from './Once';
+export * from './Document.js';
+export * from './Head.js';
+export * from './Once.js';

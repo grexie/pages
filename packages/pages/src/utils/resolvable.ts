@@ -4,7 +4,7 @@ export interface ResolvablePromise<T = void>
 
 export interface Resolver<T = void> {
   readonly resolved: boolean;
-  readonly resolve: (value: T) => void;
+  readonly resolve: (value: PromiseLike<T> | T) => void;
   readonly reject: (error: any) => void;
 }
 
@@ -34,8 +34,12 @@ export const createResolver = <T = void>() => {
 export class PromiseQueue implements PromiseLike<void> {
   readonly #promises: Promise<any>[] = [];
 
-  add(promise: Promise<any>) {
+  async add(promise: Promise<any>) {
+    const previousPromises = [...this.#promises];
+
     this.#promises.push(promise);
+
+    await Promise.all(previousPromises);
   }
 
   then<TResult1 = void, TResult2 = never>(

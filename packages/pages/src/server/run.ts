@@ -1,5 +1,5 @@
-import { Provider } from '../api/Provider';
-import { Server } from './Server';
+import { Provider } from '../builder/Provider.js';
+import { Server } from './Server.js';
 import fs from 'fs';
 import path from 'path';
 import 'source-map-support/register.js';
@@ -15,7 +15,4 @@ const server = new Server({
 });
 server.context.fs.add(path.resolve(server.context.rootDir, 'build'), fs, true);
 
-server.start().then(server => {
-  const { port } = server.address() as any;
-  console.error(`🚀 server listening at http://localhost:${port}`);
-});
+server.start();

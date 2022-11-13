@@ -2,6 +2,7 @@ export type ResourceMetadata = Record<string, any> & { type?: string };
 
 export interface ResourceSerializeOptions {
   serializeMetadata: (source: string) => string;
+  imports: boolean;
 }
 
 export interface ResourceOptions<M extends ResourceMetadata = any> {
@@ -20,12 +21,24 @@ export class Resource<M extends ResourceMetadata = any> {
     this.metadata = metadata;
   }
 
-  serialize({ serializeMetadata }: ResourceSerializeOptions) {
-    return `{
-      path: ${JSON.stringify(this.path)},
-      slug: ${JSON.stringify(this.slug)},
-      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
-    }`;
+  async serialize({
+    serializeMetadata,
+    imports,
+  }: ResourceSerializeOptions): Promise<{
+    code: string;
+    map?: any;
+  }> {
+    if (imports) {
+      return { code: '' };
+    } else {
+      return {
+        code: `export const resource = {
+        path: ${JSON.stringify(this.path)},
+        slug: ${JSON.stringify(this.slug)},
+        metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
+      }`,
+      };
+    }
   }
 
   toJSON() {
@@ -45,41 +58,50 @@ export class ContentResource<
   }
 }
 
-export interface ModuleResourceOptions<
-  X = any,
-  M extends ResourceMetadata = any
-> extends ResourceOptions<M> {
-  source: string;
-  exports: X;
-}
+export const ResourceContextSet = Symbol();
 
-export class ModuleResource<
-  X = any,
-  M extends ResourceMetadata = any
-> extends Resource<M> {
-  readonly #source: string;
-  readonly exports: X;
+export class ResourceContext {
+  readonly parent?: ResourceContext;
+  readonly #children: ResourceContext[] = [];
+  #resource?: Resource;
 
-  constructor({ source, exports, ...options }: ModuleResourceOptions<X, M>) {
-    super(options);
-    this.#source = source;
-    this.exports = exports;
+  constructor(parent?: ResourceContext) {
+    this.parent = parent;
+    if (parent) {
+      parent.#children.push(this);
+    }
   }
 
-  serialize({ serializeMetadata }: ResourceSerializeOptions): string {
-    const source = `(() => {
-      var module = { exports: {} };
-      ((exports, module) => {
-        ${this.#source}
-      })(module.exports, module);
-      return module.exports;
-    })()`;
+  get root() {
+    let self: ResourceContext = this;
+    while (self.parent) {
+      self = self.parent;
+    }
+    return self;
+  }
 
-    return `{
-      path: ${JSON.stringify(this.path)},
-      slug: ${JSON.stringify(this.slug)},
-      metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
-      exports: ${source},
-    }`;
+  get children() {
+    return this.#children.slice();
+  }
+
+  get resource() {
+    return this.#resource!;
+  }
+
+  get resources() {
+    const stack: ResourceContext[] = [this];
+    let el: ResourceContext | undefined;
+    const out: Resource[] = [];
+    while ((el = stack.shift())) {
+      if (el.resource) {
+        out.push(el.resource);
+      }
+      stack.push(...el.#children);
+    }
+    return out;
+  }
+
+  [ResourceContextSet](resource: Resource) {
+    this.#resource = resource;
   }
 }

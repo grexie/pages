@@ -1,13 +1,21 @@
-import { ContextOptions, Context } from '../api/Context';
+import { ContextOptions, Context } from '../api/Context.js';
 import path from 'path';
-import { FileSystemOptions, WritableFileSystem } from '@grexie/builder';
-import { Builder } from './Builder';
-import { ProviderConfig, Registry } from '../api';
-import { Renderer } from './Renderer';
-import { ModuleContext, ModuleResolverOptions } from './ModuleContext';
+import {
+  FileSystemOptions,
+  WritableFileSystem,
+} from '@grexie/builder/FileSystem.js';
+import { Builder } from './Builder.js';
+import { ProviderConfig, Registry } from './Registry.js';
+import { Renderer } from './Renderer.js';
+import { ModuleContext } from './ModuleContext.js';
 import os from 'os';
-import { ConfigContext } from './ConfigContext';
+import { ConfigContext } from './ConfigContext.js';
 import { Volume } from 'memfs';
+import { createRequire } from 'module';
+import { Compiler, Compilation } from 'webpack';
+import { ModuleResolverConfig } from './ModuleResolver.js';
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -15,7 +23,7 @@ export interface BuildOptions extends ContextOptions {
   fs: WritableFileSystem;
   defaultFiles?: WritableFileSystem;
   fsOptions?: FileSystemOptions[];
-  resolver?: ModuleResolverOptions;
+  resolver?: ModuleResolverConfig;
 }
 
 const defaultOptions = () => ({
@@ -42,9 +50,11 @@ export class BuildContext extends Context {
   readonly modulesDirs: string[];
   readonly builder: Builder;
   readonly renderer: Renderer;
-  readonly modules: ModuleContext;
+  // readonly modules: ModuleContext;
   readonly config: ConfigContext;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
+  readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
+  readonly resolverConfig: Required<ModuleResolverConfig>;
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
     const {
@@ -58,6 +68,8 @@ export class BuildContext extends Context {
       ...opts
     } = Object.assign(defaultOptions(), options);
     super({ isBuild: true, ...opts });
+
+    const require = createRequire(import.meta.url);
 
     this.rootDir = rootDir;
     this.cacheDir = cacheDir;
@@ -75,33 +87,13 @@ export class BuildContext extends Context {
       path.resolve(this.rootDir, 'node_modules'),
       ...pagesModules,
     ];
+
     this.outputDir = path.resolve(this.rootDir, 'build');
 
     this.registry = new Registry(this);
     this.builder = new Builder(this, fs, defaultFiles, fsOptions);
     this.renderer = new Renderer(this);
-    this.modules = new ModuleContext({
-      context: this,
-      resolver: {
-        extensions: Array.from(
-          new Set([
-            ...(resolver.extensions ?? []),
-            '.yml',
-            '.yaml',
-            '.md',
-            '.jsx',
-            '.ts',
-            '.tsx',
-          ])
-        ),
-        forceExtensions: Array.from(
-          new Set([...(resolver.forceExtensions ?? [])])
-        ),
-        forceCompile: Array.from(
-          new Set([...(resolver.forceCompile ?? []), '@mdx-js/mdx'])
-        ),
-      },
-    });
+
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
         new provider({
@@ -112,6 +104,67 @@ export class BuildContext extends Context {
     });
 
     this.config = new ConfigContext({ context: this });
+    this.resolverConfig = {
+      extensions: Array.from(
+        new Set([
+          ...(resolver.extensions ?? []),
+          '.yml',
+          '.yaml',
+          '.md',
+          '.js',
+          '.cjs',
+          '.mjs',
+          '.jsx',
+          '.ts',
+          '.tsx',
+        ])
+      ),
+      forceCompileExtensions: Array.from(
+        new Set([
+          ...(resolver.forceCompileExtensions ?? []),
+          '.md',
+          '.pages.yml',
+          '.pages.yaml',
+          '.pages.json',
+          '.pages.js',
+          '.pages.ts',
+          '.jsx',
+          '.ts',
+          '.tsx',
+          '.scss',
+          '.css',
+          '.jpeg',
+          '.jpg',
+          '.png',
+          '.webp',
+          '.gif',
+          '.svg',
+        ])
+      ),
+      esmExtensions: [
+        ...new Set([
+          ...(resolver.esmExtensions ?? []),
+          '.scss',
+          '.css',
+          '.jpeg',
+          '.jpg',
+          '.png',
+          '.webp',
+          '.gif',
+          '.svg',
+          '.pages.yml',
+          '.pages.yaml',
+          '.md',
+          '.jsx',
+          '.ts',
+          '.tsx',
+          '.mjs',
+        ]),
+      ],
+      forceCompileRoots: Array.from(
+        new Set([...(resolver.forceCompileRoots ?? [this.pagesDir])])
+      ),
+    };
   }
 
   get defaultFiles() {
@@ -128,5 +181,19 @@ export class BuildContext extends Context {
 
   get fs() {
     return this.builder.fs;
+  }
+
+  getModuleContext(compilation: Compilation) {
+    if (!this.#moduleContextTable.has(compilation.compiler.root)) {
+      this.#moduleContextTable.set(
+        compilation.compiler.root,
+        new ModuleContext({
+          context: this,
+          compilation,
+          ...this.resolverConfig,
+        })
+      );
+    }
+    return this.#moduleContextTable.get(compilation.compiler.root)!;
   }
 }

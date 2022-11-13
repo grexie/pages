@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": true,
-    "target": "es6",
+    "target": "esnext",
     "lib": [
       "dom",
       "dom.iterable",
@@ -14,13 +14,14 @@
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
-    "isolatedModules": true,
+    "moduleResolution": "NodeNext",
+    "isolatedModules": false,
     "resolveJsonModule": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "incremental": true,
     "inlineSourceMap": true,
-    "inlineSources": true
+    "inlineSources": true,
+    "allowSyntheticDefaultImports": false
   },
   "exclude": [
     "**/*.spec.ts",

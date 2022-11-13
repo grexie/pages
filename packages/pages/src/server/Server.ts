@@ -1,10 +1,10 @@
 import http from 'http';
-import type { Stats } from '@grexie/builder';
-import { BuildContext, BuildContextOptions } from '../builder';
-import { ResolvablePromise, createResolver } from '../utils/resolvable';
-import { RequestHandler } from './RequestHandler';
-import path from 'path';
-import fs from 'fs';
+import { Stats } from '@grexie/builder/FileSystem.js';
+import { BuildContext, BuildContextOptions } from '../builder/BuildContext.js';
+import { ResolvablePromise, createResolver } from '../utils/resolvable.js';
+import WebpackHotMiddleware from 'webpack-hot-middleware';
+import WebpackDevMiddleware from 'webpack-dev-middleware';
+import express from 'express';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;
@@ -51,12 +51,33 @@ export class Server {
       throw new Error('already started');
     }
 
-    this.#watch().catch(err => console.error(err));
+    let sources = await this.context.registry.list();
+    const compiler = await this.context.builder.compiler(sources);
 
     this.#server = createResolver<http.Server>();
-    const handler = new RequestHandler(this.context);
-    const server = http.createServer(handler.handle);
+    // const handler = new RequestHandler(this.context);
+    const app = express();
+
+    app.use(
+      WebpackDevMiddleware(compiler, {
+        publicPath: compiler.options.output.publicPath,
+        writeToDisk: false,
+        serverSideRender: false,
+        stats: 'errors-warnings',
+      })
+    );
+    if (process.env.WEBPACK_HOT === 'true') {
+      app.use(
+        WebpackHotMiddleware(compiler, {
+          path: '/__webpack/hmr',
+        })
+      );
+    }
+
+    const server = http.createServer(app);
     server.listen(this.context.port, () => {
+      // const { port } = server.address() as any;
+      // console.error(`🚀 server listening at http://localhost:${port}`);
       this.#server?.resolve(server);
     });
     return this.#server;

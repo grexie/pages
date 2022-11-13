@@ -1,4 +1,4 @@
-import { ObjectProxy } from './proxy';
+import { ObjectProxy } from './proxy.js';
 
 describe('ObjectProxy', () => {
   it('should toJSON on simple object', () => {

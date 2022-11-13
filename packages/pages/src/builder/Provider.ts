@@ -1,10 +1,10 @@
 import glob from 'glob';
-import _path from 'path';
+import * as _path from 'path';
 import { promisify } from 'util';
-import { Source } from './Source';
-import { createResolver, ResolvablePromise } from '../utils/resolvable';
-import { ProviderOptions, ListOptions } from './Registry';
-import { BuildContext } from '../builder/BuildContext';
+import { Source } from './Source.js';
+import { createResolver, ResolvablePromise } from '../utils/resolvable.js';
+import { ProviderOptions, ListOptions } from './Registry.js';
+import { BuildContext } from '../builder/BuildContext.js';
 
 const globAsync = promisify(glob);
 
@@ -41,7 +41,7 @@ export class Provider {
     }
     this.#scanning = true;
 
-    const files = await globAsync('**/*', {
+    const files = await globAsync(`**/*.{ts,tsx,js,jsx,md,pages.yml}`, {
       cwd: this.context.rootDir,
       nodir: true,
       dot: true,
@@ -55,6 +55,8 @@ export class Provider {
           this.context.rootDir,
           _path.join(this.context.cacheDir, '**')
         ),
+        '**/*.scss',
+        '**/*.css',
         'node_modules/**',
         '.git/**',
         '.github/**',
@@ -69,7 +71,7 @@ export class Provider {
     });
 
     const sources = await Promise.all(
-      files.map(async filename =>
+      files.map(async (filename: string) =>
         this.create(
           _path.resolve(this.context.rootDir, filename),
           this.context.rootDir

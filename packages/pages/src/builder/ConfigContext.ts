@@ -1,12 +1,14 @@
-import { BuildContext } from './BuildContext';
-import { ResourceMetadata, Source } from '../api';
-import { Module, ModuleFactory } from './ModuleContext';
-import { ObjectProxy } from '../utils/proxy';
+import { BuildContext } from './BuildContext.js';
+import { ResourceMetadata } from '../api/Resource.js';
+import { Source } from './Source.js';
+import type { InstantiatedModule } from './ModuleLoader.js';
+import { ObjectProxy } from '../utils/proxy.js';
 import path from 'path';
+import type { Compilation } from 'webpack';
 
 export interface ConfigOptions {
   parent?: ConfigModule;
-  module: Module;
+  module: InstantiatedModule;
 }
 
 export interface ConfigResolverOptions {
@@ -19,7 +21,7 @@ export interface Config extends Record<string, any> {
 
 export class ConfigModule {
   readonly parent?: ConfigModule;
-  readonly module: Module;
+  readonly module: InstantiatedModule;
 
   constructor({ parent, module }: ConfigOptions) {
     this.parent = parent;
@@ -35,9 +37,13 @@ export class ConfigModule {
     return out;
   }
 
-  create(module: NodeModule, extra?: Config): Config {
-    const parent = this.parent?.create(module);
-    const { config: configFactory } = this.module.load(module).exports;
+  async create(extra?: Config): Promise<Config> {
+    const parent = await this.parent?.create();
+    const { exports } = this.module;
+    if (!exports.config) {
+      throw new Error(`${this.module.filename} has no config export`);
+    }
+    const { config: configFactory } = exports;
     let config = configFactory(parent);
     if (extra) {
       config = ObjectProxy.create<Config>(extra, config);
@@ -45,14 +51,33 @@ export class ConfigModule {
     return config;
   }
 
-  serialize(context: string): string {
-    const metadataFactory = `require(${JSON.stringify(
-      `./${path.relative(context, this.module.filename)}`
-    )}).metadata`;
-    if (this.parent) {
-      return `${metadataFactory}(${this.parent.serialize(context)})`;
+  serialize(context: string, imports: boolean, index: number = 1): string {
+    if (imports) {
+      const metadataImport = `import { metadata as __pages_metadata_${index} } from ${JSON.stringify(
+        `./${path.relative(context, this.module.filename)}`
+      )}`;
+
+      if (this.parent) {
+        return `${metadataImport}\n${this.parent.serialize(
+          context,
+          true,
+          index + 1
+        )}`;
+      } else {
+        return metadataImport;
+      }
     } else {
-      return `${metadataFactory}()`;
+      const metadataFactory = `__pages_metadata_${index}`;
+
+      if (this.parent) {
+        return `${metadataFactory}(${this.parent.serialize(
+          context,
+          false,
+          index + 1
+        )})`;
+      } else {
+        return `${metadataFactory}()`;
+      }
     }
   }
 }
@@ -65,34 +90,28 @@ export class ConfigContext {
   }
 
   async #createConfigModule(
-    factory: ModuleFactory,
+    compilation: Compilation,
     parent: ConfigModule | undefined,
-    source: Source,
-    parentModule: Module
+    source: Source
   ): Promise<ConfigModule> {
-    const _module = await this.context.modules.require(
-      factory,
-      source.dirname,
-      source.filename,
-      parentModule
-    );
+    const _module = await this.context
+      .getModuleContext(compilation)
+      .requireModule(source.dirname, source.filename);
     return new ConfigModule({ parent, module: _module });
   }
 
   async create(
-    factory: ModuleFactory,
-    path: string[],
-    parent: Module
+    compilation: Compilation,
+    path: string[]
   ): Promise<ConfigModule> {
     const sources = await this.context.registry.listConfig({ path });
     sources.sort((a, b) => a.path.length - b.path.length);
     let configModule: ConfigModule | undefined;
     for (const source of sources) {
       configModule = await this.#createConfigModule(
-        factory,
+        compilation,
         configModule,
-        source,
-        parent
+        source
       );
     }
     if (!configModule) {

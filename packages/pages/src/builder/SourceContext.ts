@@ -1,14 +1,12 @@
-import {
-  ContentResource,
-  ModuleResource,
-  Resource,
-  Source,
-  SourceOptions,
-} from '../api';
-import type { BuildContext, ModuleFactory, Module } from '../builder';
-import { Config, ConfigModule } from './ConfigContext';
+import { Source, SourceOptions } from './Source.js';
+import { ContentResource, Resource } from '../api/Resource.js';
+import type { BuildContext } from '../builder/BuildContext.js';
+import type { InstantiatedModule } from './ModuleLoader.js';
+import type { Compilation } from 'webpack';
+import { ModuleResource } from './ModuleResource.js';
+import { Config, ConfigModule } from './ConfigContext.js';
 import path from 'path';
-import { ObjectProxy } from '../utils/proxy';
+import { ObjectProxy } from '../utils/proxy.js';
 
 export interface CreateContentOptions<C = any> {
   content: C;
@@ -18,8 +16,8 @@ export type SourceCompiler = (source: string) => string;
 
 export interface SourceContextOptions extends SourceOptions {
   context: BuildContext;
-  factory: ModuleFactory;
-  module: Module;
+  compilation: Compilation;
+  module: InstantiatedModule;
   content: Buffer;
   config: Config;
   configModule: ConfigModule;
@@ -27,8 +25,8 @@ export interface SourceContextOptions extends SourceOptions {
 
 export class SourceContext extends Source {
   readonly context: BuildContext;
-  readonly factory: ModuleFactory;
-  readonly module: Module;
+  readonly compilation: Compilation;
+  readonly module: InstantiatedModule;
   readonly content: Buffer;
   readonly config: Config;
   readonly configModule: ConfigModule;
@@ -37,7 +35,7 @@ export class SourceContext extends Source {
 
   constructor({
     context,
-    factory,
+    compilation,
     module,
     content,
     config,
@@ -46,7 +44,7 @@ export class SourceContext extends Source {
   }: SourceContextOptions) {
     super(options);
     this.context = context;
-    this.factory = factory;
+    this.compilation = compilation;
     this.module = module;
     this.content = content;
     this.config = config;
@@ -76,45 +74,56 @@ export class SourceContext extends Source {
     return this.createContent({ content: this.content });
   }
 
-  async createModule({ source }: { source: string }) {
-    if (!this.module.module) {
-      throw new Error('state error: source module not loaded');
-    }
+  async createModule({
+    source,
+    map,
+    esm = false,
+  }: {
+    source: string;
+    map?: any;
+    esm?: boolean;
+  }) {
+    const module = await this.context
+      .getModuleContext(this.compilation)
+      .createModule(path.dirname(this.filename), this.filename, source);
 
-    const module = await this.context.modules.create(
-      this.factory,
-      this.module.webpackModule,
-      `${this.filename}$${++this.#index}`,
-      source,
-      this.filename
-    );
-
-    this.once('end', () =>
-      this.context.modules.evict(this.factory, module.filename, {
-        recompile: true,
-      })
-    );
-
-    const { exports } = module.load(this.module.module);
+    const { exports } = module;
 
     return new ModuleResource({
       path: this.path,
       metadata: this.metadata,
-      source: module.source,
+      source,
+      map,
       exports,
     });
   }
 
-  serialize(resource: Resource) {
+  async serialize(resource: Resource): Promise<{ code: string; map?: any }> {
     const serializeMetadata = (source: string) =>
-      `require('@grexie/pages').ObjectProxy.create(${JSON.stringify(
+      `__pages_object_proxy.create(${JSON.stringify(
         ObjectProxy.get(resource.metadata as any),
         null,
         2
-      )}, ${this.configModule.serialize(path.dirname(this.filename))})`;
+      )}, ${this.configModule.serialize(path.dirname(this.filename), false)})`;
 
-    return resource.serialize({
+    const { code: imports } = await resource.serialize({
       serializeMetadata,
+      imports: true,
     });
+    const { code, map } = await resource.serialize({
+      serializeMetadata,
+      imports: false,
+    });
+
+    return {
+      code: `
+      import { ObjectProxy as __pages_object_proxy } from '@grexie/pages/utils/proxy';
+      ${imports}
+      ${this.configModule.serialize(path.dirname(this.filename), true)}
+
+      ${code}
+    `,
+      map,
+    };
   }
 }

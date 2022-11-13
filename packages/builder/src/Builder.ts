@@ -1,6 +1,5 @@
-import webpack from 'webpack';
-import { Configuration, EntryObject } from 'webpack';
-import { FileSystem } from './FileSystem';
+import webpack, { Configuration, EntryObject } from 'webpack';
+import { FileSystem } from './FileSystem.js';
 import { EventEmitter } from 'events';
 
 export type WebpackStats = webpack.Stats;
@@ -45,11 +44,17 @@ export class Builder {
 
   constructor({}: BuilderOptions = {}) {}
 
-  async build({ config }: BuildOptions): Promise<WebpackStats> {
+  compiler({ config }: BuildOptions): webpack.Compiler {
     const compiler = webpack(config);
 
     compiler.inputFileSystem = this.fs;
     compiler.outputFileSystem = this.fs;
+
+    return compiler;
+  }
+
+  async build({ config }: BuildOptions): Promise<WebpackStats> {
+    const compiler = this.compiler({ config });
 
     return new Promise<WebpackStats>((resolve, reject) =>
       compiler.run((err, stats) => {
@@ -64,11 +69,7 @@ export class Builder {
   }
 
   watch({ config }: BuildOptions): Watcher {
-    const compiler = webpack(config);
-
-    compiler.inputFileSystem = this.fs;
-    compiler.outputFileSystem = this.fs;
-
+    const compiler = this.compiler({ config });
     return new Watcher(compiler);
   }
 }

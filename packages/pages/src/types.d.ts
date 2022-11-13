@@ -1,18 +1,53 @@
 declare module 'es-main';
-declare module 'mime/Mime.js' {
-  export default class Mime {
-    constructor(...mimetypes: TypeMap[]);
+declare module '@babel/preset-env';
+declare module '@babel/preset-react';
+declare module '@babel/traverse';
+declare module 'inline-source-map-comment';
+declare module '*.css';
+declare module 'webpack/lib/dependencies/EntryDependency.js';
+declare module 'util-browserify';
 
-    getType(path: string): string | null;
-    getExtension(mimetype: string): string | null;
-    define(mimetypes: TypeMap, force?: boolean): void;
+declare module 'vm' {
+  export * from 'node:vm';
+  export enum ModuleStatus {
+    unlinked = 'unlinked',
+    linking = 'linking',
+    linked = 'linked',
+    evaluating = 'evaluating',
+    evaluated = 'evaluated',
+    errored = 'errored',
   }
-}
-declare module 'mime/types/standard.js' {
-  export interface TypeMap {
-    [key: string]: string[];
+  export interface ModuleEvaluateOptions {}
+  export type ModuleLinker = (request: string) => Promise<Module> | Module;
+  export abstract class Module {
+    readonly dependencySpecifiers: string[];
+    readonly error: any;
+    readonly identifier: string;
+    readonly namespace: object;
+
+    get status(): ModuleStatus;
+    evaluate(options: ModuleEvaluateOptions): Promise<void>;
+    link(linker: ModuleLinker): Promise<Module>;
   }
 
-  const mimetypes: TypeMap;
-  export default mimetypes;
+  export interface SourceTextModuleOptions {
+    identifier?: string;
+    cachedData?: Buffer | ArrayBufferTypes | DataView;
+    context: object;
+    lineOffset?: number;
+    columnOffset?: number;
+    initializeImportMeta: (meta: ImportMeta, module: SourceTextModule) => void;
+    importModuleDynamically: (
+      specified: string,
+      module: Module,
+      importAssertions: object
+    ) => object | Module;
+  }
+
+  export class SourceTextModule extends Module {
+    constructor(code: string, options: SourceTextModuleOptions);
+    createCachedData(): Buffer;
+  }
+
+  export const SyntheticModule: any;
 }

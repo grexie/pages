@@ -1,24 +1,17 @@
-import React, {
+import {
   lazy,
   Attributes,
   PropsWithRef,
-  DependencyList,
   FC,
   useMemo,
+  Suspense,
+  SuspenseProps,
 } from 'react';
-import { createContextWithProps } from '../utils/context';
-
-interface ErrorManager {
-  report: (error: any) => void;
-}
+import { setImmediate } from 'timers';
+import { createContext } from '../utils/context.js';
 
 class LazyContext {
   readonly #wrapped: Promise<any>[] = [];
-  readonly errorManager?: ErrorManager;
-
-  constructor(errorManager?: ErrorManager) {
-    this.errorManager = errorManager;
-  }
 
   async wrap<T extends unknown>(promise: Promise<T>): Promise<T> {
     promise = promise.finally(() => {
@@ -31,10 +24,10 @@ class LazyContext {
     return promise;
   }
 
-  async complete<T extends unknown>(promise: Promise<T> | T): Promise<T> {
+  async complete<T extends unknown>(promise: () => Promise<T> | T): Promise<T> {
     const next = async (): Promise<void> => {
       await new Promise(resolve => setImmediate(resolve));
-
+      console.info(this.#wrapped.length);
       if (this.#wrapped.length) {
         await Promise.all(this.#wrapped);
         return next();
@@ -43,7 +36,8 @@ class LazyContext {
 
     await next();
 
-    return promise;
+    const result = await promise();
+    return result;
   }
 }
 
@@ -51,74 +45,70 @@ export const {
   Provider: LazyProvider,
   with: withLazy,
   use: useLazyContext,
-} = createContextWithProps<LazyContext, { errorManager?: ErrorManager }>(
-  Provider =>
-    ({ errorManager, children }) => {
-      const context = useMemo(
-        () => new LazyContext(errorManager),
-        [errorManager]
-      );
-      return <Provider value={context}>{children}</Provider>;
-    }
-);
+} = createContext<LazyContext>(Provider => ({ children }) => {
+  const context = useMemo(() => new LazyContext(), []);
+  return <Provider value={context}>{children}</Provider>;
+});
 
 export const useLazyBase = (
   cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
-  dependencies: DependencyList | undefined
+  dependencies: any[]
 ) => {
-  const { errorManager } = useLazyContext();
+  return useMemo(
+    () =>
+      cb.map(cb => {
+        const Component = lazy(async () => {
+          await new Promise(resolve => setImmediate(resolve));
 
-  const Components = useMemo(() => {
-    return cb.map(cb => {
-      const Component = lazy(async () => {
-        try {
           const Component = await cb();
+          let exports;
 
           if (!Component) {
-            return { default: () => <></> } as any;
+            exports = { default: () => null } as any;
           } else if (typeof Component === 'object') {
-            return Component;
+            exports = Component;
           } else {
-            return { default: Component };
-          }
-        } catch (err) {
-          if (!errorManager) {
-            throw err;
+            exports = { default: Component };
           }
 
-          errorManager.report(err);
-          return { default: () => <></> };
-        }
-      });
+          return exports;
+        });
 
-      return (props: Attributes & PropsWithRef<any>) => <Component {...props} />;
-    });
-  }, dependencies);
-
-  return Components;
+        return Component;
+      }),
+    dependencies
+  );
 };
 
 export const useLazy = <P extends Object = {}>(
   cb: () => Promise<FC<P> | null | undefined>,
-  dependencies: DependencyList | undefined
+  dependencies: any[]
 ) => {
   const context = useLazyContext();
 
-  return useLazyBase([async () => context.wrap(cb() as Promise<any>)], dependencies)[0];
+  return useLazyBase(
+    [async () => context.wrap(cb() as Promise<any>)],
+    dependencies
+  )[0];
 };
 
 export const useLazyComplete = <P extends Object = {}>(
   cb: () => Promise<FC<P> | null | undefined>,
-  dependencies: DependencyList | undefined
+  dependencies: any[]
 ) => {
   const context = useLazyContext();
+  console.info(context);
+  const Component = useLazyBase(
+    [async () => context.complete(cb as () => Promise<any>)],
+    dependencies
+  )[0];
 
-  return useLazyBase([async () => context.complete(cb() as Promise<any>) ], dependencies)[0];
+  return Component;
 };
 
 export const useManyLazy = (
   cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
-  dependencies: DependencyList | undefined
+  dependencies: any[]
 ) => {
   const context = useLazyContext();
 
@@ -128,3 +118,10 @@ export const useManyLazy = (
   )[0];
 };
 
+export const ClientSuspense: FC<SuspenseProps> = ({ children, ...props }) => {
+  if (typeof window === 'undefined') {
+    return <>{children}</>;
+  } else {
+    return <Suspense {...props}>{children}</Suspense>;
+  }
+};

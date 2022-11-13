@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
-import { Document, DocumentProps, DocumentOptions } from '../api/Document';
-import { createContextWithProps } from '../utils/context';
+import { useMemo } from 'react';
+import { Document, DocumentOptions } from '../api/Document.js';
+import { createContextWithProps } from '../utils/context.js';
 
 const {
   Provider: DocumentProvider,
@@ -14,16 +14,14 @@ const {
     }
 );
 
-export const useDocument = (props?: DocumentProps) => {
+export const useDocument = () => {
   const document = useDocumentContext();
 
-  useMemo(() => {
-    if (props) {
-      Object.assign(document.props, props);
-    }
-  }, [document, JSON.stringify(props)]);
+  if (!document) {
+    throw new Error('document context not found');
+  }
 
   return document;
 };
 
-export { DocumentProvider, withDocument };
+export { DocumentProvider, withDocument, useDocumentContext };

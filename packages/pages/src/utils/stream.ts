@@ -1,49 +1,60 @@
-import { Readable, Writable } from 'stream';
-import { createResolver } from './resolvable';
+import { Buffer } from 'buffer';
+import { createResolver } from './resolvable.js';
+import { WritableStream } from 'stream/web';
 
 export const toBuffer = async (
-  readable: Promise<Readable> | Readable
+  readable: Promise<ReadableStream> | ReadableStream
 ): Promise<Buffer> => {
-  const reader = await readable;
-  return new Promise((resolve, reject) => {
-    const buffers: Buffer[] = [];
-    reader.on('data', buffer => buffers.push(buffer));
-    reader.on('end', () => resolve(Buffer.concat(buffers)));
-    reader.on('error', err => reject(err));
-  });
+  const writable = new WritableBuffer();
+  await (await readable).pipeTo(writable);
+  return writable;
 };
 
 export const toString = async (
-  readable: Promise<Readable> | Readable
+  readable: Promise<ReadableStream> | ReadableStream
 ): Promise<string> => (await toBuffer(readable)).toString();
 
-export class WritableBuffer extends Writable implements PromiseLike<Buffer> {
+export class WritableBuffer
+  extends WritableStream
+  implements PromiseLike<Buffer>
+{
   readonly #buffers: Buffer[] = [];
   readonly #resolver = createResolver<Buffer>();
 
-  get then() {
-    return this.#resolver.then.bind(this.#resolver);
+  constructor() {
+    super({
+      write: async (buffer: Buffer): Promise<void> => {
+        this.#buffers.push(buffer);
+      },
+      close: async (): Promise<void> => {
+        this.#resolver.resolve(Buffer.concat(this.#buffers));
+      },
+    });
   }
 
-  get catch() {
-    return this.#resolver.catch.bind(this.#resolver);
+  then<TResult1 = void, TResult2 = never>(
+    onfulfilled?:
+      | ((value: Buffer) => TResult1 | PromiseLike<TResult1>)
+      | null
+      | undefined,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | null
+      | undefined
+  ): Promise<TResult1 | TResult2> {
+    return this.#resolver.then(onfulfilled, onrejected);
   }
 
-  get finally() {
-    return this.#resolver.finally.bind(this.#resolver);
+  catch<TResult = never>(
+    onrejected?:
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | null
+      | undefined
+  ): Promise<Buffer | TResult> {
+    return this.then(x => x, onrejected);
   }
 
-  _write(
-    buffer: Buffer,
-    _: BufferEncoding,
-    callback: (error?: Error) => void
-  ): void {
-    this.#buffers.push(buffer);
-    callback();
-  }
-
-  _final(callback: (error?: Error) => void): void {
-    this.#resolver.resolve(Buffer.concat(this.#buffers));
-    callback();
+  finally(onfinally?: (() => void) | null | undefined): Promise<Buffer> {
+    return this.then(x => x).finally(onfinally);
   }
 }
