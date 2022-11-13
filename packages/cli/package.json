@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-cli",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "license": "MIT",
   "bin": {
     "pages": "bin/index.js"
