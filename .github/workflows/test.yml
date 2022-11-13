@@ -1,9 +1,14 @@
 on: [pull_request]
+
 name: Build and Test
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on:
+      - veritas
+      - linux
+      - arm64
+    container: grexie/node-docker:lts
     strategy:
       matrix:
         node-version: [18.x]
