@@ -54,10 +54,7 @@ export class Builder {
   }
 
   async build({ config }: BuildOptions): Promise<WebpackStats> {
-    const compiler = webpack(config);
-
-    compiler.inputFileSystem = this.fs;
-    compiler.outputFileSystem = this.fs;
+    const compiler = this.compiler({ config });
 
     return new Promise<WebpackStats>((resolve, reject) =>
       compiler.run((err, stats) => {
@@ -72,11 +69,7 @@ export class Builder {
   }
 
   watch({ config }: BuildOptions): Watcher {
-    const compiler = webpack(config);
-
-    compiler.inputFileSystem = this.fs;
-    compiler.outputFileSystem = this.fs;
-
+    const compiler = this.compiler({ config });
     return new Watcher(compiler);
   }
 }

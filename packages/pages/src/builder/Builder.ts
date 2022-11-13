@@ -173,7 +173,7 @@ export class Builder {
     } as any;
   }
 
-  async config(sources: Source[]): Promise<Configuration> {
+  async config(sources: Source[]): Promise<webpack.Configuration> {
     const require = createRequire(import.meta.url);
 
     const config: webpack.Configuration = {
@@ -439,6 +439,7 @@ export class Builder {
           entries: false,
           modules: false,
           dependencies: false,
+          // profile: true,
         }),
         new ResourcesPlugin({ context: this.context }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),
@@ -462,9 +463,22 @@ export class Builder {
 
       (config as any).devServer = Object.assign(
         (config as any).devServer ?? {},
-        { hotOnly: true }
+        { hotOnly: false }
       );
     }
+
+    Object.assign(config as any, {
+      devServer: {
+        hot: false,
+        client: false,
+        watchFiles: {
+          options: {
+            ignored: /\/(\.cache|build)\//,
+            cwd: this.context.rootDir,
+          },
+        },
+      },
+    });
 
     return config;
   }

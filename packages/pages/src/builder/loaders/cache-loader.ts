@@ -95,7 +95,7 @@ export default async function CacheLoader(
 
     const modules = context.getModuleContext(this._compilation!);
 
-    modules.evict(this.resourcePath);
+    // modules.evict(this.resourcePath);
 
     callback(null, content, inputSourceMap, additionalData);
   } catch (err) {

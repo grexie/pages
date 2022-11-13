@@ -41,3 +41,9 @@ if (typeof window !== 'undefined') {
 } else if (typeof global !== 'undefined') {
   attach(global);
 }
+
+if (typeof import.meta !== 'undefined') {
+  update((import.meta as any).webpackHot);
+} else if (typeof module !== 'undefined') {
+  update((module as any).hot);
+}
