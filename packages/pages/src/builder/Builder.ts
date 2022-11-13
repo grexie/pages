@@ -1,8 +1,6 @@
 import {
   Builder as BuilderBase,
   Watcher,
-  Configuration,
-  EntryObject,
   WebpackStats,
 } from '@grexie/builder/Builder.js';
 import {
@@ -16,13 +14,69 @@ import { Source } from './Source.js';
 import _path from 'path';
 import { Volume } from 'memfs';
 import { ResourcesPlugin } from './plugins/resources-plugin.js';
-import { ModuleContext } from './ModuleContext.js';
-import { Compilation } from 'webpack';
 import path from 'path';
 import webpack from 'webpack';
 import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import chalk from 'chalk';
+import NormalModuleFactory from 'webpack/lib/NormalModuleFactory.js';
+
+const originalResolveRequestArray =
+  NormalModuleFactory.prototype.resolveRequestArray;
+NormalModuleFactory.prototype.resolveRequestArray =
+  function resolveRequestArray(
+    this: any,
+    contextInfo: any,
+    context: any,
+    array: any,
+    originalResolver: any,
+    resolveContext: any,
+    callback: any
+  ) {
+    //Object.setPrototypeOf(resolver, Object.getPrototypeOf(originalResolver));
+    const originalResolve = originalResolver.resolve;
+    let resolveRequests: any[] = [];
+    const resolver = {
+      resolve: function (this: any) {
+        const args = [...arguments];
+        const originalCallback = args.pop();
+        args.push(function (
+          this: any,
+          err: any,
+          result: any,
+          resolveRequest: any
+        ) {
+          if (result && resolveRequest) {
+            resolveRequests.push({ result, resolveRequest });
+          }
+
+          return originalCallback.call(this, err, result, resolveRequest);
+        });
+        return originalResolve.call(originalResolver, ...args);
+      },
+    };
+
+    return originalResolveRequestArray.call(
+      this,
+      contextInfo,
+      context,
+      array,
+      resolver,
+      resolveContext,
+      function (this: any, err: any, resolved: any[]) {
+        if (resolved) {
+          resolved.forEach(resolved => {
+            const resolveRequest = resolveRequests.find(
+              ({ result }) => result === resolved.loader
+            )?.resolveRequest;
+            resolved.type = resolveRequest?.descriptionFileData?.type;
+          });
+        }
+
+        callback.call(this, err, resolved);
+      }
+    );
+  };
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
