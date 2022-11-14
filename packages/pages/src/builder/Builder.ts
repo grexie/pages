@@ -268,7 +268,7 @@ export class Builder {
       module: {
         rules: [
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.scss$/,
             use: [
               this.#loader('cache-loader'),
@@ -283,7 +283,7 @@ export class Builder {
             include: /\.global\.scss$/,
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.scss$/,
             use: [
               this.#loader('cache-loader'),
@@ -301,7 +301,7 @@ export class Builder {
             include: /\.module\.scss$/,
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.css$/,
             use: [
               this.#loader('cache-loader'),
@@ -313,7 +313,7 @@ export class Builder {
             include: /\.global\.css$/,
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.css$/,
             use: [
               this.#loader('cache-loader'),
@@ -328,7 +328,7 @@ export class Builder {
             include: /\.module\.css$/,
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(png|jpe?g|gif|webp|svg)$/,
             use: [
               this.#loader('cache-loader'),
@@ -337,7 +337,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.pages\.([mc]?js|ts)$/,
             use: [
               this.#loader('cache-loader'),
@@ -356,7 +356,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -366,7 +366,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -377,7 +377,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(jsx?|mjs|cjs)$/,
             include: [this.context.rootDir],
             //include: [/node_modules\/@mdx-js/],
@@ -406,7 +406,7 @@ export class Builder {
             ],
           },
           {
-            type: 'javascript/auto',
+            type: 'javascript/esm',
             test: /\.(ts|tsx)$/,
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,

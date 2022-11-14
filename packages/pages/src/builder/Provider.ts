@@ -57,6 +57,7 @@ export class Provider {
         ),
         '**/*.scss',
         '**/*.css',
+        '**/*.d.ts',
         'node_modules/**',
         '.git/**',
         '.github/**',

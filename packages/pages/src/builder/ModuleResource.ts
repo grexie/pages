@@ -6,6 +6,7 @@ import {
   Resource,
 } from '../api/Resource.js';
 import type * as babel from '@babel/core';
+import { AnyFn } from 'react-refresh';
 
 const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
@@ -24,16 +25,38 @@ const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
       );
     },
     ExportNamedDeclaration(path: any) {
-      path.replaceWith(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            t.identifier('__handler_exports'),
-            path.node.specifiers[0].exported
-          ),
-          path.node.declaration as any
-        )
-      );
+      if (path.node.declaration) {
+        path.replaceWithMultiple(
+          path.node.declaration.declarations
+            .map((declaration: any) => {
+              return [
+                t.variableDeclaration('const', [
+                  t.variableDeclarator(declaration.id, declaration.init),
+                ]),
+                t.assignmentExpression(
+                  '=',
+                  t.memberExpression(
+                    t.identifier('__handler_exports'),
+                    declaration.id
+                  ),
+                  declaration.id
+                ),
+              ];
+            })
+            .reduce((a: any[], b: any[]) => [...a, ...b], [])
+        );
+      } else {
+        path.replaceWith(
+          t.assignmentExpression(
+            '=',
+            t.memberExpression(
+              t.identifier('__handler_exports'),
+              path.node.specifiers[0].exported
+            ),
+            path.node.declaration as any
+          )
+        );
+      }
     },
   },
 });

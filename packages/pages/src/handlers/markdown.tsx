@@ -31,19 +31,21 @@ export const resource = async (
 
   let stylesheets = '';
   if (typeof context.metadata.styles === 'object') {
+    const imports = (Object.values(context.metadata.styles) as string[])
+      .map((stylesheet, i) => {
+        return `import __pages_stylesheet_${i} from ${JSON.stringify(
+          stylesheet
+        )};`;
+      })
+      .join('\n');
     stylesheets =
-      'export const styles = {' +
-      (
-        Object.entries(context.metadata.styles ?? {}) as unknown as [
-          string,
-          string
-        ][]
-      )
-        .map(
-          ([name, stylesheet]) =>
-            `${name}: require(${JSON.stringify(stylesheet)})`
-        )
-        .join(', ') +
+      imports +
+      '\n' +
+      'export const styles = {\n' +
+      (Object.keys(context.metadata.styles ?? {}) as string[])
+
+        .map((name, i) => `  ${JSON.stringify(name)}: __pages_stylesheet_${i}`)
+        .join(',\n') +
       '};\n';
   } else if (typeof context.metadata.styles === 'string') {
     stylesheets = `export { default as styles } from ${JSON.stringify(
@@ -59,6 +61,8 @@ export const resource = async (
       SourceMapGenerator,
     }
   );
+
+  console.info(source.toString());
 
   const map = SourceMapGenerator.fromSourceMap(
     new SourceMapConsumer(source.map as any)
