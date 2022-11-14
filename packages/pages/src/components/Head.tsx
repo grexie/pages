@@ -1,5 +1,4 @@
-import {
-  ReactNode,
+import React, {
   ReactElement,
   FC,
   PropsWithChildren,
@@ -9,38 +8,71 @@ import {
   useEffect,
   startTransition,
   Children,
-  Fragment,
+  createElement,
+  ReactNode,
 } from 'react';
 import EventEmitter from 'events';
 import { isElement, isFragment } from 'react-is';
 import { hash } from '../utils/hash.js';
-import { createContext } from '../utils/context.js';
+import {
+  createContext,
+  SharedContextClone,
+  useSharedContexts,
+  type SharedContexts,
+} from '../utils/context.js';
 import { setImmediate } from 'timers';
-import { hydrateRoot, Root } from 'react-dom/client';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createPortal, unmountComponentAtNode } from 'react-dom';
 
-const nodeToString = (children: ReactNode) => {
-  const out: string[] = [];
+const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
+  const {
+    children,
+    dangerouslySetInnerHTML: { __html: html = undefined } = {},
+    ...props
+  } = element.props;
 
-  Children.toArray(children).forEach(child => {
-    if (typeof child === 'boolean') {
-      return;
-    } else if (typeof child === 'string' || typeof child === 'number') {
-      out.push(child.toString());
-      return;
-    } else if (Array.isArray(child)) {
-      out.push(nodeToString(child));
-      return;
-    } else if (typeof child === 'object' && child !== null) {
-      if ((child as any).type === Fragment) {
-        out.push(nodeToString((child as any).props.children));
-        return;
-      }
-    }
+  const Component = () => (
+    <SharedContextClone contexts={contexts}>{children}</SharedContextClone>
+  );
 
-    throw new Error('children must be fragments, strings or numbers');
-  });
+  const string = html ?? renderToStaticMarkup(<Component />);
 
-  return out.join('');
+  if (
+    [
+      'area',
+      'base',
+      'br',
+      'col',
+      'embed',
+      'hr',
+      'img',
+      'keygen',
+      'link',
+      'meta',
+      'param',
+      'source',
+      'track',
+      'wbr',
+    ].includes(element.type as any)
+  ) {
+    return createElement(element.type, {
+      ...props,
+    });
+  } else if (['title'].includes(element.type as any)) {
+    return createElement(
+      element.type,
+      {
+        ...props,
+      },
+      string
+    );
+  } else {
+    return createElement(element.type, {
+      ...props,
+      dangerouslySetInnerHTML: { __html: string },
+    });
+  }
 };
 
 class HeadContext extends EventEmitter {
@@ -71,17 +103,12 @@ class HeadContext extends EventEmitter {
     }
   }
 
-  setProps(props: HeadProps) {
+  setProps(props: HeadProps, contexts: SharedContexts) {
     let children;
 
     const handleElement = (element: ReactElement, key?: number) => {
-      if (element.type === 'title') {
-        props.title = nodeToString(element.props.children);
-        return <></>;
-      }
-
       return cloneElement(
-        element,
+        flattenElement(element, contexts),
         typeof key !== 'undefined' ? { key: `${key}` } : {}
       );
     };
@@ -122,7 +149,6 @@ class HeadContext extends EventEmitter {
   render(): ReactElement {
     return (
       <>
-        {!!this.props.title && <title>{this.props.title}</title>}
         {this.props.children}
         {this.children.map((Child, i) => (
           <Child key={`${i}`} />
@@ -169,9 +195,7 @@ export const useHead = () => {
   return head;
 };
 
-export interface HeadProps extends PropsWithChildren {
-  title?: string;
-}
+export interface HeadProps extends PropsWithChildren {}
 
 export const Head: FC<HeadProps> = ({ children, ...props }) => {
   if (typeof window === 'undefined') {
@@ -190,22 +214,42 @@ interface ServerHeadProps extends HeadProps {}
 
 const ServerHead: FC<ServerHeadProps> = withHead(({ ...props }) => {
   const head = _useHead();
+  const contexts = useSharedContexts();
 
   useMemo(() => {
-    head.setProps(props);
-  }, [hash(props)]);
+    head.setProps(props, contexts);
+  }, [hash(props), contexts]);
 
   return null;
 });
 
 interface BrowserHeadProps extends HeadProps {}
 
-const BrowserHead: FC<BrowserHeadProps> = withHead(({ ...props }) => {
-  const head = _useHead();
+const useReactNodeDependency = (node: ReactNode) => {
+  const { fragment, portal } = useMemo(() => {
+    const fragment = document.createDocumentFragment();
+    const portal = createPortal(node, fragment);
+    return { fragment, portal };
+  }, []);
 
   useEffect(() => {
-    head.setProps(props);
-  }, [hash(props)]);
+    const observer = new MutationObserver(() => {});
+    observer.observe(fragment);
+
+    return () => {
+      observer.disconnect();
+      unmountComponentAtNode(fragment);
+    };
+  }, []);
+};
+
+const BrowserHead: FC<BrowserHeadProps> = withHead(({ ...props }) => {
+  const head = _useHead();
+  const contexts = useSharedContexts();
+
+  useEffect(() => {
+    head.setProps(props, contexts);
+  }, [hash(props), contexts]);
 
   return null;
 });
