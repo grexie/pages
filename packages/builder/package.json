@@ -1,6 +1,6 @@
 {
   "name": "@grexie/builder",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "license": "MIT",
   "main": "index.mjs",
   "type": "module",
