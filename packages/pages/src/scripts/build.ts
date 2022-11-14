@@ -13,7 +13,6 @@ export default async () => {
   });
   context.fs.add(context.outputDir, fs, true);
 
-  let sources = await context.registry.list();
-  const stats = await context.builder.build(sources);
+  const stats = await context.builder.build();
   console.info(stats.toString());
 };

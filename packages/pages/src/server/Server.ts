@@ -51,8 +51,7 @@ export class Server {
       throw new Error('already started');
     }
 
-    let sources = await this.context.registry.list();
-    const compiler = await this.context.builder.compiler(sources);
+    const compiler = await this.context.builder.compiler();
 
     this.#server = createResolver<http.Server>();
     // const handler = new RequestHandler(this.context);
@@ -84,8 +83,7 @@ export class Server {
   }
 
   async #watch(): Promise<void> {
-    let resources = await this.context.registry.list();
-    const watcher = await this.context.builder.watch(resources);
+    const watcher = await this.context.builder.watch();
     watcher.on('build', (err: Error | null | undefined, stats?: Stats) => {
       if (err) {
         console.error(err);

@@ -41,20 +41,8 @@ export class Provider {
     }
     this.#scanning = true;
 
-    const files = await globAsync(`**/*.{ts,tsx,js,jsx,md,pages.yml}`, {
-      cwd: this.context.rootDir,
-      nodir: true,
-      dot: true,
-      fs: this.context.fs as any,
-      ignore: [
-        _path.relative(
-          this.context.rootDir,
-          _path.join(this.context.outputDir, '**')
-        ),
-        _path.relative(
-          this.context.rootDir,
-          _path.join(this.context.cacheDir, '**')
-        ),
+    try {
+      const ignore = [
         '**/*.scss',
         '**/*.css',
         '**/*.d.ts',
@@ -68,41 +56,71 @@ export class Provider {
         'yarn.lock',
         'package-lock.json',
         ...this.#exclude,
-      ],
-    });
+      ];
 
-    const sources = await Promise.all(
-      files.map(async (filename: string) =>
-        this.create(
-          _path.resolve(this.context.rootDir, filename),
-          this.context.rootDir
+      if (this.context.outputDir.startsWith(this.context.rootDir)) {
+        ignore.push(
+          _path.relative(
+            this.context.rootDir,
+            _path.join(this.context.outputDir, '**')
+          )
+        );
+      }
+
+      if (this.context.cacheDir.startsWith(this.context.rootDir)) {
+        ignore.push(
+          _path.relative(
+            this.context.rootDir,
+            _path.join(this.context.cacheDir, '**')
+          )
+        );
+      }
+
+      const files = await globAsync(`**/*.{ts,tsx,js,jsx,md,pages.yml}`, {
+        cwd: this.context.rootDir,
+        nodir: true,
+        dot: true,
+        fs: this.context.fs as any,
+        ignore,
+      });
+
+      const sources = await Promise.all(
+        files.map(async (filename: string) =>
+          this.create(
+            _path.resolve(this.context.rootDir, filename),
+            this.context.rootDir
+          )
         )
-      )
-    );
+      );
 
-    this.#sources.resolve(
-      (
-        sources.filter(source => !!source && !source.isPagesConfig) as Source[]
-      ).reduce(
-        (resources, resource) => ({
-          ...resources,
-          [resource.path.join('/')]: resource,
-        }),
-        {}
-      )
-    );
+      this.#sources.resolve(
+        (
+          sources.filter(
+            source => !!source && !source.isPagesConfig
+          ) as Source[]
+        ).reduce(
+          (resources, resource) => ({
+            ...resources,
+            [resource.path.join('/')]: resource,
+          }),
+          {}
+        )
+      );
 
-    this.#configs.resolve(
-      (
-        sources.filter(source => !!source && source.isPagesConfig) as Source[]
-      ).reduce(
-        (resources, resource) => ({
-          ...resources,
-          [resource.path.join('/')]: resource,
-        }),
-        {}
-      )
-    );
+      this.#configs.resolve(
+        (
+          sources.filter(source => !!source && source.isPagesConfig) as Source[]
+        ).reduce(
+          (resources, resource) => ({
+            ...resources,
+            [resource.path.join('/')]: resource,
+          }),
+          {}
+        )
+      );
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {

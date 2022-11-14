@@ -16,6 +16,7 @@ export interface ConfigResolverOptions {
 }
 
 export interface Config extends Record<string, any> {
+  render: boolean;
   metadata: ResourceMetadata;
 }
 
@@ -37,7 +38,7 @@ export class ConfigModule {
     return out;
   }
 
-  async create(extra?: Config): Promise<Config> {
+  async create(extra?: Partial<Config>): Promise<Config> {
     const parent = await this.parent?.create();
     const { exports } = this.module;
     if (!exports.config) {

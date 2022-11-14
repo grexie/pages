@@ -244,14 +244,20 @@ export class ResourcesPlugin {
         compilation,
       });
 
-      context.modules.reset();
+      sources = (
+        await Promise.all(
+          sources.map(async source => {
+            const config = await (
+              await context.build.config.create(compilation, source.path)
+            ).create();
+            if (config.render) {
+              return source;
+            }
+          })
+        )
+      ).filter(x => !!x) as Source[];
 
-      // compilation.hooks.processAssets.tap(
-      //   { name: 'ResourcesPlugin', stage: Infinity, before: 'SourceCompiler' },
-      //   async () => {
-      //     context.modules.reset();
-      //   }
-      // );
+      // context.modules.reset();
 
       await Promise.all(
         sources.map(async source => {

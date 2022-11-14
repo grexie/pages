@@ -73,6 +73,7 @@ export class BuildContext extends Context {
 
     this.rootDir = rootDir;
     this.cacheDir = cacheDir;
+
     this.pagesDir = path.dirname(require.resolve('@grexie/pages/package.json'));
     const pagesModules: string[] = [];
     let dirname = this.pagesDir;

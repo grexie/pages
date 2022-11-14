@@ -214,8 +214,7 @@ export class MockBuilder extends BuildContext {
   }
 
   async build() {
-    let sources = await this.registry.list();
-    const stats = await this.builder.build(sources);
+    const stats = await this.builder.build();
 
     if (stats.hasErrors()) {
       throw stats.compilation.errors;
@@ -224,7 +223,6 @@ export class MockBuilder extends BuildContext {
   }
 
   async watch() {
-    let sources = await this.registry.list();
-    return this.builder.watch(sources);
+    return this.builder.watch();
   }
 }

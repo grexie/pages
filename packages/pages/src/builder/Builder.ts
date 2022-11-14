@@ -151,6 +151,8 @@ export class Builder {
         .add(this.context.cacheDir, fs, true),
     };
 
+    fs.mkdirSync(this.context.cacheDir, { recursive: true });
+
     this.#builder.fs.add(
       this.context.cacheDir,
       cacheStorage.persistent,
@@ -229,7 +231,7 @@ export class Builder {
     } as any;
   }
 
-  async config(sources: Source[]): Promise<webpack.Configuration> {
+  async config(): Promise<webpack.Configuration> {
     const require = createRequire(import.meta.url);
 
     const config: webpack.Configuration & {
@@ -509,7 +511,7 @@ export class Builder {
           format:
             '  build [:bar] ' +
             chalk.green.bold(':percent') +
-            ' (:elapsed seconds)',
+            ' (:elapsed seconds) :msg',
           clear: true,
           total: 0,
         }) as any,
@@ -544,18 +546,18 @@ export class Builder {
     return config;
   }
 
-  async build(sources: Source[]): Promise<WebpackStats> {
-    const config = await this.config(sources);
+  async build(): Promise<WebpackStats> {
+    const config = await this.config();
     return this.#builder.build({ config });
   }
 
-  async watch(sources: Source[]): Promise<Watcher> {
-    const config = await this.config(sources);
+  async watch(): Promise<Watcher> {
+    const config = await this.config();
     return this.#builder.watch({ config });
   }
 
-  async compiler(sources: Source[]): Promise<webpack.Compiler> {
-    const config = await this.config(sources);
+  async compiler(): Promise<webpack.Compiler> {
+    const config = await this.config();
     return this.#builder.compiler({ config });
   }
 }
