@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { Provider } from '@grexie/builder/src/builder/Provider.js';
-import { BuildContext } from '@grexie/builder/src/builder/BuildContext.js';
+import { Provider } from '../Provider.js';
+import { BuildContext } from '../BuildContext.js';
 
 export default async () => {
   const context = new BuildContext({

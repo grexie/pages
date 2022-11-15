@@ -1,14 +1,10 @@
 import { Source, SourceOptions } from './Source.js';
-import {
-  ContentResource,
-  Resource,
-  type SourceContext as _SourceContext,
-} from '@grexie/pages/api';
+import { ContentResource, Resource, Config } from '@grexie/pages/api';
 import type { BuildContext } from './BuildContext.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import type { Compilation } from 'webpack';
 import { ModuleResource } from './ModuleResource.js';
-import { Config, ConfigModule } from './ConfigContext.js';
+import { ConfigModule } from './ConfigContext.js';
 import path from 'path';
 import { ObjectProxy } from '@grexie/proxy';
 
@@ -27,7 +23,7 @@ export interface SourceContextOptions extends SourceOptions {
   configModule: ConfigModule;
 }
 
-export class SourceContext extends Source implements _SourceContext {
+export class SourceContext extends Source {
   readonly context: BuildContext;
   readonly compilation: Compilation;
   readonly module: InstantiatedModule;

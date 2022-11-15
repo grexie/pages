@@ -16,16 +16,26 @@ export default () => {
   );
   tsconfigBase.include = workspaces
     .map(({ location }) => [
-      join(location, 'src', '**', '*.ts'),
-      join(location, 'src', '**', '*.tsx'),
+      './' + join(location, 'src', '**', '*.ts'),
+      './' + join(location, 'src', '**', '*.tsx'),
     ])
     .reduce((a, b) => [...a, ...b], []);
-  tsconfigBase.compilerOptions.paths = workspaces
+  tsconfigBase.exclude = workspaces
+    .map(({ location }) => [
+      './' + join(location, 'src', '**', '*.spec.ts'),
+      './' + join(location, 'src', '**', '*.spec.tsx'),
+      './' + join(location, 'src', '**', '*.test.ts'),
+      './' + join(location, 'src', '**', '*.test.tsx'),
+    ])
+    .reduce((a, b) => [...a, ...b], []);
+  //tsconfigBase.compilerOptions.paths = [];
+  workspaces
     .map(({ workspace, location }) => ({
-      [workspace]: [join(location, 'src')],
-      [join(workspace, '*')]: [join(location, 'src', '*')],
+      [workspace]: ['./' + join(location)],
+      [join(workspace, '*')]: ['./' + join(location, '*')],
     }))
     .reduce((a, b) => ({ ...a, ...b }), {});
+
   writeFileSync('tsconfig.base.json', JSON.stringify(tsconfigBase, null, 2));
 };
 

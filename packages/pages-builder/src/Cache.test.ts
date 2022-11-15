@@ -1,7 +1,7 @@
-import { Cache } from './Cache';
-import { FileSystem } from './FileSystem';
+import { Cache } from './Cache.js';
+import { FileSystem } from './FileSystem.js';
 import { Volume } from 'memfs';
-import { createResolver } from './utils/resolvable';
+import { createResolver } from '@grexie/resolvable';
 
 const timeout = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const immediate = () => new Promise(resolve => setImmediate(resolve));

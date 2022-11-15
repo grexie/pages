@@ -1,6 +1,7 @@
 {
   "files": [],
   "compilerOptions": {
+    "declaration": true,
     "allowSyntheticDefaultImports": false
   },
   "references": [

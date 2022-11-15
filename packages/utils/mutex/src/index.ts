@@ -2,7 +2,7 @@ import {
   createResolver,
   PromiseQueue,
   ResolvablePromise,
-} from './resolvable.js';
+} from '@grexie/resolvable';
 
 export class Lock {
   readonly #resolver: ResolvablePromise<void>;
