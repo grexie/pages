@@ -1,4 +1,4 @@
-import type { Config } from './builder/ConfigContext.js';
+import type { Config } from '@grexie/builder/src/builder/ConfigContext.js';
 
 export default (): Config => ({
   render: true,

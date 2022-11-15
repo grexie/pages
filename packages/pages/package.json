@@ -6,8 +6,9 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src/ -D -d . -x .ts,.tsx",
-    "test": "jest"
+    "build": "run-p -s build:ts build:ts-test --",
+    "build:ts": "babel src/ --no-copy-ignored -D -d . -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-test": "babel src/ --no-copy-ignored -D -d . -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'"
   },
   "dependencies": {
     "@babel/core": "^7.18.2",
@@ -79,11 +80,15 @@
   },
   "exports": {
     ".": "./index.js",
+    "./api": "./api/index.js",
     "./runtime/util": "./runtime/util.js",
     "./scripts/clean/cache": "./scripts/clean/cache.js",
     "./scripts/build": "./scripts/build.js",
     "./scripts/serve": "./scripts/serve.js",
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "sideEffects": false
 }

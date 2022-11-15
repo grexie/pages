@@ -1,0 +1,8 @@
+/pages*/*.mjs
+/pages*/*.js
+/pages*/*.ts
+/pages*/*/
+!/pages*/.babelrc.js
+!/pages*/src/
+!/pages*/bin/
+!/pages*/jest.config.js

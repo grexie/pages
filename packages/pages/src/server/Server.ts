@@ -1,6 +1,9 @@
 import http from 'http';
 import { Stats } from '@grexie/builder/FileSystem.js';
-import { BuildContext, BuildContextOptions } from '../builder/BuildContext.js';
+import {
+  BuildContext,
+  BuildContextOptions,
+} from '@grexie/builder/src/builder/BuildContext.js';
 import { ResolvablePromise, createResolver } from '../utils/resolvable.js';
 import WebpackHotMiddleware from 'webpack-hot-middleware';
 import WebpackDevMiddleware from 'webpack-dev-middleware';

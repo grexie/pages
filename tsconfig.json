@@ -8,6 +8,9 @@
       "path": "packages/builder"
     },
     {
+      "path": "packages/cache-loader"
+    },
+    {
       "path": "packages/cli"
     },
     {

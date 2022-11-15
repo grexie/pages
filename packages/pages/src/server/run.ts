@@ -1,4 +1,4 @@
-import { Provider } from '../builder/Provider.js';
+import { Provider } from '@grexie/builder/src/builder/Provider.js';
 import { Server } from './Server.js';
 import fs from 'fs';
 import path from 'path';

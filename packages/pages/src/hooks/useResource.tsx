@@ -6,7 +6,7 @@ import type {
   ResourceMetadata,
 } from '../api/Resource.js';
 import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
-import type { ModuleResource } from '../builder/ModuleResource.js';
+import type { ModuleResource } from '@grexie/builder/src/builder/ModuleResource.js';
 import { useDocument } from './useDocument.js';
 import { hash } from '../utils/hash.js';
 
