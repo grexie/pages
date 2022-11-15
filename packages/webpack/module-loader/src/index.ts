@@ -1,14 +1,14 @@
 import type { LoaderContext } from 'webpack';
 import type { BuildContext } from '@grexie/pages-builder';
 import type { InstantiatedModule } from '@grexie/pages-builder';
-import type { Handler } from '@grexie/pages/api';
+import type { Handler } from '@grexie/pages-builder';
 import type { Resource } from '@grexie/pages/api';
 import _path from 'path';
 import * as babel from '@babel/core';
 import { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
 import reactRefreshPlugin from 'react-refresh/babel';
-import { offsetLines } from './source-maps.js';
+import { offsetLines } from '@grexie/source-maps';
 
 interface ModuleLoaderOptions {
   context: BuildContext;

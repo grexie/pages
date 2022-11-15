@@ -4,21 +4,26 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
-    "paths": {
-      "@grexie/pages-builder": ["../pages-builder/src"]
-    },
     "moduleResolution": "node16",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages": ["../pages/src"],
+      "@grexie/pages/*": ["../pages/src/*"],
+      "@grexie/pages-builder": ["../pages-builder/src"]
+    }
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx"
-, "../pages-builder/src/Handler.ts"  ],
+  ],
   "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx"
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
   ],
   "references": [
+    {
+      "path": "../pages"
+    },
     {
       "path": "../pages-builder"
     }

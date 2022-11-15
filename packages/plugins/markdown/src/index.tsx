@@ -1,7 +1,8 @@
 import { FC, PropsWithChildren } from 'react';
 import { compile } from '@mdx-js/mdx';
 import grayMatter from 'gray-matter';
-import { useModule, StyleSheet } from '@grexie/pages';
+import { useModule } from '@grexie/pages';
+import type { StyleSheet } from '@grexie/pages-runtime-styles';
 import { Resource } from '@grexie/pages/api';
 import type { SourceContext } from '@grexie/pages-builder';
 import { SourceMapGenerator, SourceMapConsumer } from 'source-map';

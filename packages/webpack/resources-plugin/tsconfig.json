@@ -3,7 +3,19 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./",
+    "rootDir": "./src/",
     "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true,
-  }
+    "paths": {
+      "@grexie/pages-builder": ["../../pages-builder/src"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
 }

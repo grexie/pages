@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useStyles } from '@grexie/pages';
 
 export type Class = string | Record<string, any> | null | undefined;

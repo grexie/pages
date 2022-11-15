@@ -3,7 +3,29 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./",
+    "rootDir": "./src/",
     "moduleResolution": "node16",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages": ["../pages/src"],
+      "@grexie/pages/*": ["../pages/src/*"],
+      "@grexie/pages-resources-plugin": ["../webpack/resources-plugin/src"]
+    }
   },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../pages"
+    },
+    {
+      "path": "../webpack/resources-plugin"
+    }
+  ]
 }

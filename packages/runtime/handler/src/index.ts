@@ -14,7 +14,7 @@ import { withDocumentContent } from '@grexie/pages';
 import { Context } from '@grexie/pages/api';
 import { withLazy } from '@grexie/pages';
 import type { Resource } from '@grexie/pages/api';
-import type { Handler } from '@grexie/pages/api';
+import type { Handler } from '@grexie/pages-builder';
 
 export const wrapHandler = (
   resource: Resource,

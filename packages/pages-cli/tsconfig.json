@@ -4,16 +4,19 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "moduleResolution": "node16",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages": ["../../pages/src"],
+      "@grexie/pages/*": ["../../pages/src/*"]
+    }
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
   "exclude": [
-    "bin/**/*.js",
-    "**/*.test.ts",
-    "**/*.test.tsx"
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
   ]
 }

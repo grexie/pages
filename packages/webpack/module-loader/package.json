@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "main": "index.js",
-  "types": "index.d.ts",
+  "types": "types.d.ts",
   "scripts": {
     "build": "run-p -s build:ts build:ts-test --",
     "build:ts": "babel src/ --no-copy-ignored -D -d . -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
