@@ -12,9 +12,9 @@
   "scripts": {
     "clean": "git clean -dfX && yarn install --force && yarn build",
     "start": "npm-run-all -p start:tsc start:build",
-    "start:tsc": "tsc -b -w --preserveWatchOutput",
+    "start:tsc": "monorepo generate:tsconfig && tsc -b -w --preserveWatchOutput",
     "start:build": "monorepo run -p build -w",
-    "build": "tsc -b && monorepo run build",
+    "build": "monorepo generate:tsconfig && tsc -b && monorepo run build",
     "publish": "yarn build && monorepo workspaces npm publish",
     "link": "monorepo workspaces yarn link",
     "unlink": "monorepo workspaces yarn unlink",

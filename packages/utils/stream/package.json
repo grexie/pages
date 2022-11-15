@@ -1,5 +1,5 @@
 {
-  "name": "@grexie/hash-object",
+  "name": "@grexie/stream",
   "version": "0.0.13",
   "license": "MIT",
   "type": "commonjs",

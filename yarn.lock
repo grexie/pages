@@ -1349,6 +1349,13 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@grexie/builder@^0.0.13":
+  version "0.0.13"
+  resolved "https://registry.yarnpkg.com/@grexie/builder/-/builder-0.0.13.tgz#7b058438a39fac3d0cf4610df311745827e12658"
+  integrity sha512-reETLF4BoF24JAsaJZEWFsPOdBqvs8v3RyHYpz06x6XIo0jPbMqP8ZfP1osp8A49LTK82UHkVZuV9d7OwmH+7w==
+  dependencies:
+    webpack "^5.73.0"
+
 "@grexie/compose@^0.1.10":
   version "0.1.10"
   resolved "https://registry.yarnpkg.com/@grexie/compose/-/compose-0.1.10.tgz#53c2fcba083cb5a5f771f9c61cec641ecfb74927"

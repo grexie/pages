@@ -9,7 +9,13 @@ require('ts-node').register({
 });
 
 const importScript = name => {
-  const module = require(path.resolve(__dirname, '..', 'src', 'scripts', name));
+  const module = require(path.resolve(
+    __dirname,
+    '..',
+    'src',
+    'scripts',
+    name.replace(/:/g, '/')
+  ));
 
   return {
     script: module.default,
