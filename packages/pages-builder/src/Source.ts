@@ -2,7 +2,7 @@ import type {
   ContentResource,
   Resource,
   ResourceMetadata,
-} from '../../../pages/src/api/Resource.js';
+} from '@grexie/pages/api';
 import path from 'path';
 import EventEmitter from 'events';
 export type SourceTree = { [key: string]: SourceTree | string };

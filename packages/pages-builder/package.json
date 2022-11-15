@@ -2,7 +2,7 @@
   "name": "@grexie/pages-builder",
   "version": "0.0.13",
   "license": "MIT",
-  "main": "index.mjs",
+  "main": "index.js",
   "type": "module",
   "scripts": {
     "build": "babel src/ --no-copy-ignored -D -d . -x .ts,.tsx --ignore '**/*.d.ts'"
@@ -12,5 +12,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": "./index.js"
   }
 }

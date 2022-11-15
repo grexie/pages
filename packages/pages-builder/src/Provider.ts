@@ -2,12 +2,9 @@ import glob from 'glob';
 import * as _path from 'path';
 import { promisify } from 'util';
 import { Source } from './Source.js';
-import {
-  createResolver,
-  ResolvablePromise,
-} from '../../../pages/src/utils/resolvable.js';
+import { createResolver, ResolvablePromise } from '@grexie/resolvable';
 import { ProviderOptions, ListOptions } from './Registry.js';
-import { BuildContext } from '../BuildContext.js';
+import { BuildContext } from './BuildContext.js';
 
 const globAsync = promisify(glob);
 

@@ -13,13 +13,13 @@ import React, {
 } from 'react';
 import EventEmitter from 'events';
 import { isElement, isFragment } from 'react-is';
-import { hash } from '../utils/hash.js';
+import { hash } from '@grexie/hash-object';
 import {
   createContext,
   SharedContextClone,
   useSharedContexts,
   type SharedContexts,
-} from '../utils/context.js';
+} from '@grexie/context';
 import { setImmediate } from 'timers';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';

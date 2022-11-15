@@ -1,4 +1,4 @@
-import { createResolver, ResolvablePromise } from './resolvable.js';
+import { createResolver, ResolvablePromise } from '@grexie/resolvable';
 
 export class Lock {
   readonly #resolver: ResolvablePromise<void>;

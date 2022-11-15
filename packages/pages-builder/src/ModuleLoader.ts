@@ -1,13 +1,13 @@
 import type { ModuleReference, ModuleResolver } from './ModuleResolver.js';
 import type { Compilation } from 'webpack';
-import { createResolver } from '../../../pages/src/utils/resolvable.js';
+import { createResolver } from '@grexie/resolvable';
 import webpack from 'webpack';
 import vm from 'vm';
-import { attach as attachHotReload } from '../../../pages/src/runtime/hmr.js';
+import { attach as attachHotReload } from '@grexie/pages-runtime-hmr';
 import type { ModuleContext } from './ModuleContext.js';
 import path from 'path';
-import { isPlainObject } from '../../../pages/src/utils/object.js';
-import type { BuildContext } from '../BuildContext.js';
+import { isPlainObject } from '@grexie/is-plain-object';
+import type { BuildContext } from './BuildContext.js';
 
 const vmGlobal = { process } as any;
 vmGlobal.global = vmGlobal;

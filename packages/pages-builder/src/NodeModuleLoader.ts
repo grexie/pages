@@ -5,7 +5,7 @@ import {
   vmContext,
 } from './ModuleLoader.js';
 import vm from 'vm';
-import { isPlainObject } from '../../../pages/src/utils/object.js';
+import { isPlainObject } from '@grexie/is-plain-object';
 import webpack from 'webpack';
 
 export interface CommonJsModule extends InstantiatedModule {}

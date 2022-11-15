@@ -1,5 +1,9 @@
 import type { LoaderContext } from 'webpack';
-import type { BuildContext, ICache, IReadOnlyCache } from '@grexie/builder';
+import type {
+  BuildContext,
+  ICache,
+  IReadOnlyCache,
+} from '@grexie/pages-builder';
 import webpack from 'webpack';
 
 interface LoaderOptions {

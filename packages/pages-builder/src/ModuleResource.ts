@@ -4,7 +4,7 @@ import {
   ResourceSerializeOptions,
   ResourceOptions,
   Resource,
-} from '../../../pages/src/api/Resource.js';
+} from '@grexie/pages/api';
 import type * as babel from '@babel/core';
 
 const handlerResourcePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({

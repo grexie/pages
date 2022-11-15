@@ -1,8 +1,8 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '../BuildContext.js';
+import { BuildContext } from '@grexie/pages-builder';
 import { createHash } from 'crypto';
-import { offsetLines } from '../../../../pages/src/utils/source-maps.js';
-import { createResolver } from '../../../../pages/src/utils/resolvable.js';
+import { offsetLines } from '@grexie/source-maps';
+import { createResolver } from '@grexie/resolvable';
 import path from 'path';
 
 interface StyleLoaderOptions {

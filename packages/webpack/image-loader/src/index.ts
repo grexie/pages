@@ -1,5 +1,5 @@
 import type { LoaderContext } from 'webpack';
-import type { BuildContext } from '../BuildContext.js';
+import type { BuildContext } from '@grexie/pages-builder';
 import path from 'path';
 import { createHash } from 'crypto';
 import webpack from 'webpack';

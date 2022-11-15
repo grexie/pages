@@ -8,7 +8,7 @@ import {
   SuspenseProps,
 } from 'react';
 import { setImmediate } from 'timers';
-import { createContext } from '../utils/context.js';
+import { createContext } from '@grexie/context';
 
 class LazyContext {
   readonly #wrapped: Promise<any>[] = [];

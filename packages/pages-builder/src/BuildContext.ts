@@ -1,9 +1,6 @@
 import { ContextOptions, Context } from '@grexie/pages';
 import path from 'path';
-import {
-  FileSystemOptions,
-  WritableFileSystem,
-} from '@grexie/builder/FileSystem.js';
+import { FileSystemOptions, WritableFileSystem } from './FileSystem.js';
 import { Builder } from './Builder.js';
 import { ProviderConfig, Registry } from './Registry.js';
 import { Renderer } from './Renderer.js';
@@ -14,8 +11,6 @@ import { Volume } from 'memfs';
 import { createRequire } from 'module';
 import { Compiler, Compilation } from 'webpack';
 import { ModuleResolverConfig } from './ModuleResolver.js';
-
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];

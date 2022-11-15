@@ -1,4 +1,4 @@
-import { createContextWithProps } from '../utils/context.js';
+import { createContextWithProps } from '@grexie/context';
 import type { Context } from '../api/Context.js';
 
 interface ContextProviderProps {

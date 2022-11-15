@@ -1,12 +1,12 @@
 import { Source, SourceOptions } from './Source.js';
-import { ContentResource, Resource } from '../../../pages/src/api/Resource.js';
-import type { BuildContext } from '../BuildContext.js';
+import { ContentResource, Resource } from '@grexie/pages/api';
+import type { BuildContext } from './BuildContext.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import type { Compilation } from 'webpack';
 import { ModuleResource } from './ModuleResource.js';
 import { Config, ConfigModule } from './ConfigContext.js';
 import path from 'path';
-import { ObjectProxy } from '../../../pages/src/utils/proxy.js';
+import { ObjectProxy } from '@grexie/proxy';
 
 export interface CreateContentOptions<C = any> {
   content: C;

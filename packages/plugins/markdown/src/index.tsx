@@ -3,7 +3,7 @@ import { compile } from '@mdx-js/mdx';
 import grayMatter from 'gray-matter';
 import { useModule, StyleSheet } from '@grexie/pages';
 import { Resource } from '@grexie/pages/api';
-import type { SourceContext } from '@grexie/builder';
+import type { SourceContext } from '@grexie/pages-builder';
 import { SourceMapGenerator, SourceMapConsumer } from 'source-map';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {

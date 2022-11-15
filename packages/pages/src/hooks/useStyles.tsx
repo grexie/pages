@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import { useEffect, useMemo, useState, startTransition, FC } from 'react';
-import { createContextWithProps } from '../utils/context.js';
-import { hash } from '../utils/hash.js';
+import { createContextWithProps } from '@grexie/context';
+import { hash } from '@grexie/hash-object';
 import { setImmediate, clearImmediate } from 'timers';
 import { Head } from '../components/Head.js';
 

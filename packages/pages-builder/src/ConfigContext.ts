@@ -1,8 +1,8 @@
-import { BuildContext } from '../BuildContext.js';
-import { ResourceMetadata } from '../../../pages/src/api/Resource.js';
+import { BuildContext } from './BuildContext.js';
+import { ResourceMetadata } from '@grexie/pages/api';
 import { Source } from './Source.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
-import { ObjectProxy } from '../../../pages/src/utils/proxy.js';
+import { ObjectProxy } from '@grexie/proxy';
 import path from 'path';
 import type { Compilation } from 'webpack';
 

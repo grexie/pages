@@ -1,20 +1,13 @@
 import { createElement } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
 import { compose } from '@grexie/compose';
-import { withDocumentComponent } from '../../../pages/src/components/Document.js';
-import {
-  withDocument,
-  withContext,
-  withResourceContext,
-} from '../../../pages/src/hooks/index.js';
-import { Resource, ResourceContext } from '../../../pages/src/api/Resource.js';
-import type { BuildContext } from '../BuildContext.js';
-import {
-  withStyles,
-  StylesContext,
-} from '../../../pages/src/hooks/useStyles.js';
-import { withScripts } from '../../../pages/src/hooks/useScripts.js';
-import { withLazy } from '../../../pages/src/hooks/useLazy.js';
+import { withDocumentComponent } from '@grexie/pages';
+import { withDocument, withContext, withResourceContext } from '@grexie/pages';
+import { Resource, ResourceContext } from '@grexie/pages/api';
+import type { BuildContext } from './BuildContext.js';
+import { withStyles, StylesContext } from '@grexie/pages';
+import { withScripts } from '@grexie/pages';
+import { withLazy } from '@grexie/pages';
 import { Writable } from 'stream';
 
 export class Renderer {

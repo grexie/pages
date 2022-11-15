@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
-import { createContextWithProps } from '../utils/context.js';
+import { createContextWithProps } from '@grexie/context';
 import type {
   ContentResource,
   Resource,
   ResourceMetadata,
 } from '../api/Resource.js';
 import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
-import type { ModuleResource } from '@grexie/builder/src/builder/ModuleResource.js';
+import type { ModuleResource } from '@grexie/pages-builder';
 import { useDocument } from './useDocument.js';
-import { hash } from '../utils/hash.js';
+import { hash } from '@grexie/hash-object';
 
 export interface ResourceContextProviderProps {
   resourceContext: ResourceContext;

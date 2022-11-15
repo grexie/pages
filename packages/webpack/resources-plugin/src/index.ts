@@ -1,5 +1,4 @@
-import type { Source } from '../Source.js';
-import type { BuildContext } from '../BuildContext.js';
+import type { Source, BuildContext } from '@grexie/pages-builder';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';

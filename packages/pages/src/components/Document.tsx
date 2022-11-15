@@ -1,11 +1,4 @@
-import {
-  FC,
-  PropsWithChildren,
-  Suspense,
-  useState,
-  startTransition,
-  createElement,
-} from 'react';
+import { FC, PropsWithChildren, createElement } from 'react';
 import { HeadProvider, useHead, withHead } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles, useStyles } from '../hooks/useStyles.js';

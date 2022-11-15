@@ -7,7 +7,7 @@ import {
 import vm from 'vm';
 import { createRequire, Module as NodeModule } from 'module';
 import path from 'path';
-import { isPlainObject } from '../../../pages/src/utils/object.js';
+import { isPlainObject } from '@grexie/is-plain-object';
 import { ModuleReference } from './ModuleResolver.js';
 
 export interface CommonJsModule extends InstantiatedModule {}

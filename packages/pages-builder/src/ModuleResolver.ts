@@ -1,6 +1,6 @@
 import { Compilation } from 'webpack';
-import { promisify } from '../../../pages/src/utils/promisify.js';
-import { BuildContext } from '../BuildContext.js';
+import { promisify } from '@grexie/promisify';
+import { BuildContext } from './BuildContext.js';
 import { ModuleLoaderType } from './ModuleLoader.js';
 import type { Compiler } from 'webpack';
 import { createRequire } from 'module';

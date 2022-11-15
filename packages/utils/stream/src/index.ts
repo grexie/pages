@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import { createResolver } from './resolvable.js';
+import { createResolver } from '@grexie/resolvable';
 import { WritableStream } from 'stream/web';
 
 export const toBuffer = async (
