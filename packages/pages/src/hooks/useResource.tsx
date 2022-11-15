@@ -4,9 +4,9 @@ import type {
   ContentResource,
   Resource,
   ResourceMetadata,
+  ModuleResource,
 } from '../api/Resource.js';
 import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
-import type { ModuleResource } from '@grexie/pages-builder';
 import { useDocument } from './useDocument.js';
 import { hash } from '@grexie/hash-object';
 

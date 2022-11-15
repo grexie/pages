@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   exclude: [/\.d\.tsx?$/],
   sourceMaps: 'inline',
   overrides: [

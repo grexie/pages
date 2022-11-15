@@ -1,5 +1,9 @@
 import { Source, SourceOptions } from './Source.js';
-import { ContentResource, Resource } from '@grexie/pages/api';
+import {
+  ContentResource,
+  Resource,
+  type SourceContext as _SourceContext,
+} from '@grexie/pages/api';
 import type { BuildContext } from './BuildContext.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import type { Compilation } from 'webpack';
@@ -23,7 +27,7 @@ export interface SourceContextOptions extends SourceOptions {
   configModule: ConfigModule;
 }
 
-export class SourceContext extends Source {
+export class SourceContext extends Source implements _SourceContext {
   readonly context: BuildContext;
   readonly compilation: Compilation;
   readonly module: InstantiatedModule;

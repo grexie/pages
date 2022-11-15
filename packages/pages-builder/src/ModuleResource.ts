@@ -4,6 +4,7 @@ import {
   ResourceSerializeOptions,
   ResourceOptions,
   Resource,
+  type ModuleResource as _ModuleResource,
 } from '@grexie/pages/api';
 import type * as babel from '@babel/core';
 
@@ -69,10 +70,10 @@ export interface ModuleResourceOptions<
   exports: X;
 }
 
-export class ModuleResource<
-  X = any,
-  M extends ResourceMetadata = any
-> extends Resource<M> {
+export class ModuleResource<X = any, M extends ResourceMetadata = any>
+  extends Resource<M>
+  implements _ModuleResource
+{
   readonly #source: string;
   readonly #map: string;
   readonly exports: X;

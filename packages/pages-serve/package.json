@@ -1,5 +1,5 @@
 {
-  "name": "@grexie/pages-runtime-handler",
+  "name": "@grexie/pages-serve",
   "version": "0.0.13",
   "license": "MIT",
   "type": "module",
@@ -77,6 +77,15 @@
     "@types/webpack-hot-middleware": "^2.25.6",
     "@types/webpack-node-externals": "^2.5.3",
     "@types/whatwg-url": "^8.2.1"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./api": "./api/index.js",
+    "./runtime/util": "./runtime/util.js",
+    "./scripts/clean/cache": "./scripts/clean/cache.js",
+    "./scripts/build": "./scripts/build.js",
+    "./scripts/serve": "./scripts/serve.js",
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public"

@@ -14,7 +14,7 @@
     "start": "npm-run-all -p start:tsc start:build",
     "start:tsc": "monorepo generate:tsconfig && tsc -b -w --preserveWatchOutput",
     "start:build": "monorepo run -p build -w",
-    "build": "monorepo generate:tsconfig && tsc -b && monorepo run build",
+    "build": "monorepo generate:tsconfig && monorepo run build && tsc -b",
     "publish": "yarn build && monorepo workspaces npm publish",
     "link": "monorepo workspaces yarn link",
     "unlink": "monorepo workspaces yarn unlink",

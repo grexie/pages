@@ -5,7 +5,6 @@ import type {
 } from '@grexie/pages/api';
 import path from 'path';
 import EventEmitter from 'events';
-export type SourceTree = { [key: string]: SourceTree | string };
 
 export interface SourceOptions {
   filename: string;

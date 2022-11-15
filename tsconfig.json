@@ -1,0 +1,89 @@
+{
+  "files": [],
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": false
+  },
+  "references": [
+    {
+      "path": "packages/pages-builder"
+    },
+    {
+      "path": "packages/pages-cli"
+    },
+    {
+      "path": "packages/pages-serve"
+    },
+    {
+      "path": "packages/pages"
+    },
+    {
+      "path": "packages/plugins/markdown"
+    },
+    {
+      "path": "packages/runtime/handler"
+    },
+    {
+      "path": "packages/runtime/hmr"
+    },
+    {
+      "path": "packages/runtime/image"
+    },
+    {
+      "path": "packages/runtime/styles"
+    },
+    {
+      "path": "packages/runtime/util"
+    },
+    {
+      "path": "packages/utils/context"
+    },
+    {
+      "path": "packages/utils/hash-object"
+    },
+    {
+      "path": "packages/utils/is-plain-object"
+    },
+    {
+      "path": "packages/utils/mutex"
+    },
+    {
+      "path": "packages/utils/promisify"
+    },
+    {
+      "path": "packages/utils/proxy"
+    },
+    {
+      "path": "packages/utils/resolvable"
+    },
+    {
+      "path": "packages/utils/source-maps"
+    },
+    {
+      "path": "packages/utils/stream"
+    },
+    {
+      "path": "packages/utils/timed"
+    },
+    {
+      "path": "packages/webpack/cache-loader"
+    },
+    {
+      "path": "packages/webpack/image-loader"
+    },
+    {
+      "path": "packages/webpack/module-loader"
+    },
+    {
+      "path": "packages/webpack/pages-loader"
+    },
+    {
+      "path": "packages/webpack/resources-plugin"
+    },
+    {
+      "path": "packages/webpack/style-loader"
+    },
+    {
+      "path": "packages/webpack/yaml-loader"
+    }
+  ]
+}

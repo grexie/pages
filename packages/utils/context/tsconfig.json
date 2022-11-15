@@ -3,16 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./",
-    "rootDir": "./src/",
     "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-  ],
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx"
-  ]
+  }
 }

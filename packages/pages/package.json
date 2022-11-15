@@ -81,10 +81,6 @@
   "exports": {
     ".": "./index.js",
     "./api": "./api/index.js",
-    "./runtime/util": "./runtime/util.js",
-    "./scripts/clean/cache": "./scripts/clean/cache.js",
-    "./scripts/build": "./scripts/build.js",
-    "./scripts/serve": "./scripts/serve.js",
     "./package.json": "./package.json"
   },
   "publishConfig": {

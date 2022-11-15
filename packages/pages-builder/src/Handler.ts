@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
-import type { Resource, ResourceMetadata } from './Resource.js';
-import type { SourceContext } from '@grexie/pages-builder';
+import type { Resource, ResourceMetadata } from '@grexie/pages/api';
+import type { SourceContext } from './SourceContext.js';
 
 export interface Handler<
   P = any,

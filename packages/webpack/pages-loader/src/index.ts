@@ -1,5 +1,5 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '@grexie/pages-builder';
+import type { BuildContext } from '@grexie/pages-builder';
 import path from 'path';
 
 interface PagesLoaderOptions {

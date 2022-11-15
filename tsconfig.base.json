@@ -8,6 +8,7 @@
       "dom.iterable",
       "esnext"
     ],
+    "rootDir": ".",
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
@@ -21,10 +22,231 @@
     "incremental": true,
     "inlineSourceMap": true,
     "inlineSources": true,
-    "allowSyntheticDefaultImports": false
+    "allowSyntheticDefaultImports": false,
+    "baseUrl": ".",
+    "paths": {
+      "@grexie/pages-builder": [
+        "packages/pages-builder/src"
+      ],
+      "@grexie/pages-builder/*": [
+        "packages/pages-builder/src/*"
+      ],
+      "@grexie/pages-cli": [
+        "packages/pages-cli/src"
+      ],
+      "@grexie/pages-cli/*": [
+        "packages/pages-cli/src/*"
+      ],
+      "@grexie/pages-serve": [
+        "packages/pages-serve/src"
+      ],
+      "@grexie/pages-serve/*": [
+        "packages/pages-serve/src/*"
+      ],
+      "@grexie/pages": [
+        "packages/pages/src"
+      ],
+      "@grexie/pages/*": [
+        "packages/pages/src/*"
+      ],
+      "@grexie/pages-plugin-markdown": [
+        "packages/plugins/markdown/src"
+      ],
+      "@grexie/pages-plugin-markdown/*": [
+        "packages/plugins/markdown/src/*"
+      ],
+      "@grexie/pages-runtime-handler": [
+        "packages/runtime/handler/src"
+      ],
+      "@grexie/pages-runtime-handler/*": [
+        "packages/runtime/handler/src/*"
+      ],
+      "@grexie/pages-runtime-hmr": [
+        "packages/runtime/hmr/src"
+      ],
+      "@grexie/pages-runtime-hmr/*": [
+        "packages/runtime/hmr/src/*"
+      ],
+      "@grexie/pages-runtime-image": [
+        "packages/runtime/image/src"
+      ],
+      "@grexie/pages-runtime-image/*": [
+        "packages/runtime/image/src/*"
+      ],
+      "@grexie/pages-runtime-styles": [
+        "packages/runtime/styles/src"
+      ],
+      "@grexie/pages-runtime-styles/*": [
+        "packages/runtime/styles/src/*"
+      ],
+      "@grexie/pages-runtime-util": [
+        "packages/runtime/util/src"
+      ],
+      "@grexie/pages-runtime-util/*": [
+        "packages/runtime/util/src/*"
+      ],
+      "@grexie/context": [
+        "packages/utils/context/src"
+      ],
+      "@grexie/context/*": [
+        "packages/utils/context/src/*"
+      ],
+      "@grexie/hash-object": [
+        "packages/utils/hash-object/src"
+      ],
+      "@grexie/hash-object/*": [
+        "packages/utils/hash-object/src/*"
+      ],
+      "@grexie/is-plain-object": [
+        "packages/utils/is-plain-object/src"
+      ],
+      "@grexie/is-plain-object/*": [
+        "packages/utils/is-plain-object/src/*"
+      ],
+      "@grexie/mutex": [
+        "packages/utils/mutex/src"
+      ],
+      "@grexie/mutex/*": [
+        "packages/utils/mutex/src/*"
+      ],
+      "@grexie/promisify": [
+        "packages/utils/promisify/src"
+      ],
+      "@grexie/promisify/*": [
+        "packages/utils/promisify/src/*"
+      ],
+      "@grexie/proxy": [
+        "packages/utils/proxy/src"
+      ],
+      "@grexie/proxy/*": [
+        "packages/utils/proxy/src/*"
+      ],
+      "@grexie/resolvable": [
+        "packages/utils/resolvable/src"
+      ],
+      "@grexie/resolvable/*": [
+        "packages/utils/resolvable/src/*"
+      ],
+      "@grexie/source-maps": [
+        "packages/utils/source-maps/src"
+      ],
+      "@grexie/source-maps/*": [
+        "packages/utils/source-maps/src/*"
+      ],
+      "@grexie/stream": [
+        "packages/utils/stream/src"
+      ],
+      "@grexie/stream/*": [
+        "packages/utils/stream/src/*"
+      ],
+      "@grexie/timed": [
+        "packages/utils/timed/src"
+      ],
+      "@grexie/timed/*": [
+        "packages/utils/timed/src/*"
+      ],
+      "@grexie/cache-loader": [
+        "packages/webpack/cache-loader/src"
+      ],
+      "@grexie/cache-loader/*": [
+        "packages/webpack/cache-loader/src/*"
+      ],
+      "@grexie/image-loader": [
+        "packages/webpack/image-loader/src"
+      ],
+      "@grexie/image-loader/*": [
+        "packages/webpack/image-loader/src/*"
+      ],
+      "@grexie/module-loader": [
+        "packages/webpack/module-loader/src"
+      ],
+      "@grexie/module-loader/*": [
+        "packages/webpack/module-loader/src/*"
+      ],
+      "@grexie/pages-loader": [
+        "packages/webpack/pages-loader/src"
+      ],
+      "@grexie/pages-loader/*": [
+        "packages/webpack/pages-loader/src/*"
+      ],
+      "@grexie/pages-resources-plugin": [
+        "packages/webpack/resources-plugin/src"
+      ],
+      "@grexie/pages-resources-plugin/*": [
+        "packages/webpack/resources-plugin/src/*"
+      ],
+      "@grexie/style-loader": [
+        "packages/webpack/style-loader/src"
+      ],
+      "@grexie/style-loader/*": [
+        "packages/webpack/style-loader/src/*"
+      ],
+      "@grexie/yaml-loader": [
+        "packages/webpack/yaml-loader/src"
+      ],
+      "@grexie/yaml-loader/*": [
+        "packages/webpack/yaml-loader/src/*"
+      ]
+    }
   },
   "exclude": [
     "**/*.spec.ts",
-    "**/*.spec.tsx",
+    "**/*.spec.tsx"
+  ],
+  "include": [
+    "packages/pages-builder/src/**/*.ts",
+    "packages/pages-builder/src/**/*.tsx",
+    "packages/pages-cli/src/**/*.ts",
+    "packages/pages-cli/src/**/*.tsx",
+    "packages/pages-serve/src/**/*.ts",
+    "packages/pages-serve/src/**/*.tsx",
+    "packages/pages/src/**/*.ts",
+    "packages/pages/src/**/*.tsx",
+    "packages/plugins/markdown/src/**/*.ts",
+    "packages/plugins/markdown/src/**/*.tsx",
+    "packages/runtime/handler/src/**/*.ts",
+    "packages/runtime/handler/src/**/*.tsx",
+    "packages/runtime/hmr/src/**/*.ts",
+    "packages/runtime/hmr/src/**/*.tsx",
+    "packages/runtime/image/src/**/*.ts",
+    "packages/runtime/image/src/**/*.tsx",
+    "packages/runtime/styles/src/**/*.ts",
+    "packages/runtime/styles/src/**/*.tsx",
+    "packages/runtime/util/src/**/*.ts",
+    "packages/runtime/util/src/**/*.tsx",
+    "packages/utils/context/src/**/*.ts",
+    "packages/utils/context/src/**/*.tsx",
+    "packages/utils/hash-object/src/**/*.ts",
+    "packages/utils/hash-object/src/**/*.tsx",
+    "packages/utils/is-plain-object/src/**/*.ts",
+    "packages/utils/is-plain-object/src/**/*.tsx",
+    "packages/utils/mutex/src/**/*.ts",
+    "packages/utils/mutex/src/**/*.tsx",
+    "packages/utils/promisify/src/**/*.ts",
+    "packages/utils/promisify/src/**/*.tsx",
+    "packages/utils/proxy/src/**/*.ts",
+    "packages/utils/proxy/src/**/*.tsx",
+    "packages/utils/resolvable/src/**/*.ts",
+    "packages/utils/resolvable/src/**/*.tsx",
+    "packages/utils/source-maps/src/**/*.ts",
+    "packages/utils/source-maps/src/**/*.tsx",
+    "packages/utils/stream/src/**/*.ts",
+    "packages/utils/stream/src/**/*.tsx",
+    "packages/utils/timed/src/**/*.ts",
+    "packages/utils/timed/src/**/*.tsx",
+    "packages/webpack/cache-loader/src/**/*.ts",
+    "packages/webpack/cache-loader/src/**/*.tsx",
+    "packages/webpack/image-loader/src/**/*.ts",
+    "packages/webpack/image-loader/src/**/*.tsx",
+    "packages/webpack/module-loader/src/**/*.ts",
+    "packages/webpack/module-loader/src/**/*.tsx",
+    "packages/webpack/pages-loader/src/**/*.ts",
+    "packages/webpack/pages-loader/src/**/*.tsx",
+    "packages/webpack/resources-plugin/src/**/*.ts",
+    "packages/webpack/resources-plugin/src/**/*.tsx",
+    "packages/webpack/style-loader/src/**/*.ts",
+    "packages/webpack/style-loader/src/**/*.tsx",
+    "packages/webpack/yaml-loader/src/**/*.ts",
+    "packages/webpack/yaml-loader/src/**/*.tsx"
   ]
 }

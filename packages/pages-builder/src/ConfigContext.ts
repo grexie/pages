@@ -1,5 +1,5 @@
 import { BuildContext } from './BuildContext.js';
-import { ResourceMetadata } from '@grexie/pages/api';
+import { Config } from '@grexie/pages/api';
 import { Source } from './Source.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import { ObjectProxy } from '@grexie/proxy';
@@ -13,11 +13,6 @@ export interface ConfigOptions {
 
 export interface ConfigResolverOptions {
   context: BuildContext;
-}
-
-export interface Config extends Record<string, any> {
-  render: boolean;
-  metadata: ResourceMetadata;
 }
 
 export class ConfigModule {

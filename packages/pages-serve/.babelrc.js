@@ -4,7 +4,7 @@ export default {
   overrides: [
     {
       test: [/\.tsx?$/],
-      exclude: [/\.(test|spec)\.tsx?$/],
+      exclude: [/\/loaders\/.*\.tsx?$/, /\.(test|spec)\.tsx?$/],
       presets: [
         '@babel/typescript',
         ['@babel/react', { runtime: 'automatic' }],
@@ -12,14 +12,13 @@ export default {
           '@babel/env',
           {
             targets: 'node 16',
-            modules: 'commonjs',
-            exclude: ['proposal-dynamic-import'],
+            modules: false,
           },
         ],
       ],
     },
     {
-      test: [/\.(test|spec)\.tsx?$/],
+      test: [/\/loaders\/.*\.tsx?$/, /\.(test|spec)\.tsx?$/],
       presets: [
         '@babel/typescript',
         ['@babel/react', { runtime: 'automatic' }],

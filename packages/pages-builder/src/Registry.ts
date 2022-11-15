@@ -1,7 +1,8 @@
 import type { Provider } from './Provider.js';
 import { BuildContext } from './BuildContext.js';
 import _path from 'path';
-import { Source, SourceTree } from './Source.js';
+import { SourceTree } from '@grexie/pages';
+import { Source } from './Source.js';
 import path from 'path';
 
 export interface GetOptions {

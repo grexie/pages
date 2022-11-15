@@ -1,8 +1,9 @@
 import { LoaderContext } from 'webpack';
-import { BuildContext } from '@grexie/pages-builder';
-import { createHash } from 'crypto';
+import type { BuildContext } from '@grexie/pages-builder';
 import { offsetLines } from '@grexie/source-maps';
 import { createResolver } from '@grexie/resolvable';
+import { createHash } from 'crypto';
+
 import path from 'path';
 
 interface StyleLoaderOptions {
