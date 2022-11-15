@@ -4,6 +4,7 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true
   },
   "include": [
@@ -13,5 +14,13 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../pages"
+    },
+    {
+      "path": "../webpack/resources-plugin"
+    }
   ]
 }

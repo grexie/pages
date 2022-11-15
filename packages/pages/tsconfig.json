@@ -14,5 +14,10 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../pages-builder"
+    }
   ]
 }

@@ -1,4 +1,4 @@
-import { ContextOptions, Context } from '@grexie/pages';
+import { ContextOptions, Context } from '@grexie/pages/api';
 import path from 'path';
 import { FileSystemOptions, WritableFileSystem } from './FileSystem.js';
 import { Builder } from './Builder.js';

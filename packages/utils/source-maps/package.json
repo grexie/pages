@@ -1,8 +1,8 @@
 {
-  "name": "@grexie/context",
+  "name": "@grexie/source-maps",
   "version": "0.0.13",
   "license": "MIT",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {

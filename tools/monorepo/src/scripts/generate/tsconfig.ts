@@ -1,5 +1,5 @@
 import { getWorkspaces } from '../../utils/workspaces';
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 export default () => {
   const workspaces = getWorkspaces().filter(
