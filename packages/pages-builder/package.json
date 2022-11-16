@@ -60,6 +60,8 @@
   },
   "exports": {
     ".": "./lib/index.js",
+    "./scripts/build": "./lib/scripts/build.js",
+    "./scripts/clean/cache": "./lib/scripts/clean/cache.js",
     "./package.json": "./package.json"
   },
   "devDependencies": {

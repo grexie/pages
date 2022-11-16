@@ -196,7 +196,7 @@ export class ModuleResolver {
     if (
       resolved.filename ===
       this.#require.resolve(
-        path.resolve(this.context.pagesDir, 'defaults.pages.js')
+        path.resolve(this.context.pagesDir, 'lib', 'defaults.pages.js')
       )
     ) {
       return this.#buildImport(resolved.filename, {

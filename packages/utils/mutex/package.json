@@ -3,7 +3,7 @@
   "version": "0.0.13",
   "license": "MIT",
   "type": "module",
-  "main": "lib/index.js",
+  "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "run-p -s build:ts build:ts-test",
@@ -19,5 +19,8 @@
   "sideEffects": false,
   "dependencies": {
     "@grexie/resolvable": "^0.0.13"
+  },
+  "exports": {
+    ".": "./lib/index.js"
   }
 }

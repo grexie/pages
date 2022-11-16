@@ -278,8 +278,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.scss$/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('style-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
               },
@@ -293,8 +293,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.scss$/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('style-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
                 options: {
@@ -311,8 +311,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.css$/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('style-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
               },
@@ -323,8 +323,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.css$/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('style-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
                 options: {
@@ -338,8 +338,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.(png|jpe?g|gif|webp|svg)$/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('image-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-image-loader'),
               'raw-loader',
             ],
           },
@@ -347,8 +347,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.pages\.([mc]?js|ts)$/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('pages-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-config-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -367,9 +367,9 @@ export class Builder {
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('pages-loader'),
-              this.#loader('yaml-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-config-loader'),
+              this.#loader('@grexie/pages-yaml-loader'),
             ],
           },
           {
@@ -377,8 +377,8 @@ export class Builder {
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('module-loader', {
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-module-loader', {
                 handler: '@grexie/pages/handlers/markdown',
               }),
             ],
@@ -390,8 +390,8 @@ export class Builder {
             //include: [/node_modules\/@mdx-js/],
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('module-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-module-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -418,8 +418,8 @@ export class Builder {
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('cache-loader'),
-              this.#loader('module-loader'),
+              this.#loader('@grexie/pages-cache-loader'),
+              this.#loader('@grexie/pages-module-loader'),
               {
                 loader: 'babel-loader',
                 options: {
