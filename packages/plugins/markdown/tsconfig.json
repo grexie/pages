@@ -8,10 +8,10 @@
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@grexie/pages": ["../../pages/lib"],
-      "@grexie/pages/*": ["../../pages/lib/*"],
-      "@grexie/pages-builder": ["../../pages-builder/lib"],
-      "@grexie/pages-runtime-styles": ["../../runtime/styles"]
+      "@grexie/pages": ["../../pages/src"],
+      "@grexie/pages/api": ["../../pages/src/api"],
+      "@grexie/pages-builder": ["../../pages-builder/src"],
+      "@grexie/pages-runtime-styles": ["../../runtime/styles/src"]
     }
   },
   "include": [
