@@ -117,7 +117,7 @@ export class SourceContext extends Source {
 
     return {
       code: `
-      import { ObjectProxy as __pages_object_proxy } from '@grexie/pages/utils/proxy';
+      import { ObjectProxy as __pages_object_proxy } from '@grexie/proxy';
       ${imports}
       ${this.configModule.serialize(path.dirname(this.filename), true)}
 

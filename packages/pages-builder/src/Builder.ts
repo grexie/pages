@@ -381,7 +381,7 @@ export class Builder {
             use: [
               this.#loader('@grexie/pages-cache-loader'),
               this.#loader('@grexie/pages-module-loader', {
-                handler: '@grexie/pages/handlers/markdown',
+                handler: '@grexie/pages-plugin-markdown',
               }),
             ],
           },

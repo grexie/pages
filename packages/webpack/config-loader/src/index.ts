@@ -44,7 +44,7 @@ export default async function PagesLoader(
     callback(
       null,
       `
-      import { ObjectProxy } from '@grexie/pages';
+      import { ObjectProxy } from '@grexie/proxy';
 
       const _metadata = ${JSON.stringify(metadata, null, 2)};
 

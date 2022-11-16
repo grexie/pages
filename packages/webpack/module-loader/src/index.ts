@@ -130,7 +130,7 @@ export default async function ModuleLoader(
     const serializedResource = await sourceContext.serialize(resource);
 
     const hmrHeader = `
-      import __pages_refresh_runtime from '@grexie/pages/runtime/hmr';
+      import __pages_refresh_runtime from '@grexie/pages-runtime-hmr';
 
       const __pages_refresh_global = typeof window === 'undefined' ? global : window;
       const __pages_previous_refreshreg = __pages_refresh_global.$RefreshReg$;
@@ -155,7 +155,7 @@ export default async function ModuleLoader(
 
     if (options.handler) {
       const header = `
-        import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages/runtime/handler";
+        import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
         ${
           composablesRequires.length
             ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'
@@ -242,7 +242,7 @@ export default async function ModuleLoader(
         .forEach(({ filename }) => this.addDependency(filename));
 
       const header = `
-      import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages/runtime/handler";
+      import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
       ${
         composablesRequires.length
           ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'

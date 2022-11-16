@@ -46,7 +46,7 @@ export default async function StyleLoader(
       .substring(0, 8);
 
     const chunk = `
-    import { wrapStyles } from '@grexie/pages/runtime/styles';
+    import { wrapStyles } from '@grexie/pages-runtime-styles';
     export default wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
       css
     )}, ${JSON.stringify(locals, null, 2)}); 

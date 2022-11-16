@@ -21,7 +21,7 @@ const SvgrTemplate =
   ({ imports, props, jsx }: any, { tpl }: any) => {
     return tpl`
     ${imports}
-    import { wrapImageComponent } from '@grexie/pages/runtime/image' ;
+    import { wrapImageComponent } from '@grexie/pages-runtime-image' ;
     export default wrapImageComponent((${props}) => ${jsx}, ${JSON.stringify(
       metadata
     )});
@@ -52,7 +52,7 @@ export default async function ImageLoader(
     const metadata = await image.metadata();
 
     let jsCode = `
-      import { wrapImage } from '@grexie/pages/runtime/image';
+      import { wrapImage } from '@grexie/pages-runtime-image';
       export default wrapImage(${JSON.stringify(
         path.resolve('/', filename)
       )}, ${JSON.stringify(metadata)});
