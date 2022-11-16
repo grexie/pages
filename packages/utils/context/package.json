@@ -3,14 +3,17 @@
   "version": "0.0.13",
   "license": "MIT",
   "type": "module",
-  "main": "lib/index.js",
+  "module": "lib/index.mjs",
+  "main": "lib/index.cjs",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "run-p -s build:ts build:ts-test",
-    "build:ts": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build": "run-p -s build:ts-mjs build:ts-cjs build:ts-test",
+    "build:ts-mjs": "NODE_ENV=esm babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .mjs --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-cjs": "NODE_ENV=commonjs babel src/ --no-copy-ignored -D -d ./lib/ --out-file-extension .cjs -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
     "build:ts-test": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
-    "watch": "run-p -s watch:ts watch:ts-test",
-    "watch:ts": "npm run -s build:ts -- -w",
+    "watch": "run-p -s watch:ts-mjs watch:ts-cjs watch:ts-test",
+    "watch:ts-mjs": "npm run -s build:ts-mjs -- -w",
+    "watch:ts-cjs": "npm run -s build:ts-cjs -- -w",
     "watch:ts-test": "npm run -s build:ts-test -- -w"
   },
   "publishConfig": {
@@ -22,5 +25,12 @@
   },
   "dependencies": {
     "@grexie/compose": "^0.1.10"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs",
+      "default": "./lib/index.mjs"
+    }
   }
 }
