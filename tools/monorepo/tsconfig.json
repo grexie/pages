@@ -2,11 +2,7 @@
   "compilerOptions": {
     "noEmit": true,
     "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -16,13 +12,8 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "jsx": "react",
-    "incremental": true,
+    "incremental": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "bin/**/*.js"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["bin/**/*.js"]
 }

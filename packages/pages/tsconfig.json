@@ -5,7 +5,6 @@
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
-
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/hash-object": ["../utils/hash-object/src"],
