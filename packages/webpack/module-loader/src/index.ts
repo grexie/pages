@@ -9,6 +9,7 @@ import { PluginObj, PluginPass, transformAsync } from '@babel/core';
 import babelEnvPreset from '@babel/preset-env';
 import reactRefreshPlugin from 'react-refresh/babel';
 import { offsetLines } from '@grexie/source-maps';
+import { createComposable } from '@grexie/compose';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
@@ -29,22 +30,9 @@ export default async function ModuleLoader(
 
   const { context, ...options } = this.getOptions();
 
-  // await context.modules.addBuild(this.resourcePath, resolver);
-
   const modules = context.getModuleContext(this._compilation!);
 
   try {
-    // const factory = context.modules.createModuleFactory(this._compilation!);
-
-    const { createComposable } = await modules.require(
-      import.meta,
-      '@grexie/compose'
-    );
-    const { SourceContext } = await modules.require(
-      import.meta,
-      '../SourceContext.js'
-    );
-
     const path = context.builder.filenameToPath(this.resourcePath);
 
     const createHandler = async () => {
@@ -86,7 +74,7 @@ export default async function ModuleLoader(
 
     let resource: Resource | undefined = undefined;
 
-    const sourceContext = new SourceContext({
+    const sourceContext = context.createSourceContext({
       compilation: this._compilation!,
       context,
       module: handlerModule,

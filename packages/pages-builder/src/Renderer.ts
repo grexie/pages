@@ -1,6 +1,6 @@
-import { createElement } from 'react';
+import { ComponentType, createElement } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
-import { compose } from '@grexie/compose';
+import { Composable, compose } from '@grexie/compose';
 import { withDocumentComponent } from '@grexie/pages';
 import { withDocument, withContext, withResourceContext } from '@grexie/pages';
 import { Resource, ResourceContext } from '@grexie/pages/api';
@@ -21,7 +21,7 @@ export class Renderer {
     writable: T,
     resource: Resource,
     scripts: string[],
-    ...composables: any[]
+    ...composables: [...Composable[], ComponentType]
   ): Promise<T> {
     const styles = new StylesContext();
     const resourceContext = new ResourceContext();

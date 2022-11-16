@@ -126,14 +126,16 @@ export class Builder {
       'fs:defaultFiles+root'
     );
 
-    if ((process.env.NODE_ENV ?? 'development') === 'development') {
-      this.#builder.fs.add(
-        _path.resolve(this.context.pagesDir, '..', '..'),
-        fs,
-        false,
-        'pagesDir'
-      );
-    }
+    // if ((process.env.NODE_ENV ?? 'development') === 'development') {
+    //   this.#builder.fs.add(
+    //     _path.resolve(this.context.pagesDir, '..', '..'),
+    //     fs,
+    //     false,
+    //     'pagesDir'
+    //   );
+    // }
+
+    this.#builder.fs.add('/', fs, false);
 
     fsOptions.forEach(options =>
       this.#builder.fs.add(

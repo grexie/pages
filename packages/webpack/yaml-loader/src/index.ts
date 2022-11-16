@@ -1,6 +1,5 @@
 import { LoaderContext } from 'webpack';
 import type { BuildContext } from '@grexie/pages-builder';
-import YAML from 'yaml';
 
 interface YamlLoaderOptions {
   context: BuildContext;
@@ -11,9 +10,10 @@ export default async function YamlLoader(
   content: Buffer,
   inputSourceMap: any
 ) {
-  const { SourceNode } = await import('source-map');
-
   const callback = this.async();
+
+  const YAML = await import('yaml');
+  const { SourceNode } = await import('source-map');
   this.cacheable(true);
 
   const documents = YAML.parseAllDocuments(content.toString());

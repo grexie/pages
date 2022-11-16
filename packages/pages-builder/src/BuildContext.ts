@@ -11,6 +11,7 @@ import { Volume } from 'memfs';
 import { createRequire } from 'module';
 import { Compiler, Compilation } from 'webpack';
 import { ModuleResolverConfig } from './ModuleResolver.js';
+import { SourceContext, SourceContextOptions } from './SourceContext.js';
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -190,5 +191,9 @@ export class BuildContext extends Context {
       );
     }
     return this.#moduleContextTable.get(compilation.compiler.root)!;
+  }
+
+  createSourceContext(options: SourceContextOptions) {
+    return new SourceContext(options);
   }
 }

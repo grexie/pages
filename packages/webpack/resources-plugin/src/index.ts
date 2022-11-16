@@ -54,8 +54,8 @@ class SourceCompiler {
     const [{ Renderer }, { WritableBuffer }, exports] =
       await modules.requireMany(
         import.meta,
-        '../Renderer.js',
-        '../../utils/stream.js',
+        '@grexie/pages-builder',
+        '@grexie/stream',
         this.source.filename
       );
 

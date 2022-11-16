@@ -18,7 +18,7 @@
     "react-dom": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/compose": "^0.1.10",
+    "@grexie/compose": "^0.1.15",
     "@grexie/context": "^0.0.13",
     "@grexie/hash-object": "^0.0.13",
     "@grexie/proxy": "^0.0.13",

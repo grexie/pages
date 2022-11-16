@@ -20,7 +20,6 @@
     "depcheck": "monorepo workspaces depcheck --ignores @jest/globals --ignore-dirs lib 2>&1",
     "dev:link": "monorepo workspaces yarn link",
     "dev:unlink": "monorepo workspaces yarn unlink",
-    "dev:upgrade": "monorepo workspaces yarn upgrade && yarn upgrade && yarn clean",
     "release": "release-it",
     "test": "node --no-warnings --experimental-specifier-resolution=node --experimental-import-meta-resolve --experimental-vm-modules ./node_modules/.bin/jest"
   },
