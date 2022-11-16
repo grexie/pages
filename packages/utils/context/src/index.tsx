@@ -67,7 +67,7 @@ export const useSharedContexts = () => {
 
 type ProviderCreator<T extends unknown, P extends Object = {}> = (
   Provider: React.Context<T>['Provider']
-) => FC<PropsWithChildren<any>>;
+) => FC<PropsWithChildren<P>>;
 
 export const createContextWithProps = <
   T extends unknown,
@@ -81,8 +81,7 @@ export const createContextWithProps = <
     creator = ((
       creator: ProviderCreator<T, P>,
       provider: React.Context<T>['Provider']
-    ): FC<PropsWithChildren<P>> =>
-      withSharedContext({ context: Context })(creator(provider))).bind(
+    ) => withSharedContext({ context: Context })(creator(provider))).bind(
       null,
       creator
     );

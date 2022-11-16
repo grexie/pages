@@ -23,7 +23,7 @@
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
     "@babel/preset-typescript": "^7.17.12",
-    "@grexie/compose": "^0.1.15",
+    "@grexie/compose": "^0.1.16",
     "@grexie/is-plain-object": "^0.0.13",
     "@grexie/mutex": "^0.0.13",
     "@grexie/pages": "^0.0.13",
