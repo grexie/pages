@@ -2,14 +2,14 @@
   "files": [],
   "compilerOptions": {
     "allowSyntheticDefaultImports": false,
-    "composite": true,
+    "composite": false,
     "outDir": "./lib",
     "rootDir": "./src",
     "noEmit": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    "allowJs": false
   },
   "exclude": [
     "packages/pages*/lib/**",

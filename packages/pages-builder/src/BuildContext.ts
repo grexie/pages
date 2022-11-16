@@ -1,6 +1,6 @@
 import { ContextOptions, Context } from '@grexie/pages/api';
 import path from 'path';
-import { FileSystemOptions, WritableFileSystem } from './FileSystem.js';
+import type { FileSystemOptions, WritableFileSystem } from './FileSystem.js';
 import { Builder } from './Builder.js';
 import { ProviderConfig, Registry } from './Registry.js';
 import { Renderer } from './Renderer.js';
@@ -9,9 +9,10 @@ import os from 'os';
 import { ConfigContext } from './ConfigContext.js';
 import { Volume } from 'memfs';
 import { createRequire } from 'module';
-import { Compiler, Compilation } from 'webpack';
-import { ModuleResolverConfig } from './ModuleResolver.js';
-import { SourceContext, SourceContextOptions } from './SourceContext.js';
+import type { Compiler, Compilation } from 'webpack';
+import type { ModuleResolverConfig } from './ModuleResolver.js';
+import type { SourceContextOptions } from './SourceContext.js';
+import { SourceContext } from './SourceContext.js';
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];

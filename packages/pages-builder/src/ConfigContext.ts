@@ -1,6 +1,6 @@
-import { BuildContext } from './BuildContext.js';
-import { Config } from '@grexie/pages/api';
-import { Source } from './Source.js';
+import type { BuildContext } from './BuildContext.js';
+import type { Config } from '@grexie/pages/api';
+import type { Source } from './Source.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import { ObjectProxy } from '@grexie/proxy';
 import path from 'path';

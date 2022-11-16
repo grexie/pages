@@ -4,7 +4,7 @@ import type { BuildContext } from './BuildContext.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import type { Compilation } from 'webpack';
 import { ModuleResource } from './ModuleResource.js';
-import { ConfigModule } from './ConfigContext.js';
+import type { ConfigModule } from './ConfigContext.js';
 import path from 'path';
 import { ObjectProxy } from '@grexie/proxy';
 

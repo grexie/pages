@@ -9,7 +9,7 @@ import {
   FileSystemOptions,
 } from './FileSystem.js';
 import { CacheStorage, Cache } from './Cache.js';
-import { BuildContext } from './BuildContext.js';
+import type { BuildContext } from './BuildContext.js';
 import _path from 'path';
 import { Volume } from 'memfs';
 import { ResourcesPlugin } from '@grexie/pages-resources-plugin';
