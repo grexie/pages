@@ -15,6 +15,6 @@
     "access": "public"
   },
   "exports": {
-    ".": "./index.js"
+    ".": "./lib/index.js"
   }
 }

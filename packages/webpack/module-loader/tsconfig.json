@@ -8,7 +8,7 @@
     "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@grexie/pages-builder": ["../../pages-builder/src"],
+      "@grexie/pages-builder": ["../../pages-builder"],
       "@grexie/pages": ["../../pages/src"],
       "@grexie/pages/*": ["../../pages/src/*"],
     }
