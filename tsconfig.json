@@ -8,7 +8,8 @@
     "noEmit": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true
+    "strict": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
   "exclude": [
     "packages/pages*/lib/**",
