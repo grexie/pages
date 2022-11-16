@@ -4,11 +4,11 @@ import {
   RawSourceMap,
 } from 'source-map';
 
-export const offsetLines = (
+export const offsetLines = async (
   incomingSourceMap: RawSourceMap,
   lineOffset: number
 ) => {
-  const consumer = new SourceMapConsumer(incomingSourceMap);
+  const consumer = await new SourceMapConsumer(incomingSourceMap);
   const generator = new SourceMapGenerator({
     file: incomingSourceMap.file,
     sourceRoot: incomingSourceMap.sourceRoot,

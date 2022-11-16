@@ -8,16 +8,11 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 type Script = (...args: string[]) => Promise<void>;
 
 const domains = [
+  { domain: '@grexie/pages-serve/scripts' },
+  { domain: '@grexie/pages-builder/scripts' },
   { domain: '@grexie/pages/scripts' },
-  {
-    domain: '@grexie/pages/scripts',
-    parent: __dirname,
-  },
-  {
-    domain: path.resolve(__dirname, './scripts/'),
-    parent: __dirname,
-  },
-];
+  { domain: '@grexie/pages-cli/scripts', parent: __dirname },
+] as { domain: string; parent?: string }[];
 
 const importScript = async (name: string): Promise<Script> => {
   let module: string | undefined;
@@ -26,7 +21,7 @@ const importScript = async (name: string): Promise<Script> => {
     try {
       const modulePath = path.join(domain, name.replace(/:/g, '/'));
       const require = createRequire(parent ?? process.cwd());
-      module = require.resolve(modulePath);
+      module = await import.meta.resolve!(modulePath, parent);
       break;
     } catch (err) {
       continue;

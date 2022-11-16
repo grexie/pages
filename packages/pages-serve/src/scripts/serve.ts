@@ -11,13 +11,13 @@ export default () => {
 
   const watch = [
     path.dirname(require.resolve('@grexie/pages/package.json')),
-    path.dirname(require.resolve('@grexie/builder/package.json')),
+    path.dirname(require.resolve('@grexie/pages-builder/package.json')),
   ];
 
   process.env.WEBPACK_HOT = 'true';
 
   const options: nodemon.Settings = {
-    script: path.resolve(__dirname, '..', 'server', 'run'),
+    script: path.resolve(__dirname, '..', 'run'),
     ext: 'js jsx json',
     watch: watch.map(pathname => fs.realpathSync(pathname)),
     delay: 100,

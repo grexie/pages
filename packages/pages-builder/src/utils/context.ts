@@ -6,7 +6,10 @@ import {
 } from 'react';
 import { createComposableWithProps } from '@grexie/compose';
 
-export const createContextWithProps = <T extends unknown, P = {}>(
+export const createContextWithProps = <
+  T extends unknown,
+  P extends object = {}
+>(
   creator: (Provider: React.Context<T>['Provider']) => FC<PropsWithChildren<P>>
 ) => {
   const Context = _createContext<T | undefined>(undefined);

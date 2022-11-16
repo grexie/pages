@@ -30,12 +30,13 @@ In the `@grexie/pages` monorepo:
 
 ```
 yarn
-yarn run link
+yarn dev:link
 yarn start
 ```
 
 In your dev website:
 
 ```
+pages dev:link
 pages serve
 ```

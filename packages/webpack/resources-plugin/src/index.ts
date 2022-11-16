@@ -3,7 +3,6 @@ import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
-import html from 'html';
 
 const { RawSource } = webpack.sources;
 
@@ -78,11 +77,6 @@ class SourceCompiler {
     }
 
     return buffer.toString();
-    return Buffer.from(
-      html.prettyPrint(buffer.toString(), {
-        indent_size: 2,
-      })
-    );
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {

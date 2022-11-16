@@ -74,7 +74,7 @@
       "path": "packages/webpack/module-loader"
     },
     {
-      "path": "packages/webpack/pages-loader"
+      "path": "packages/webpack/config-loader"
     },
     {
       "path": "packages/webpack/resources-plugin"

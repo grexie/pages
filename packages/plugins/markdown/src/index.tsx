@@ -58,14 +58,14 @@ export const resource = async (
     {
       outputFormat: 'program',
       format: 'mdx',
-      SourceMapGenerator,
+      SourceMapGenerator: SourceMapGenerator as any,
     }
   );
 
   console.info(source.toString());
 
   const map = SourceMapGenerator.fromSourceMap(
-    new SourceMapConsumer(source.map as any)
+    await new SourceMapConsumer(source.map as any)
   );
   map.setSourceContent(context.filename, content);
   source.map = JSON.parse(map.toString());

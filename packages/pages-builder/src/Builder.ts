@@ -2,13 +2,13 @@ import {
   Builder as BuilderBase,
   Watcher,
   WebpackStats,
-} from '@grexie/builder/Builder.js';
+} from './BuilderBase.js';
 import {
   FileSystem,
   WritableFileSystem,
   FileSystemOptions,
-} from '@grexie/builder/FileSystem.js';
-import { CacheStorage, Cache } from '@grexie/builder/Cache.js';
+} from './FileSystem.js';
+import { CacheStorage, Cache } from './Cache.js';
 import { BuildContext } from './BuildContext.js';
 import _path from 'path';
 import { Volume } from 'memfs';

@@ -5,7 +5,8 @@ import { cyan, gray } from 'chalk';
 import { getWorkspaces } from '../utils/workspaces';
 
 interface RunOptions {
-  parallel: boolean;
+  parallel?: boolean;
+  silent?: boolean;
 }
 
 interface ResolvablePromise<T = void>
@@ -48,7 +49,7 @@ const stripAnsiCursor = (text: string) =>
   );
 
 export default async (
-  { parallel = false }: RunOptions,
+  { parallel = false, silent = false }: RunOptions,
   command: string,
   ...args: string[]
 ) => {
@@ -93,7 +94,9 @@ export default async (
         runLock = createResolver();
       }
 
-      console.error(cyan(`[${logName}] yarn run ${command}`));
+      if (!silent) {
+        console.error(cyan(`[${logName}] yarn run ${command}`));
+      }
 
       const child = spawn('yarn', ['run', command, ...args], {
         env: { ...process.env, FORCE_COLOR: '3' },
@@ -147,9 +150,10 @@ export default async (
 };
 
 export const args = {
-  boolean: ['parallel'],
+  boolean: ['parallel', 'silent'],
   alias: {
     parallel: 'p',
+    silent: 's',
   },
   stopEarly: true,
 };

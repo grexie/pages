@@ -13,11 +13,13 @@ export const getWorkspaces = () => {
     .map(glob => globSync(glob + '/package.json'))
     .reduce((a: string[], b: string[]) => [...a, ...b], []);
 
-  return packageFiles.map(filename => {
-    const json = JSON.parse(readFileSync(filename).toString());
-    return {
-      workspace: json.name as string,
-      location: dirname(filename),
-    };
-  });
+  return packageFiles
+    .map(filename => {
+      const json = JSON.parse(readFileSync(filename).toString());
+      return {
+        workspace: json.name as string,
+        location: dirname(filename),
+      };
+    })
+    .filter(({ location }) => !location.startsWith('tools/'));
 };

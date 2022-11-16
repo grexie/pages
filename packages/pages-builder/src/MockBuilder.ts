@@ -1,8 +1,8 @@
 import { BuildContext } from './BuildContext.js';
 import { Provider } from './Provider.js';
 import { ResourceMetadata } from '@grexie/pages/api';
-import { vol, Volume } from 'memfs';
-import { WritableFileSystem } from '@grexie/builder/FileSystem.js';
+import { Volume } from 'memfs';
+import { WritableFileSystem } from './FileSystem.js';
 import path from 'path';
 import { Config } from '@grexie/pages/api';
 import YAML from 'yaml';

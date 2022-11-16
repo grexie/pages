@@ -1,5 +1,5 @@
 {
-  "name": "@grexie/resolvable",
+  "name": "@grexie/pages-config-loader",
   "version": "0.0.13",
   "license": "MIT",
   "type": "module",
@@ -16,5 +16,9 @@
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "peerDependencies": {
+    "@grexie/pages-builder": "^0.0.13",
+    "webpack": "^5.75.0"
+  }
 }
