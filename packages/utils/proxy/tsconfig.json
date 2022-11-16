@@ -4,6 +4,7 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true
   },

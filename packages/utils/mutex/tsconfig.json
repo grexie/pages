@@ -4,6 +4,7 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true,
     "paths": {
@@ -17,5 +18,10 @@
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../resolvable"
+    }
   ]
 }

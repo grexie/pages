@@ -1,5 +1,5 @@
 import { Compilation } from 'webpack';
-import { BuildContext } from '../BuildContext.js';
+import { BuildContext } from './BuildContext.js';
 import { ModuleResolver } from './ModuleResolver.js';
 import {
   InstantiatedModule,
@@ -12,7 +12,6 @@ import path from 'path';
 import { EsmModuleLoader } from './EsmModuleLoader.js';
 import { CommonJsModuleLoader } from './CommonJsModuleLoader.js';
 import { NodeModuleLoader } from './NodeModuleLoader.js';
-import { timedAsync } from '../../../pages/src/utils/timed.js';
 
 export interface ModuleContextOptions {
   context: BuildContext;

@@ -9,7 +9,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src/ --no-copy-ignored -D -d . -x .ts,.tsx --ignore '**/*.d.ts'"
+    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts'"
   },
   "dependencies": {
     "resolve": "^1.22.0",

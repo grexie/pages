@@ -5,6 +5,7 @@
     "outDir": "./",
     "rootDir": "./src/",
     "moduleResolution": "node16",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages-builder": ["../../pages-builder/src"]
@@ -17,5 +18,10 @@
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../../pages-builder"
+    }
   ]
 }

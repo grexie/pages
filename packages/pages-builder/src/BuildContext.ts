@@ -45,7 +45,6 @@ export class BuildContext extends Context {
   readonly modulesDirs: string[];
   readonly builder: Builder;
   readonly renderer: Renderer;
-  // readonly modules: ModuleContext;
   readonly config: ConfigContext;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();

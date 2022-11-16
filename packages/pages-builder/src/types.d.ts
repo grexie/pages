@@ -1,3 +1,5 @@
+declare module '@grexie/pages-resources-plugin';
+
 declare module 'vm' {
   export * from 'node:vm';
   export enum ModuleStatus {

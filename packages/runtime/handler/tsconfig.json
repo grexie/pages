@@ -5,10 +5,12 @@
     "outDir": "./",
     "rootDir": "./src/",
     "moduleResolution": "node16",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../../pages/src"],
-      "@grexie/pages/*": ["../../pages/src/*"]
+      "@grexie/pages/*": ["../../pages/src/*"],
+      "@grexie/pages-builder": ["../../pages-builder/src"]
     }
   },
   "include": [
@@ -18,5 +20,13 @@
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../../pages"
+    },
+    {
+      "path": "../../pages-builder"
+    }
   ]
 }

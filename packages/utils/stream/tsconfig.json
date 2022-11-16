@@ -4,8 +4,12 @@
     "composite": true,
     "outDir": "./",
     "rootDir": "./src/",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "moduleResolution": "node16",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/resolvable": ["../resolvable/src"]
+    }
   },
   "include": [
     "src/**/*.ts",
@@ -14,5 +18,10 @@
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "../resolvable"
+    }
   ]
 }

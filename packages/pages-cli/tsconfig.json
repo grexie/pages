@@ -2,9 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "./",
+    "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../../pages/src"],

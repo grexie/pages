@@ -5,11 +5,13 @@
     "outDir": "./",
     "rootDir": "./src/",
     "moduleResolution": "node16",
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../../pages/src"],
       "@grexie/pages/*": ["../../pages/src/*"],
-      "@grexie/pages-builder": ["../../pages-builder/src"]
+      "@grexie/pages-builder": ["../../pages-builder/src"],
+      "@grexie/pages-runtime-styles": ["../../runtime/styles"]
     }
   },
   "include": [
@@ -23,6 +25,9 @@
   "references": [
     {
       "path": "../../pages-builder"
+    },
+    {
+      "path": "../../runtime/styles"
     }
   ]
 }
