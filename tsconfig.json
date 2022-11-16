@@ -1,8 +1,21 @@
 {
   "files": [],
   "compilerOptions": {
-    "allowSyntheticDefaultImports": false
+    "allowSyntheticDefaultImports": false,
+    "composite": true,
+    "outDir": "./lib",
+    "rootDir": "./src",
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true
   },
+  "exclude": [
+    "packages/pages*/lib/**",
+    "packages/*/*/lib/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
   "references": [
     {
       "path": "packages/pages-builder"

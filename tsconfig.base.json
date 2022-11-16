@@ -3,11 +3,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "target": "esnext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,

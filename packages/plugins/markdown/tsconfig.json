@@ -1,11 +1,11 @@
 {
-    "extends": "../../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "../../../tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../../pages/src"],
@@ -14,15 +14,12 @@
       "@grexie/pages-runtime-styles": ["../../runtime/styles/src"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
+    {
+      "path": "../../pages"
+    },
     {
       "path": "../../pages-builder"
     },

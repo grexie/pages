@@ -3,7 +3,7 @@
   "version": "0.0.14",
   "license": "MIT",
   "type": "module",
-  "main": "lib/index.js",
+  "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "run-p -s build:ts build:ts-test",
@@ -30,8 +30,14 @@
     "@types/react-is": "^17.0.3"
   },
   "exports": {
-    ".": "./lib/index.js",
-    "./api": "./lib/api/index.js",
+    ".": {
+      "default": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    },
+    "./api": {
+      "default": "./lib/api/index.js",
+      "types": "./lib/api/index.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {

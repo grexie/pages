@@ -10,17 +10,11 @@
     "paths": {
       "@grexie/pages-builder": ["../../pages-builder/src"],
       "@grexie/pages": ["../../pages/src"],
-      "@grexie/pages/*": ["../../pages/src/*"]
+      "@grexie/pages/api": ["../../pages/src/api"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
     {
       "path": "../../pages-builder"

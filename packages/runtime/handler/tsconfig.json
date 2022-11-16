@@ -5,7 +5,7 @@
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
-    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "../../../tsconfig.tsbuildinfo",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../../pages/src"],
@@ -13,14 +13,8 @@
       "@grexie/pages-builder": ["../../pages-builder/src"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
     {
       "path": "../../pages"
