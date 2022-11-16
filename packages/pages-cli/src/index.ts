@@ -2,16 +2,19 @@ import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
 import { createRequire } from 'module';
+import resolve from 'enhanced-resolve';
+import { promisify } from 'util';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 type Script = (...args: string[]) => Promise<void>;
 
 const domains = [
-  { domain: '@grexie/pages-serve/scripts' },
-  { domain: '@grexie/pages-builder/scripts' },
+  { domain: path.resolve(__dirname, 'scripts'), parent: __dirname },
+  { domain: '@grexie/pages-cli/scripts' },
   { domain: '@grexie/pages/scripts' },
-  { domain: '@grexie/pages-cli/scripts', parent: __dirname },
+  { domain: '@grexie/pages-builder/scripts' },
+  { domain: '@grexie/pages-serve/scripts' },
 ] as { domain: string; parent?: string }[];
 
 const importScript = async (name: string): Promise<Script> => {
@@ -20,8 +23,21 @@ const importScript = async (name: string): Promise<Script> => {
   for (const { domain, parent } of domains) {
     try {
       const modulePath = path.join(domain, name.replace(/:/g, '/'));
-      const require = createRequire(parent ?? process.cwd());
-      module = await import.meta.resolve!(modulePath, parent);
+      module = await new Promise((result, reject) =>
+        resolve(
+          {},
+          parent ?? process.cwd(),
+          modulePath,
+          (err: any, module: string) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            result(module);
+          }
+        )
+      );
       break;
     } catch (err) {
       continue;

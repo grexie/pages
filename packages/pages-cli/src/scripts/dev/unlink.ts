@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import packages from '../../utils/packages.json';
+import packages from '../../utils/packages.json' assert { type: 'json' };
 
 export default () => {
   execSync(
