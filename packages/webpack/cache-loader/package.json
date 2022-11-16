@@ -27,7 +27,8 @@
     ".": {
       "import": "./lib/index.mjs",
       "require": "./lib/index.cjs",
-      "default": "./lib/index.cjs"
+      "default": "./lib/index.cjs",
+      "types": "./lib/index.d.ts"
     }
   }
 }

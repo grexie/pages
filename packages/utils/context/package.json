@@ -30,7 +30,8 @@
     ".": {
       "import": "./lib/index.mjs",
       "require": "./lib/index.cjs",
-      "default": "./lib/index.mjs"
+      "default": "./lib/index.mjs",
+      "types": "./lib/index.d.ts"
     }
   }
 }

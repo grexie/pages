@@ -3,7 +3,8 @@
   "version": "0.0.13",
   "license": "MIT",
   "type": "module",
-  "module": "lib/index.js",
+  "module": "lib/index.mjs",
+  "main": "lib/index.cjs",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "run-p -s build:ts-mjs build:ts-cjs build:ts-test",
@@ -25,8 +26,10 @@
   },
   "exports": {
     ".": {
-      "import": "./lib/index.js",
-      "default": "./lib/index.js"
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs",
+      "default": "./lib/index.mjs",
+      "types": "./lib/index.d.ts"
     }
   }
 }
