@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../pages/src"],
-      "@grexie/pages/*": ["../pages/src/*"],
+      "@grexie/pages/api": ["../pages/src/api"],
       "@grexie/resolvable": ["../utils/resolvable/src"],
       "@grexie/pages-runtime-hmr": ["../runtime/hmr/src"],
       "@grexie/is-plain-object": ["../utils/is-plain-object/src"],

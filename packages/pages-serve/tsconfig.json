@@ -9,7 +9,6 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../pages/src"],
-      "@grexie/pages/*": ["../pages/src/*"],
       "@grexie/pages-builder": ["../pages-builder/src"]
     }
   },

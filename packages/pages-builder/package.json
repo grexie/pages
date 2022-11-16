@@ -2,10 +2,11 @@
   "name": "@grexie/pages-builder",
   "version": "0.0.13",
   "license": "MIT",
-  "main": "index.js",
+  "main": "lib/index.js",
   "type": "module",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "build": "babel src/ --no-copy-ignored -D -d ./lib -x .ts,.tsx --ignore '**/*.d.ts'"
+    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts'"
   },
   "dependencies": {
     "webpack": "^5.73.0"
