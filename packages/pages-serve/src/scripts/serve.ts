@@ -14,13 +14,15 @@ export default () => {
     path.dirname(require.resolve('@grexie/pages-builder/package.json')),
   ];
 
-  process.env.WEBPACK_HOT = 'true';
-
   const options: nodemon.Settings = {
     script: path.resolve(__dirname, '..', 'run'),
     ext: 'js jsx json',
     watch: watch.map(pathname => fs.realpathSync(pathname)),
     delay: 100,
+    env: {
+      ...process.env,
+      WEBPACK_HOT: 'true',
+    },
   };
 
   nodemon(options);

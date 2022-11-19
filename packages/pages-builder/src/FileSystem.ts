@@ -180,14 +180,6 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
 
     fileSystems.sort((a, b) => b.path.length - a.path.length);
 
-    if (/defaults.pages.*original/.test(filename)) {
-      console.info(
-        filename,
-        writable,
-        fileSystems.map(({ path, name }) => `${path} ${name}`)
-      );
-    }
-
     return fileSystems.map(obj => ({ ...obj }));
   }
 

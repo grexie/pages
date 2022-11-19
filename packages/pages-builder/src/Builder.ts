@@ -519,9 +519,11 @@ export class Builder {
     };
 
     if (hot) {
+      config.devServer = config.devServer ?? {};
+      config.devServer.hot = true;
       Object.assign(config.entry!, {
         '__webpack/react-refresh': {
-          import: '@grexie/pages/runtime/hmr.js',
+          import: '@grexie/pages-runtime-hmr',
           filename: '__webpack/react-refresh.js',
         },
         '__webpack/hot': {

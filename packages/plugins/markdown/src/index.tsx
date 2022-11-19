@@ -62,8 +62,6 @@ export const resource = async (
     }
   );
 
-  console.info(source.toString());
-
   const map = SourceMapGenerator.fromSourceMap(
     await new SourceMapConsumer(source.map as any)
   );

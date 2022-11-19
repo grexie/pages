@@ -164,7 +164,6 @@ export default async function CacheLoader(
 }
 
 export async function pitch(this: LoaderContext<LoaderOptions>) {
-  console.info('not here');
   const { context } = this.getOptions();
   const callback = this.async();
   this.cacheable(false);

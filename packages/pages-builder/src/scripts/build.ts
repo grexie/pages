@@ -14,5 +14,5 @@ export default async () => {
   context.fs.add(context.outputDir, fs, true);
 
   const stats = await context.builder.build();
-  console.info(stats.toString());
+  console.info(stats.toString({ colors: true }));
 };
