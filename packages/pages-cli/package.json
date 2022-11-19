@@ -9,12 +9,8 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "yarn generate:packages && run-p -s build:ts build:ts-test",
-    "build:ts": "babel src/ -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
-    "build:ts-test": "babel src/ -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
-    "watch": "yarn generate:packages && run-p -s watch:ts watch:ts-test",
-    "watch:ts": "npm run -s build:ts -- -w",
-    "watch:ts-test": "npm run -s build:ts-test -- -w",
+    "build": "npm run -s generate:packages && babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore **/*.d.ts",
+    "watch": "npm run -s build -- -w",
     "generate:packages": "mkdir -p lib/utils && (cd ../.. && monorepo workspaces -pj) >lib/utils/packages.json"
   },
   "dependencies": {

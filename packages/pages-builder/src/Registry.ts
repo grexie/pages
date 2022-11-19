@@ -1,7 +1,7 @@
 import type { Provider } from './Provider.js';
 import { BuildContext } from './BuildContext.js';
 import _path from 'path';
-import { SourceTree } from '@grexie/pages';
+import type { SourceTree } from '@grexie/pages';
 import { Source } from './Source.js';
 import path from 'path';
 
