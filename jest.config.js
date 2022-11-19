@@ -13,4 +13,5 @@ module.exports = {
     '^.cache/',
     '^examples/*/build/',
   ],
+  snapshotResolver: './tools/jest/snapshotResolver.js',
 };

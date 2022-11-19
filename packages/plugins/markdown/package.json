@@ -7,7 +7,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "run-p -s build:ts",
-    "build:ts": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
     "build:ts-test": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
     "watch": "run-p -s watch:ts watch:ts-test",
     "watch:ts": "npm run -s build:ts -- -w",

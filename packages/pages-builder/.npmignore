@@ -7,3 +7,4 @@ jest.config.js
 yarn-error.log
 /index.d.js
 /types.d.js
+__snapshots__

@@ -5,4 +5,6 @@ tsconfig.tsbuildinfo
 jest.config.js
 .babelrc
 yarn-error.log
-*.test.js
+/index.d.js
+/types.d.js
+__snapshots__

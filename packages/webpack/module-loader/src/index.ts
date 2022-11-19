@@ -221,7 +221,7 @@ export default async function ModuleLoader(
       );
     } else {
       const requests: string[] = [];
-      console.info(inputSourceMap);
+
       const compiled = await transformAsync(content.toString(), {
         presets: [[babelEnvPreset, { modules: false }]],
         plugins: [
