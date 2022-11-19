@@ -14,8 +14,8 @@ import type { SourceContextOptions } from './SourceContext.js';
 import { SourceContext } from './SourceContext.js';
 import resolve from 'enhanced-resolve';
 import { createResolver } from '@grexie/resolvable';
-import { Events, EventManager } from './EventManager.js';
-import { PluginContext } from './PluginContext.js';
+import { Events, EventManager, EventPhase } from './EventManager.js';
+import { PluginContext, Plugin } from './PluginContext.js';
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -53,14 +53,13 @@ export class BuildContext extends Context {
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
   readonly resolverConfig: Required<ModuleResolverConfig>;
-  readonly plugins = new Map<string, Promise<Plugin>>();
   readonly #readyResolver = createResolver<BuildContext>();
   readonly ready = this.#readyResolver.finally(() => {});
   readonly #events = EventManager.get<BuildContext>(this);
-  readonly #plugins: PluginContext;
+  #plugins?: PluginContext;
 
   get plugins() {
-    return this.#plugins.plugins;
+    return this.#plugins?.plugins;
   }
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
@@ -172,7 +171,8 @@ export class BuildContext extends Context {
       path.resolve(this.rootDir, 'package.json')
     ).then(async plugins => {
       this.#plugins = plugins;
-      await this.initializePlugins(plugins.plugins);
+      await this.initializePlugins([...plugins.plugins]);
+      await this.#events.emit(EventPhase.after, 'config', this);
       this.#readyResolver.resolve(this);
     });
   }
@@ -211,15 +211,15 @@ export class BuildContext extends Context {
     return new SourceContext(options);
   }
 
-  addCompilationRoot(...paths) {
+  addCompilationRoot(...paths: string[]) {
     this.resolverConfig.forceCompileRoots.push(...paths);
   }
 
-  addEsmExtension(...extensions) {
+  addEsmExtension(...extensions: string[]) {
     this.resolverConfig.esmExtensions.push(...extensions);
   }
 
-  addCompileExtension(...extensions) {
+  addCompileExtension(...extensions: string[]) {
     this.resolverConfig.forceCompileExtensions.push(...extensions);
   }
 
@@ -227,7 +227,6 @@ export class BuildContext extends Context {
     await Promise.all(
       plugins.map(async plugin => {
         const events = EventManager.get<BuildContext>(this).create(plugin.name);
-        console.info(plugin.name);
         await plugin.handler(events);
       })
     );

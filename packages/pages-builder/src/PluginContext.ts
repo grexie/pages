@@ -3,6 +3,7 @@ import type { ReadableFileSystem } from './FileSystem.js';
 import type { BuildContext } from './BuildContext.js';
 import resolve from 'enhanced-resolve';
 import path from 'path';
+import { createRequire } from 'module';
 
 export interface DescriptionFile {
   name?: string;
@@ -45,6 +46,8 @@ export class PluginContext {
   }
 
   protected createPluginResolver(resolveToContext: boolean) {
+    const require = createRequire(import.meta.url);
+
     const pagesDir = path.dirname(
       require.resolve('@grexie/pages/package.json')
     );

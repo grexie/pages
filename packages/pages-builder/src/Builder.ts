@@ -18,7 +18,7 @@ import path from 'path';
 import webpack, { dependencies } from 'webpack';
 import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
-import { EventManager } from './EventManager.js';
+import { EventManager, EventPhase } from './EventManager.js';
 
 // const originalResolveRequestArray =
 //   NormalModuleFactory.prototype.resolveRequestArray;
@@ -83,7 +83,7 @@ import { EventManager } from './EventManager.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const defaultDescriptionFileData: DescriptionFile = {
+export const defaultDescriptionFileData: DescriptionFile = {
   dependencies: {
     '@grexie/pages-plugin-markdown': '*',
     '@grexie/pages-plugin-typescript': '*',
@@ -531,7 +531,7 @@ export class Builder {
       config.plugins!.push(new webpack.HotModuleReplacementPlugin());
     }
 
-    await this.#events.emit('after', 'config', config);
+    await this.#events.emit(EventPhase.after, 'config', config);
     return config;
   }
 
