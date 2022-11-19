@@ -8,6 +8,7 @@ import EventEmitter from 'events';
 import type { BuildContext } from './BuildContext.js';
 
 export interface SourceOptions {
+  context: BuildContext;
   filename: string;
   path: string[];
 }

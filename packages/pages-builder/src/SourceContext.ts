@@ -42,7 +42,7 @@ export class SourceContext extends Source {
     configModule,
     ...options
   }: SourceContextOptions) {
-    super(options);
+    super({ context, ...options });
     this.context = context;
     this.compilation = compilation;
     this.module = module;
