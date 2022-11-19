@@ -1,6 +1,6 @@
 {
   "name": "@grexie/hash-object",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
