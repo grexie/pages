@@ -51,7 +51,7 @@
       "commitMessage": "chore: release v${version}"
     },
     "plugins": {
-      "@release-it/workspaces": {
+      "@release-it-plugins/workspaces": {
         "workspaces": [
           "packages/pages*",
           "packages/plugins/*",
