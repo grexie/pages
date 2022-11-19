@@ -1,5 +1,5 @@
-import type { Document } from '../api/Document.js';
 import { useRef } from 'react';
+import type { Document } from '../api/Document.js';
 import { useDocument } from './useDocument.js';
 
 const nextIdTable = new WeakMap<Document, { value: number }>();

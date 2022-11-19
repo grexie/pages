@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { Document, DocumentOptions } from '../api/Document.js';
-import { createContextWithProps } from '../utils/context.js';
+import { createContextWithProps } from '@grexie/context';
 
 const {
+  Context,
   Provider: DocumentProvider,
   with: withDocument,
   use: useDocumentContext,

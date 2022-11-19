@@ -1,0 +1,8 @@
+/*/*.mjs
+/*/*.js
+/*/*.ts
+/*/*/
+!/*/.babelrc.js
+!/*/src/
+!/*/bin/
+!/*/jest.config.js

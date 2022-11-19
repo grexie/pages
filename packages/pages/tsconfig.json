@@ -2,17 +2,27 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "./",
+    "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/hash-object": ["../utils/hash-object/src"],
+      "@grexie/context": ["../utils/context/src"],
+      "@grexie/proxy": ["../utils/proxy/src"]
+    }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-  ],
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx"
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../utils/hash-object"
+    },
+    {
+      "path": "../utils/context"
+    },
+    {
+      "path": "../utils/proxy"
+    }
   ]
 }

@@ -1,4 +1,4 @@
-import { createContextWithProps } from '../utils/context.js';
+import { createContextWithProps } from '@grexie/context';
 
 interface ScriptsProviderProps {
   scripts: string[];

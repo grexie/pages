@@ -1,9 +1,10 @@
 import type { ComponentType } from 'react';
 import { useMemo } from 'react';
-import type { SourceTree } from '../builder/Source.js';
 import { usePath } from './useResource.js';
 import _path from 'path';
-import { hash } from '../utils/hash.js';
+import { hash } from '@grexie/hash-object';
+
+export type SourceTree = { [key: string]: SourceTree | string };
 
 export type ComponentTree = { [key: string]: ComponentTree | ComponentType };
 

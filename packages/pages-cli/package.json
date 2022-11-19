@@ -1,0 +1,33 @@
+{
+  "name": "@grexie/pages-cli",
+  "version": "0.0.14",
+  "license": "MIT",
+  "bin": {
+    "pages": "bin/index.js"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "yarn generate:packages && run-p -s build:ts build:ts-test",
+    "build:ts": "babel src/ -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-test": "babel src/ -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
+    "watch": "yarn generate:packages && run-p -s watch:ts watch:ts-test",
+    "watch:ts": "npm run -s build:ts -- -w",
+    "watch:ts-test": "npm run -s build:ts-test -- -w",
+    "generate:packages": "mkdir -p lib/utils && (cd ../.. && monorepo workspaces -pj) >lib/utils/packages.json"
+  },
+  "dependencies": {
+    "chalk": "^5.1.2",
+    "enhanced-resolve": "^5.10.0",
+    "source-map-support": "^0.5.21"
+  },
+  "exports": {
+    "./scripts/dev/link": "./lib/scripts/dev/link.js",
+    "./scripts/dev/unlink": "./lib/scripts/dev/unlink.js",
+    "./scripts/create": "./lib/scripts/create"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

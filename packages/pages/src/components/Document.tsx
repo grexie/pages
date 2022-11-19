@@ -1,11 +1,4 @@
-import {
-  FC,
-  PropsWithChildren,
-  Suspense,
-  useState,
-  startTransition,
-  createElement,
-} from 'react';
+import { FC, PropsWithChildren, createElement } from 'react';
 import { HeadProvider, useHead, withHead } from './Head.js';
 import { createComposable } from '@grexie/compose';
 import { Styles, useStyles } from '../hooks/useStyles.js';
@@ -94,16 +87,18 @@ export const DocumentContent: FC<PropsWithChildren<DocumentContentProps>> =
     );
   });
 
-export const Document: FC<PropsWithChildren<{}>> = withHead(({ children }) => {
-  return (
-    <html>
-      <DocumentHead />
-      <body>
-        <DocumentRoot>{children}</DocumentRoot>
-      </body>
-    </html>
-  );
-});
+export const DefaultDocument: FC<PropsWithChildren<{}>> = withHead(
+  ({ children }) => {
+    return (
+      <html>
+        <DocumentHead />
+        <body>
+          <DocumentRoot>{children}</DocumentRoot>
+        </body>
+      </html>
+    );
+  }
+);
 
-export const withDocumentComponent = createComposable(Document);
+export const withDocumentComponent = createComposable(DefaultDocument);
 export const withDocumentContent = createComposable(DocumentContent);

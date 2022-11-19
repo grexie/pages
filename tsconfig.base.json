@@ -3,18 +3,14 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "target": "esnext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "strict": true,
-    "allowJs": true,
+    "allowJs": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node16",
     "isolatedModules": false,
     "resolveJsonModule": true,
     "jsx": "react-jsx",
@@ -22,9 +18,5 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "allowSyntheticDefaultImports": false
-  },
-  "exclude": [
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
-  ]
+  }
 }

@@ -8,7 +8,7 @@ import {
   SuspenseProps,
 } from 'react';
 import { setImmediate } from 'timers';
-import { createContext } from '../utils/context.js';
+import { createContext } from '@grexie/context';
 
 class LazyContext {
   readonly #wrapped: Promise<any>[] = [];
@@ -27,7 +27,6 @@ class LazyContext {
   async complete<T extends unknown>(promise: () => Promise<T> | T): Promise<T> {
     const next = async (): Promise<void> => {
       await new Promise(resolve => setImmediate(resolve));
-      console.info(this.#wrapped.length);
       if (this.#wrapped.length) {
         await Promise.all(this.#wrapped);
         return next();
@@ -97,7 +96,6 @@ export const useLazyComplete = <P extends Object = {}>(
   dependencies: any[]
 ) => {
   const context = useLazyContext();
-  console.info(context);
   const Component = useLazyBase(
     [async () => context.complete(cb as () => Promise<any>)],
     dependencies

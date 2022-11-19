@@ -105,3 +105,8 @@ export class ResourceContext {
     this.#resource = resource;
   }
 }
+
+export interface ModuleResource<X = any, M extends ResourceMetadata = any>
+  extends Resource<M> {
+  readonly exports: X;
+}

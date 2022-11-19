@@ -1,0 +1,37 @@
+{
+  "name": "@grexie/hash-object",
+  "version": "0.0.13",
+  "license": "MIT",
+  "type": "module",
+  "module": "lib/index.mjs",
+  "main": "lib/index.cjs",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "run-p -s build:ts-mjs build:ts-cjs build:ts-test",
+    "build:ts-mjs": "NODE_ENV=esm babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .mjs --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-cjs": "NODE_ENV=commonjs babel src/ --no-copy-ignored -D -d ./lib/ --out-file-extension .cjs -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-test": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
+    "watch": "run-p -s watch:ts-mjs watch:ts-cjs watch:ts-test",
+    "watch:ts-mjs": "npm run -s build:ts-mjs -- -w",
+    "watch:ts-cjs": "npm run -s build:ts-cjs -- -w",
+    "watch:ts-test": "npm run -s build:ts-test -- -w"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "object-hash": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/object-hash": "^2.2.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.mjs"
+    }
+  }
+}

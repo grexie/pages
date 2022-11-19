@@ -1,0 +1,26 @@
+{
+  "name": "@grexie/pages-runtime-styles",
+  "version": "0.0.13",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "run-p -s build:ts build:ts-test",
+    "build:ts": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-test": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
+    "watch": "run-p -s watch:ts watch:ts-test",
+    "watch:ts": "npm run -s build:ts -- -w",
+    "watch:ts-test": "npm run -s build:ts-test -- -w"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "react": ">=18.2.0"
+  },
+  "dependencies": {
+    "@grexie/pages": "0.0.13"
+  }
+}

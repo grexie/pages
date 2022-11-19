@@ -1,0 +1,75 @@
+{
+  "name": "@grexie/pages-builder",
+  "version": "0.0.13",
+  "license": "MIT",
+  "type": "module",
+  "module": "index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "run-p -s build:ts build:ts-test",
+    "build:ts": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/*.test.ts','**/*.spec.ts','**/*.test.tsx','**/*.spec.tsx'",
+    "build:ts-test": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .cjs --only '**/*.test.tsx','**/*.test.ts','**/*.spec.tsx','**/*.spec.ts'",
+    "watch": "run-p -s watch:ts watch:ts-test",
+    "watch:ts": "npm run -s build:ts -- -w",
+    "watch:ts-test": "npm run -s build:ts-test -- -w"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0",
+    "webpack": ">=5.75.0"
+  },
+  "dependencies": {
+    "@babel/cli": "^7.17.10",
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-typescript": "^7.17.12",
+    "@grexie/compose": "^0.1.17",
+    "@grexie/is-plain-object": "^0.0.13",
+    "@grexie/mutex": "^0.0.13",
+    "@grexie/pages": "^0.0.13",
+    "@grexie/pages-cache-loader": "^0.0.13",
+    "@grexie/pages-config-loader": "^0.0.13",
+    "@grexie/pages-image-loader": "^0.0.13",
+    "@grexie/pages-module-loader": "^0.0.13",
+    "@grexie/pages-resources-plugin": "^0.0.13",
+    "@grexie/pages-runtime-hmr": "^0.0.13",
+    "@grexie/pages-style-loader": "^0.0.13",
+    "@grexie/pages-yaml-loader": "^0.0.13",
+    "@grexie/promisify": "^0.0.13",
+    "@grexie/proxy": "^0.0.13",
+    "@grexie/resolvable": "^0.0.13",
+    "@types/jest": "^28.1.3",
+    "@types/node": "^17.0.41",
+    "@types/source-map-support": "^0.5.4",
+    "babel-plugin-source-map-support": "^2.1.3",
+    "chalk": "^5.1.2",
+    "create-hash": "^1.2.0",
+    "crypto-browserify": "^3.12.0",
+    "glob": "^8.0.3",
+    "memfs": "^3.4.11",
+    "path-browserify": "^1.0.1",
+    "progress-bar-webpack-plugin": "^2.1.0",
+    "stream-browserify": "^3.0.0",
+    "timers-browserify": "^2.0.12",
+    "ts-node": "^10.8.1",
+    "tty-browserify": "^0.0.1",
+    "typescript": "^4.7.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./scripts/build": "./lib/scripts/build.js",
+    "./scripts/clean/cache": "./lib/scripts/clean/cache.js",
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@types/progress-bar-webpack-plugin": "^2.1.2",
+    "yaml": "^2.1.3"
+  },
+  "sideEffects": false
+}
