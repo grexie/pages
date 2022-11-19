@@ -1,8 +1,7 @@
 import path from 'path';
 import { MockBuilder } from './MockBuilder.js';
-import { jest } from '@jest/globals';
 
-jest.setTimeout(30000);
+// jest.setTimeout(30000);
 
 describe('ModuleLoader2', () => {
   let builder: MockBuilder;
@@ -19,7 +18,11 @@ describe('ModuleLoader2', () => {
     const { context, filename, source } = (await loader.modules[
       path.resolve(builder.rootDir, 'test.jsx')
     ])!;
-    expect({ context, filename, source }).toMatchSnapshot();
+    expect({
+      context: path.relative(builder.rootDir, context),
+      filename: path.relative(builder.rootDir, filename),
+      source,
+    }).toMatchSnapshot();
   });
 
   it.todo('should rebuild a module already built in the current compilation');

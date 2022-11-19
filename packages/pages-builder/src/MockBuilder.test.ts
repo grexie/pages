@@ -1,5 +1,7 @@
 import { MockBuilder } from './MockBuilder.js';
 import path from 'path';
+import jest from '@jest/globals';
+
 describe('MockBuilder', () => {
   it.only('should write files', () => {
     const builder = new MockBuilder();

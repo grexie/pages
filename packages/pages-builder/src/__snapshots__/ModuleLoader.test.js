@@ -2,8 +2,8 @@
 
 exports[`ModuleLoader2 should build a module 1`] = `
 {
-  "context": "/pages",
-  "filename": "/pages/test.jsx",
+  "context": "",
+  "filename": "test.jsx",
   "source": "
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
       
