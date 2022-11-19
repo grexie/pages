@@ -6,7 +6,7 @@
   "module": "lib/index.mjs",
   "main": "lib/index.cjs",
   "scripts": {
-    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore **/*.d.ts",
+    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts'",
     "watch": "npm run -s build -- -w"
   },
   "publishConfig": {

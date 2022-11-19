@@ -9,7 +9,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "npm run -s generate:packages && babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore **/*.d.ts",
+    "build": "npm run -s generate:packages && babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts'",
     "watch": "npm run -s build -- -w",
     "generate:packages": "mkdir -p lib/utils && (cd ../.. && monorepo workspaces -pj) >lib/utils/packages.json"
   },

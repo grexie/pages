@@ -6,9 +6,9 @@
   "main": "lib/index.js",
   "module": "lib/index.mjs",
   "scripts": {
-    "build": "run-p -s build:ts-mjs build:ts-cjs build:ts-test",
-    "build:ts-mjs": "NODE_ENV=esm babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .mjs --ignore **/*.d.ts",
-    "build:ts-cjs": "NODE_ENV=commonjs babel src/ --no-copy-ignored -D -d ./lib/ --out-file-extension .cjs -x .ts,.tsx --ignore **/*.d.ts",
+    "build": "run-p -s build:ts-mjs build:ts-cjs",
+    "build:ts-mjs": "NODE_ENV=esm babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .mjs --ignore '**/*.d.ts'",
+    "build:ts-cjs": "NODE_ENV=commonjs babel src/ --no-copy-ignored -D -d ./lib/ --out-file-extension .cjs -x .ts,.tsx --ignore '**/*.d.ts'",
     "watch": "run-p -s watch:ts-mjs watch:ts-cjs",
     "watch:ts-mjs": "npm run -s build:ts-mjs -- -w",
     "watch:ts-cjs": "npm run -s build:ts-cjs -- -w"
