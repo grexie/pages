@@ -2,6 +2,8 @@ import type { Source, BuildContext } from '@grexie/pages-builder';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
+import { Renderer } from '@grexie/pages-builder';
+import { WritableBuffer } from '@grexie/stream';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 
 const { RawSource } = webpack.sources;
@@ -29,10 +31,6 @@ class CompilationContext {
   get modules() {
     return this.build.getModuleContext(this.compilation);
   }
-
-  get renderer() {
-    return this.build.renderer;
-  }
 }
 
 class SourceCompiler {
@@ -58,6 +56,7 @@ class SourceCompiler {
         '@grexie/stream',
         this.source.filename
       );
+    // const exports = await modules.require(import.meta, this.source.filename);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendering', this.source.filename);
@@ -252,8 +251,6 @@ export class ResourcesPlugin {
           })
         )
       ).filter(x => !!x) as Source[];
-
-      console.info('not here');
 
       // context.modules.reset();
 

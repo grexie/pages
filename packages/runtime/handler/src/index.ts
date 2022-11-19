@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { compose } from '@grexie/compose';
-import { ResourceContext } from '@grexie/pages/api';
+import { ResourceContext } from '@grexie/pages';
 import {
   StylesContext,
   withContext,
@@ -11,9 +11,9 @@ import {
   withStyles,
 } from '@grexie/pages';
 import { withDocumentContent } from '@grexie/pages';
-import { Context } from '@grexie/pages/api';
+import { Context } from '@grexie/pages';
 import { withLazy } from '@grexie/pages';
-import type { Resource } from '@grexie/pages/api';
+import type { Resource } from '@grexie/pages';
 import type { Handler } from '@grexie/pages-builder';
 
 export const wrapHandler = (

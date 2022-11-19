@@ -3,7 +3,6 @@ import path from 'path';
 import type { FileSystemOptions, WritableFileSystem } from './FileSystem.js';
 import { Builder } from './Builder.js';
 import { ProviderConfig, Registry } from './Registry.js';
-import { Renderer } from './Renderer.js';
 import { ModuleContext } from './ModuleContext.js';
 import os from 'os';
 import { ConfigContext } from './ConfigContext.js';
@@ -46,7 +45,6 @@ export class BuildContext extends Context {
   readonly outputDir: string;
   readonly modulesDirs: string[];
   readonly builder: Builder;
-  readonly renderer: Renderer;
   readonly config: ConfigContext;
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
@@ -89,7 +87,6 @@ export class BuildContext extends Context {
 
     this.registry = new Registry(this);
     this.builder = new Builder(this, fs, defaultFiles, fsOptions);
-    this.renderer = new Renderer(this);
 
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
@@ -159,7 +156,7 @@ export class BuildContext extends Context {
         ]),
       ],
       forceCompileRoots: Array.from(
-        new Set([...(resolver.forceCompileRoots ?? [this.pagesDir])])
+        new Set([...(resolver.forceCompileRoots ?? [])])
       ),
     };
   }

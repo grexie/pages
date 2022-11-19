@@ -24,14 +24,14 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/compose": "^0.1.16"
+    "@grexie/compose": "^0.1.17"
   },
   "exports": {
     ".": {
       "import": "./lib/index.mjs",
       "require": "./lib/index.cjs",
-      "default": "./lib/index.mjs",
-      "types": "./lib/index.d.ts"
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.mjs"
     }
   }
 }

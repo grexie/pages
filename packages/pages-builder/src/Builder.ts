@@ -126,15 +126,6 @@ export class Builder {
       'fs:defaultFiles+root'
     );
 
-    // if ((process.env.NODE_ENV ?? 'development') === 'development') {
-    //   this.#builder.fs.add(
-    //     _path.resolve(this.context.pagesDir, '..', '..'),
-    //     fs,
-    //     false,
-    //     'pagesDir'
-    //   );
-    // }
-
     this.#builder.fs.add('/', fs, false);
 
     fsOptions.forEach(options =>
@@ -249,7 +240,7 @@ export class Builder {
         children: true,
       },
       mode: production ? 'production' : 'development',
-      devtool: 'source-map',
+      // devtool: 'source-map',
       output: {
         path: this.context.outputDir,
         filename: `assets/js/[name].js`,

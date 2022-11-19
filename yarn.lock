@@ -1047,10 +1047,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@grexie/compose@^0.1.16":
-  version "0.1.16"
-  resolved "https://registry.yarnpkg.com/@grexie/compose/-/compose-0.1.16.tgz#78d1a14cbbc3720cbfb09e69b65fd7a24c80d0ff"
-  integrity sha512-ET/FeXHa4k4act63LxSxAa4RqKrQTbvbmdYbDwdsJl0/jgC1tDQZXgF9CCs9ZCLkwTYnIbFsY1UH3CJBJnZ2uA==
+"@grexie/compose@^0.1.17":
+  version "0.1.17"
+  resolved "https://registry.yarnpkg.com/@grexie/compose/-/compose-0.1.17.tgz#929e31da1fce426d34aec09c4726547a98bfc12e"
+  integrity sha512-+SSWW4rdszJP67mN5YIX5gcwEvPtSV1CFnAQMZ9DndAUM4ocDhpx+V3ncQAGUmkdLCVzYBxjOpLwcl8x4DNrdQ==
 
 "@iarna/toml@2.2.5":
   version "2.2.5"

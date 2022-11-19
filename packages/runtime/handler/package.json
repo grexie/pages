@@ -18,7 +18,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/compose": "^0.1.16",
+    "@grexie/compose": "^0.1.17",
     "@grexie/pages": "^0.0.13",
     "@grexie/pages-builder": "^0.0.13",
     "react": "^18.2.0",

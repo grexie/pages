@@ -188,8 +188,11 @@ export abstract class ModuleLoader {
     }
 
     if (reference.compile) {
+      console.info('loading', reference.filename);
       return this.load(context, request);
     }
+
+    console.info('requiring', reference.filename);
 
     const resolver = createResolver<InstantiatedModule>();
     this.globalModules[reference.filename] = resolver;

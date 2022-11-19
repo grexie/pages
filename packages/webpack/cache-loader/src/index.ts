@@ -112,6 +112,7 @@ export default async function CacheLoader(
                       (err, stats) => {
                         if (err) {
                           resolve(undefined);
+                          return;
                         }
 
                         resolve({

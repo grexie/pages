@@ -66,7 +66,7 @@ export default async function ModuleLoader(
     });
 
     const handler = handlerModule.exports as Handler;
-    const handlerConfig = {};
+    const handlerConfig = { metadata: {} };
 
     const configPromise = configModule.create(handlerConfig);
 

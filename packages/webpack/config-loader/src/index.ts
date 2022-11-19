@@ -46,11 +46,11 @@ export default async function PagesLoader(
       `
       import { ObjectProxy } from '@grexie/proxy';
 
-      const _metadata = ${JSON.stringify(metadata, null, 2)};
+      const _metadata = ${JSON.stringify(metadata ?? {}, null, 2)};
 
       export const config = (parent) => ObjectProxy.create({
-        metadata: ${JSON.stringify(metadata, null, 2)},
-        ...${JSON.stringify(config, null, 2)}
+        metadata: ${JSON.stringify(metadata ?? {}, null, 2)},
+        ...${JSON.stringify(config ?? {}, null, 2)}
       }, parent);
       export const metadata = (parent) => ObjectProxy.create(_metadata, parent);
     `,

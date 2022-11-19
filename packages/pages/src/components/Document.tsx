@@ -87,16 +87,18 @@ export const DocumentContent: FC<PropsWithChildren<DocumentContentProps>> =
     );
   });
 
-export const Document: FC<PropsWithChildren<{}>> = withHead(({ children }) => {
-  return (
-    <html>
-      <DocumentHead />
-      <body>
-        <DocumentRoot>{children}</DocumentRoot>
-      </body>
-    </html>
-  );
-});
+export const DefaultDocument: FC<PropsWithChildren<{}>> = withHead(
+  ({ children }) => {
+    return (
+      <html>
+        <DocumentHead />
+        <body>
+          <DocumentRoot>{children}</DocumentRoot>
+        </body>
+      </html>
+    );
+  }
+);
 
-export const withDocumentComponent = createComposable(Document);
+export const withDocumentComponent = createComposable(DefaultDocument);
 export const withDocumentContent = createComposable(DocumentContent);
