@@ -10,13 +10,15 @@ import {
 } from './FileSystem.js';
 import { CacheStorage, Cache } from './Cache.js';
 import type { BuildContext } from './BuildContext.js';
+import type { DescriptionFile } from './PluginContext.js';
 import _path from 'path';
 import { Volume } from 'memfs';
 import { ResourcesPlugin } from '@grexie/pages-resources-plugin';
 import path from 'path';
-import webpack from 'webpack';
+import webpack, { dependencies } from 'webpack';
 import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
+import { EventManager } from './EventManager.js';
 
 // const originalResolveRequestArray =
 //   NormalModuleFactory.prototype.resolveRequestArray;
@@ -81,11 +83,20 @@ import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
+const defaultDescriptionFileData: DescriptionFile = {
+  dependencies: {
+    '@grexie/pages-plugin-markdown': '*',
+    '@grexie/pages-plugin-typescript': '*',
+    '@grexie/pages-plugin-image': '*',
+    '@grexie/pages-plugin-sass': '*',
+  },
+};
+
 export class Builder {
   readonly context: BuildContext;
   readonly defaultFiles: WritableFileSystem;
-  readonly buildFiles = new FileSystem();
   readonly #builder: BuilderBase;
+  readonly #events = EventManager.get<Builder>(this);
   readonly cache: Cache;
 
   get fs() {
@@ -111,10 +122,8 @@ export class Builder {
     });
     this.defaultFiles.writeFileSync(
       _path.resolve(this.context.rootDir, 'package.json'),
-      '{}'
+      JSON.stringify(defaultDescriptionFileData, null, 2)
     );
-
-    this.#builder.fs.add('/', this.buildFiles, false, 'buildFiles');
 
     this.#builder.fs.add(
       this.context.rootDir,
@@ -215,7 +224,7 @@ export class Builder {
     }
   }
 
-  #loader(loader: string, options: any = {}): webpack.RuleSetUseItem {
+  loader(loader: string, options: any = {}): webpack.RuleSetUseItem {
     return {
       loader,
       options: {
@@ -270,8 +279,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.scss$/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-style-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
               },
@@ -285,8 +294,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.scss$/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-style-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
                 options: {
@@ -303,8 +312,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.css$/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-style-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
               },
@@ -315,8 +324,8 @@ export class Builder {
             type: 'javascript/esm',
             test: /\.css$/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-style-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-style-loader'),
               {
                 loader: 'css-loader',
                 options: {
@@ -328,19 +337,10 @@ export class Builder {
           },
           {
             type: 'javascript/esm',
-            test: /\.(png|jpe?g|gif|webp|svg)$/,
-            use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-image-loader'),
-              'raw-loader',
-            ],
-          },
-          {
-            type: 'javascript/esm',
             test: /\.pages\.([mc]?js|ts)$/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-config-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-config-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -359,9 +359,9 @@ export class Builder {
             test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-config-loader'),
-              this.#loader('@grexie/pages-yaml-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-config-loader'),
+              this.loader('@grexie/pages-yaml-loader'),
             ],
           },
           {
@@ -369,8 +369,8 @@ export class Builder {
             test: /\.(md|mdx)$/,
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-module-loader', {
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-module-loader', {
                 handler: '@grexie/pages-plugin-markdown',
               }),
             ],
@@ -382,8 +382,8 @@ export class Builder {
             //include: [/node_modules\/@mdx-js/],
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-module-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-module-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -410,8 +410,8 @@ export class Builder {
             include: [this.context.rootDir],
             exclude: /(node_modules|bower_components)/,
             use: [
-              this.#loader('@grexie/pages-cache-loader'),
-              this.#loader('@grexie/pages-module-loader'),
+              this.loader('@grexie/pages-cache-loader'),
+              this.loader('@grexie/pages-module-loader'),
               {
                 loader: 'babel-loader',
                 options: {
@@ -531,20 +531,24 @@ export class Builder {
       config.plugins!.push(new webpack.HotModuleReplacementPlugin());
     }
 
+    await this.#events.emit('after', 'config', config);
     return config;
   }
 
   async build(): Promise<WebpackStats> {
+    await this.context.ready;
     const config = await this.config();
     return this.#builder.build({ config });
   }
 
   async watch(): Promise<Watcher> {
+    await this.context.ready;
     const config = await this.config();
     return this.#builder.watch({ config });
   }
 
   async compiler(): Promise<webpack.Compiler> {
+    await this.context.ready;
     const config = await this.config();
     return this.#builder.compiler({ config });
   }

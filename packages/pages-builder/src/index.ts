@@ -11,3 +11,4 @@ export * from './ModuleContext.js';
 export * from './SourceContext.js';
 export * from './ModuleResource.js';
 export * from './Renderer.js';
+export * from './EventManager.js';

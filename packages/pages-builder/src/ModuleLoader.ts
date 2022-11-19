@@ -192,6 +192,7 @@ export abstract class ModuleLoader {
     const resolver = createResolver<InstantiatedModule>();
     this.globalModules[reference.filename] = resolver;
 
+    console.info(reference);
     try {
       const exports = await import(reference.filename);
 

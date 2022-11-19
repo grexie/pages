@@ -12,6 +12,10 @@ import type { Compiler, Compilation } from 'webpack';
 import type { ModuleResolverConfig } from './ModuleResolver.js';
 import type { SourceContextOptions } from './SourceContext.js';
 import { SourceContext } from './SourceContext.js';
+import resolve from 'enhanced-resolve';
+import { createResolver } from '@grexie/resolvable';
+import { Events, EventManager } from './EventManager.js';
+import { PluginContext } from './PluginContext.js';
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
@@ -49,6 +53,15 @@ export class BuildContext extends Context {
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly #moduleContextTable = new WeakMap<Compiler, ModuleContext>();
   readonly resolverConfig: Required<ModuleResolverConfig>;
+  readonly plugins = new Map<string, Promise<Plugin>>();
+  readonly #readyResolver = createResolver<BuildContext>();
+  readonly ready = this.#readyResolver.finally(() => {});
+  readonly #events = EventManager.get<BuildContext>(this);
+  readonly #plugins: PluginContext;
+
+  get plugins() {
+    return this.#plugins.plugins;
+  }
 
   constructor(options: BuildContextOptions & { isServer?: boolean }) {
     const {
@@ -127,12 +140,6 @@ export class BuildContext extends Context {
           '.tsx',
           '.scss',
           '.css',
-          '.jpeg',
-          '.jpg',
-          '.png',
-          '.webp',
-          '.gif',
-          '.svg',
         ])
       ),
       esmExtensions: [
@@ -159,6 +166,15 @@ export class BuildContext extends Context {
         new Set([...(resolver.forceCompileRoots ?? [])])
       ),
     };
+
+    PluginContext.create(
+      this.fs,
+      path.resolve(this.rootDir, 'package.json')
+    ).then(async plugins => {
+      this.#plugins = plugins;
+      await this.initializePlugins(plugins.plugins);
+      this.#readyResolver.resolve(this);
+    });
   }
 
   get defaultFiles() {
@@ -193,5 +209,27 @@ export class BuildContext extends Context {
 
   createSourceContext(options: SourceContextOptions) {
     return new SourceContext(options);
+  }
+
+  addCompilationRoot(...paths) {
+    this.resolverConfig.forceCompileRoots.push(...paths);
+  }
+
+  addEsmExtension(...extensions) {
+    this.resolverConfig.esmExtensions.push(...extensions);
+  }
+
+  addCompileExtension(...extensions) {
+    this.resolverConfig.forceCompileExtensions.push(...extensions);
+  }
+
+  protected async initializePlugins(plugins: Plugin[]) {
+    await Promise.all(
+      plugins.map(async plugin => {
+        const events = EventManager.get<BuildContext>(this).create(plugin.name);
+        console.info(plugin.name);
+        await plugin.handler(events);
+      })
+    );
   }
 }
