@@ -51,7 +51,7 @@
       "commitMessage": "chore: release v${version}"
     },
     "plugins": {
-      "release-it-yarn-workspaces": {
+      "@release-it/workspaces": {
         "workspaces": [
           "packages/pages*",
           "packages/plugins/*",
