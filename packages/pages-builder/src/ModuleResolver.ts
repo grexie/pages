@@ -81,9 +81,6 @@ export class ModuleResolver {
       conditionNames: ['default', 'require', 'import'],
       mainFields: ['module', 'main'],
       extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
-      alias: {
-        '@grexie/pages': this.context.pagesDir,
-      },
       modules: context.modulesDirs,
     });
 
@@ -186,6 +183,7 @@ export class ModuleResolver {
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
+      console.info(err);
       return this.#buildImport(request, { builtin: true });
     }
 
@@ -195,9 +193,7 @@ export class ModuleResolver {
 
     if (
       resolved.filename ===
-      this.#require.resolve(
-        path.resolve(this.context.pagesDir, 'lib', 'defaults.pages.js')
-      )
+      this.#require.resolve('@grexie/pages/defaults.pages')
     ) {
       return this.#buildImport(resolved.filename, {
         compile: true,

@@ -438,7 +438,6 @@ export class Builder {
       },
       resolve: {
         alias: {
-          '@grexie/pages': this.context.pagesDir,
           glob: false,
           'create-hash/md5': require.resolve('create-hash/md5'),
           'create-hash': require.resolve('create-hash/browser'),
