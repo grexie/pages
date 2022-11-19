@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-runtime-hmr",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
