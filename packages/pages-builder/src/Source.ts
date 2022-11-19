@@ -5,6 +5,7 @@ import type {
 } from '@grexie/pages/api';
 import path from 'path';
 import EventEmitter from 'events';
+import type { BuildContext } from './BuildContext.js';
 
 export interface SourceOptions {
   filename: string;
@@ -12,11 +13,13 @@ export interface SourceOptions {
 }
 
 export class Source extends EventEmitter {
+  readonly context: BuildContext;
   readonly filename: string;
   readonly #path: string[];
 
-  constructor({ filename, path }: SourceOptions) {
+  constructor({ context, filename, path }: SourceOptions) {
     super();
+    this.context = context;
     this.filename = filename;
     this.#path = path;
   }
@@ -46,7 +49,27 @@ export class Source extends EventEmitter {
     return this.path.join('/');
   }
 
+  get abspath() {
+    if (!(this.filename.startsWith('./') || this.filename.startsWith('../'))) {
+      return this.filename;
+    } else {
+      return path.resolve(this.context.rootDir, this.filename);
+    }
+  }
+
+  relpath(from: string) {
+    if (!(this.filename.startsWith('./') || this.filename.startsWith('../'))) {
+      return this.filename;
+    } else {
+      let relpath = path.relative(from, this.abspath);
+      if (!relpath.startsWith('../')) {
+        relpath = `./${relpath}`;
+      }
+      return relpath;
+    }
+  }
+
   get dirname() {
-    return path.dirname(this.filename);
+    return path.dirname(this.abspath);
   }
 }

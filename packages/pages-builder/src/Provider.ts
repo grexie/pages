@@ -28,8 +28,10 @@ export class Provider {
     rootDir: string
   ): Promise<Source | undefined> {
     const path = this.context.builder.filenameToPath(filename, rootDir);
+    filename = `./${_path.relative(this.context.rootDir, filename)}`;
 
     return new Source({
+      context: this.context,
       filename,
       path,
     });

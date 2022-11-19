@@ -54,7 +54,7 @@ class SourceCompiler {
         import.meta,
         '@grexie/pages-builder',
         '@grexie/stream',
-        this.source.filename
+        this.source.abspath
       );
     // const exports = await modules.require(import.meta, this.source.filename);
 
@@ -82,9 +82,7 @@ class SourceCompiler {
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.rootDir,
-        new EntryDependency(
-          `./${path.relative(this.context.build.rootDir, this.source.filename)}`
-        ),
+        new EntryDependency(this.source.filename),
         {
           name: this.source.slug,
           filename: this.source.slug

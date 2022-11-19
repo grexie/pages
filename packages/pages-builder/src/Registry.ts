@@ -65,6 +65,7 @@ export class Registry {
   constructor(context: BuildContext) {
     this.context = context;
     this.defaultConfig = new Source({
+      context,
       filename: '@grexie/pages/defaults.pages',
       path: [],
     });
@@ -127,7 +128,7 @@ export class Registry {
       }
       let name = path.shift()!;
       name = name[0].toUpperCase() + name.substring(1);
-      current[name] = _path.relative(resource.filename, this.context.rootDir);
+      current[name] = resource.filename;
     }
     return tree;
   }

@@ -85,7 +85,7 @@ export class SourceContext extends Source {
   }) {
     const module = await this.context
       .getModuleContext(this.compilation)
-      .createModule(path.dirname(this.filename), this.filename, source);
+      .createModule(this.dirname, this.abspath, source);
 
     const { exports } = module;
 
@@ -104,7 +104,7 @@ export class SourceContext extends Source {
         ObjectProxy.get(resource.metadata as any),
         null,
         2
-      )}, ${this.configModule.serialize(path.dirname(this.filename), false)})`;
+      )}, ${this.configModule.serialize(this.dirname, false)})`;
 
     const { code: imports } = await resource.serialize({
       serializeMetadata,
@@ -119,7 +119,7 @@ export class SourceContext extends Source {
       code: `
       import { ObjectProxy as __pages_object_proxy } from '@grexie/proxy';
       ${imports}
-      ${this.configModule.serialize(path.dirname(this.filename), true)}
+      ${this.configModule.serialize(this.dirname, true)}
 
       ${code}
     `,

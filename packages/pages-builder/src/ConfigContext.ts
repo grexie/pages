@@ -8,6 +8,7 @@ import type { Compilation } from 'webpack';
 
 export interface ConfigOptions {
   parent?: ConfigModule;
+  source: Source;
   module: InstantiatedModule;
 }
 
@@ -17,10 +18,12 @@ export interface ConfigResolverOptions {
 
 export class ConfigModule {
   readonly parent?: ConfigModule;
+  readonly source: Source;
   readonly module: InstantiatedModule;
 
-  constructor({ parent, module }: ConfigOptions) {
+  constructor({ parent, source, module }: ConfigOptions) {
     this.parent = parent;
+    this.source = source;
     this.module = module;
   }
 
@@ -50,7 +53,7 @@ export class ConfigModule {
   serialize(context: string, imports: boolean, index: number = 1): string {
     if (imports) {
       const metadataImport = `import { metadata as __pages_metadata_${index} } from ${JSON.stringify(
-        `./${path.relative(context, this.module.filename)}`
+        `${this.source.relpath(context)}`
       )}`;
 
       if (this.parent) {
@@ -92,8 +95,8 @@ export class ConfigContext {
   ): Promise<ConfigModule> {
     const _module = await this.context
       .getModuleContext(compilation)
-      .requireModule(source.dirname, source.filename);
-    return new ConfigModule({ parent, module: _module });
+      .requireModule(source.dirname, source.abspath);
+    return new ConfigModule({ parent, source, module: _module });
   }
 
   async create(

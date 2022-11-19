@@ -30,7 +30,7 @@ exports[`ModuleLoader2 should build a module 1`] = `
       import { ObjectProxy as __pages_object_proxy } from '@grexie/proxy';
       
       import { metadata as __pages_metadata_1 } from "./.pages.yml"
-import { metadata as __pages_metadata_2 } from "./../Users/tim/src/grexie/grexie-pages/packages/pages/lib/defaults.pages.js"
+import { metadata as __pages_metadata_2 } from "@grexie/pages/defaults.pages"
 
       export const resource = {
         path: ["test"],
