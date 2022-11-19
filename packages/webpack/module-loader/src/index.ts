@@ -196,7 +196,7 @@ export default async function ModuleLoader(
           extractImportsPlugin(requests),
           ...(this.hot ? [reactRefreshPlugin] : []),
         ],
-        inputSourceMap: serializedResource.map,
+        inputSourceMap: await serializedResource.map,
         sourceMaps: this.sourceMap,
       });
 
@@ -221,6 +221,7 @@ export default async function ModuleLoader(
       );
     } else {
       const requests: string[] = [];
+      console.info(inputSourceMap);
       const compiled = await transformAsync(content.toString(), {
         presets: [[babelEnvPreset, { modules: false }]],
         plugins: [
@@ -228,7 +229,7 @@ export default async function ModuleLoader(
           handlerModulePlugin,
           ...(this.hot ? [reactRefreshPlugin] : []),
         ],
-        inputSourceMap: inputSourceMap,
+        inputSourceMap: inputSourceMap || false,
         sourceMaps: this.sourceMap,
       });
 

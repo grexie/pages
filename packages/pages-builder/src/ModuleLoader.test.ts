@@ -1,5 +1,5 @@
 import path from 'path';
-import { type MockBuilder } from './MockBuilder.js';
+import { MockBuilder } from './MockBuilder.js';
 import { jest } from '@jest/globals';
 
 jest.setTimeout(30000);
@@ -8,7 +8,6 @@ describe('ModuleLoader2', () => {
   let builder: MockBuilder;
 
   beforeEach(async () => {
-    let { MockBuilder } = await import('./MockBuilder.js');
     builder = new MockBuilder();
   });
 

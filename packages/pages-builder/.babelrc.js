@@ -26,8 +26,8 @@ export default {
           '@babel/env',
           {
             targets: 'node 16',
-            modules: 'commonjs',
-            exclude: ['proposal-dynamic-import'],
+            modules: false,
+            // exclude: ['proposal-dynamic-import'],
           },
         ],
       ],

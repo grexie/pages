@@ -17,7 +17,6 @@ import path from 'path';
 import webpack from 'webpack';
 import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
-import chalk from 'chalk';
 
 // const originalResolveRequestArray =
 //   NormalModuleFactory.prototype.resolveRequestArray;
@@ -506,10 +505,7 @@ export class Builder {
       },
       plugins: [
         new ProgressBarPlugin({
-          format:
-            '  build [:bar] ' +
-            chalk.green.bold(':percent') +
-            ' (:elapsed seconds) :msg',
+          format: '  build [:bar] :percent (:elapsed seconds) :msg',
           clear: true,
           total: 0,
         }) as any,

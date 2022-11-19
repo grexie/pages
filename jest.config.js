@@ -5,14 +5,12 @@ module.exports = {
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/'],
   // projects: ['packages/*'],
-  testMatch: ['**/*.(spec|test).cjs'],
+  testMatch: ['**/*.(spec|test).js'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '^.test/',
     '^__test__/',
     '^.cache/',
     '^examples/*/build/',
-    '.test.ts$',
-    '.test.tsx$',
   ],
 };

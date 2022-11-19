@@ -30,6 +30,6 @@ const main = async (name, ...rawArgs) => {
 };
 
 main(...process.argv.slice(2)).catch(err => {
-  console.error(chalk.red(err));
+  console.error(chalk.red(err.stack));
   process.exit(1);
 });
