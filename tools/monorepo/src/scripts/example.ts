@@ -1,6 +1,5 @@
 import { execSync, spawn, spawnSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
-import path, { basename, resolve } from 'path';
+import path from 'path';
 import { getWorkspaces } from '../utils/workspaces';
 
 interface ServeOptions {
@@ -13,7 +12,7 @@ export default (
   ...args: string[]
 ) => {
   spawnSync('pages', args, {
-    cwd: path.resolve(__dirname, 'examples', name),
+    cwd: path.resolve(process.cwd(), 'examples', name),
     env: {
       ...process.env,
       PORT: `${port}`,

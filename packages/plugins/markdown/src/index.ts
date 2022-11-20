@@ -8,7 +8,6 @@ const extensions = ['.md', '.mdx'];
 
 export default (context: Events<BuildContext>) => {
   context.builder.after('config', (config: Configuration) => {
-    console.info('here');
     config.module?.rules?.push({
       type: 'javascript/esm',
       test: /\.mdx?$/,

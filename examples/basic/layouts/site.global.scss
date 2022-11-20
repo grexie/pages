@@ -1,0 +1,36 @@
+
+@import "./reset.global.scss";
+
+:root {
+  --color: white;
+  --color-heading: rgb(244, 220, 60);
+  --color-header-background: rgb(36, 50, 77);
+  --color-header: var(--color-heading);
+  --color-background: rgb(47, 66, 105);
+  --font-primary: 400 16px 'Open Sans';
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font: var(--font-primary);
+  color: var(--color);
+  background: var(--color-background);
+}
+
+#__pages_root {
+  display: flex;
+  flex-flow: column nowrap;
+  flex: 1 1 auto;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  & + p {
+    margin-top: 0.25em;
+  }
+}
+
+* + p {
+  margin-top: 0.75em;
+}
