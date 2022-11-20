@@ -212,6 +212,12 @@ export class ResourcesPlugin {
         compilation.params.normalModuleFactory
       );
 
+      if (!this.mapping) {
+        console.info('NO MAPPINGS');
+      } else {
+        console.info('MAPPINGS');
+      }
+
       const thisContext = this.context.createChild(compilation, {
         providers: [
           {
@@ -227,7 +233,7 @@ export class ResourcesPlugin {
               : {}),
           },
         ],
-        mapping: this.mapping?.mapping ?? { from: '', to: [] },
+        mapping: this.mapping?.mapping,
         rootDir: this.mapping
           ? path.resolve(this.mapping.source.dirname, this.mapping.mapping.from)
           : this.context.rootDir,
@@ -283,8 +289,10 @@ export class ResourcesPlugin {
       const stack = sourceConfigs.slice();
       let el: { config: Config; source: Source } | undefined;
       while ((el = stack.shift())) {
+        console.info(el);
         if (el.config.mappings.length) {
           for (const mapping of el.config.mappings) {
+            console.info('MAPPINGS:', el.source.filename, el.config.mappings);
             mappings.push({ ...el, mapping: normalizeMapping(mapping) });
           }
         }

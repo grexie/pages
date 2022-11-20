@@ -74,7 +74,11 @@ export interface BuildContext extends Context {
   readonly compilation?: Compilation;
   readonly entries: EntryOptions[];
   readonly entrypoints: Map<string, webpack.Entrypoint>;
-
+  readonly ancestors: BuildContext[];
+  readonly descendants: BuildContext[];
+  
+  getSource({ path}: {path: string[] }): Promise<Source>;
+  
   dispose(): void;
   isRootDir(value: string): boolean;
 
@@ -93,19 +97,22 @@ export interface BuildContext extends Context {
 
 const BuildContextTable = new WeakMap<Compilation, BuildContext>();
 
-const resolveSource = (
-  mapping: string[],
-  entries: { slug: string; filename: string }[],
-  context: string,
-  request: string
-) => {
-  let slug;
+const resolveSource = async ({
+  mapping = [],
+  context,
+  request,
+  build,
+}: {
+  mapping?: string[];
+  context: string;
+  request: string;
+  build: BuildContext;
+}) => {
+  let path: string[];
   if (request.startsWith('/')) {
     const requestPath = request.substring(1).split(/\//g);
     requestPath.unshift(...mapping);
-
-    console.info(mapping, requestPath);
-    slug = requestPath.join('/');
+    path = requestPath;
   } else {
     const contextPath = context.split(/\//g).filter(x => !!x);
     const requestPath = request.split(/\//g).filter(x => !!x);
@@ -130,17 +137,10 @@ const resolveSource = (
     }
 
     contextPath.unshift(...mapping);
-    slug = contextPath.join('/');
+    path = contextPath;
   }
 
-  console.info('!!!!!!!!', slug, context, request);
-  console.info(entries);
-  const source = entries.find(entry => entry.slug === slug);
-  if (!source) {
-    throw new Error(`unable to resolve ${request} in ${context}`);
-  }
-  console.info(source);
-  return source;
+  return build.getSource({ path });
 };
 
 const ModuleContextTable = new WeakMap<Compiler, ModuleContext>();
@@ -301,7 +301,13 @@ export class RootBuildContext extends Context implements BuildContext {
   }
 
   resolveSource(context: string, request: string) {
-    return resolveSource([], this.entries, context, request);
+    return resolveSource({
+      mapping: [],
+      entries: this.entries,
+      context: context,
+      request: request,
+      build: this,
+    });
   }
 
   isRootDir(value: string): boolean {
@@ -394,6 +400,41 @@ export class RootBuildContext extends Context implements BuildContext {
       })
     );
   }
+
+    get descendants() {
+    const out: BuildContext[] = [...this.children];
+
+    for (const child of this.children) {
+      out.push(...child.descesndants);
+    }
+
+    return out;
+  }
+
+  get ancestors() {
+    let out: BuildContext[] = [];
+    let el: BuildContext = this;
+
+    while ((el = el.parent)) {
+      out.push(el);
+    }
+
+    return out;
+  }
+
+  async getSource({ path }): Promise<Source> {
+    let stack: BuildContext[] = [...this.ancestors, this, ...this.descendants];
+    let el: BuildContext;
+
+    while((el = stack.shift())) {
+      const result = await el.registry.get({ path });
+      if (result) {
+        return result;
+      }
+    }
+
+    throw new Error(`unable to resolve ${JSON.stringify(path.join('/'))}`);
+  }
 }
 
 class ChildBuildContext extends Context implements BuildContext {
@@ -407,25 +448,39 @@ class ChildBuildContext extends Context implements BuildContext {
 
   readonly children = new Set<BuildContext>();
 
-  get entries(): { name: string; filename: string } {
-    const entries = [];
-
-    for (const entry of this.compilation.entries.values() ?? []) {
-      entries.push({
-        slug: entry.options.name,
-        filename: path.resolve(
-          this.compilation.compiler.context,
-          entry.dependencies[0].request
-        ),
-        registry: this.registry,
-      });
-    }
+  get descendants() {
+    const out: BuildContext[] = [...this.children];
 
     for (const child of this.children) {
-      entries.push(...child.entries);
+      out.push(...child.descesndants);
     }
 
-    return entries;
+    return out;
+  }
+
+  get ancestors() {
+    let out: BuildContext[] = [];
+    let el: BuildContext = this;
+
+    while ((el = el.parent)) {
+      out.push(el);
+    }
+
+    return out;
+  }
+
+  async getSource({ path: string[] }): Promise<Source> {
+    let stack: BuildContext[] = [...this.ancestors, this, ...this.descendants];
+    let el: BuildContext;
+
+    while((el = stack.shift())) {
+      const result = await el.registry.get({ path });
+      if (result) {
+        return result;
+      }
+    }
+
+    throw new Error(`unable to resolve ${JSON.stringify(path.join('/'))}`);
   }
 
   get root(): string {
@@ -531,7 +586,13 @@ class ChildBuildContext extends Context implements BuildContext {
   }
 
   resolveSource(context: string, request: string) {
-    return resolveSource(this.mapping.to, this.entries, context, request);
+    return resolveSource({
+      mapping: this.mapping?.to,
+      entries: this.entries,
+      context: context,
+      request: request,
+      build: this,
+    });
   }
 
   getModuleContext(compilation: Compilation) {
@@ -552,20 +613,15 @@ class ChildBuildContext extends Context implements BuildContext {
     const { parent, providers, rootDir, mapping, compilation } = options;
     super({ isServer: parent.isServer, isBuild: parent.isBuild });
     this.parent = parent;
-    console.info(mapping);
     this.mapping = mapping;
     parent.children.add(this);
     this.compilation = compilation;
     compilation.pagesContext = this;
     this.rootDir = rootDir;
     this.registry = new Registry(this);
-    for (const provider of this.parent.registry.providers) {
-      // this.registry.providers.add(provider);
-    }
     for (const { provider, ...config } of providers ?? []) {
       const p = new provider({ context: this, ...config });
       this.registry.providers.add(p);
-      // this.parent.registry.providers.add(p);
     }
     this.config = new ConfigContext({ context: this });
   }

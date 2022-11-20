@@ -30,7 +30,7 @@ export default async function ModuleLoader(
 
   let { ...options } = this.getOptions();
   const context = this._compilation.pagesContext as BuildContext;
-
+  console.info('MAPPING', this.resourcePath, context.mapping);
   const modules = context.getModuleContext(this._compilation!);
 
   try {
@@ -109,6 +109,7 @@ export default async function ModuleLoader(
         );
         layout = filename;
       } catch (err) {
+        console.error(this.resourcePath, err);
         composablesRequires.push(layout);
       }
 
