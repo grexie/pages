@@ -76,9 +76,9 @@ export interface BuildContext extends Context {
   readonly entrypoints: Map<string, webpack.Entrypoint>;
   readonly ancestors: BuildContext[];
   readonly descendants: BuildContext[];
-  
-  getSource({ path}: {path: string[] }): Promise<Source>;
-  
+
+  getSource({ path }: { path: string[] }): Promise<Source>;
+
   dispose(): void;
   isRootDir(value: string): boolean;
 
@@ -109,6 +109,7 @@ const resolveSource = async ({
   build: BuildContext;
 }) => {
   let path: string[];
+  console.info(mapping, context, request, new Error().stack);
   if (request.startsWith('/')) {
     const requestPath = request.substring(1).split(/\//g);
     requestPath.unshift(...mapping);
@@ -300,10 +301,9 @@ export class RootBuildContext extends Context implements BuildContext {
     return entries;
   }
 
-  resolveSource(context: string, request: string) {
+  async resolveSource(context: string, request: string) {
     return resolveSource({
       mapping: [],
-      entries: this.entries,
       context: context,
       request: request,
       build: this,
@@ -401,11 +401,11 @@ export class RootBuildContext extends Context implements BuildContext {
     );
   }
 
-    get descendants() {
+  get descendants() {
     const out: BuildContext[] = [...this.children];
 
     for (const child of this.children) {
-      out.push(...child.descesndants);
+      out.push(...child.descendants);
     }
 
     return out;
@@ -426,7 +426,7 @@ export class RootBuildContext extends Context implements BuildContext {
     let stack: BuildContext[] = [...this.ancestors, this, ...this.descendants];
     let el: BuildContext;
 
-    while((el = stack.shift())) {
+    while ((el = stack.shift())) {
       const result = await el.registry.get({ path });
       if (result) {
         return result;
@@ -452,7 +452,7 @@ class ChildBuildContext extends Context implements BuildContext {
     const out: BuildContext[] = [...this.children];
 
     for (const child of this.children) {
-      out.push(...child.descesndants);
+      out.push(...child.descendants);
     }
 
     return out;
@@ -469,16 +469,21 @@ class ChildBuildContext extends Context implements BuildContext {
     return out;
   }
 
-  async getSource({ path: string[] }): Promise<Source> {
+  async getSource({ path }): Promise<Source> {
     let stack: BuildContext[] = [...this.ancestors, this, ...this.descendants];
     let el: BuildContext;
 
-    while((el = stack.shift())) {
+    let out = [];
+
+    while ((el = stack.shift())) {
+      out.push(...(await el.registry.list()));
       const result = await el.registry.get({ path });
       if (result) {
         return result;
       }
     }
+
+    console.info(out.map(({ slug }) => slug));
 
     throw new Error(`unable to resolve ${JSON.stringify(path.join('/'))}`);
   }
@@ -585,10 +590,9 @@ class ChildBuildContext extends Context implements BuildContext {
     return false;
   }
 
-  resolveSource(context: string, request: string) {
+  async resolveSource(context: string, request: string) {
     return resolveSource({
       mapping: this.mapping?.to,
-      entries: this.entries,
       context: context,
       request: request,
       build: this,

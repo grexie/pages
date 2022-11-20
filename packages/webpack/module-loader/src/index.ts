@@ -103,7 +103,11 @@ export default async function ModuleLoader(
 
     for (let layout of layouts) {
       try {
-        const { filename } = context.resolveSource(sourceContext.slug, layout);
+        console.info(this.resourcePath);
+        const { filename } = await context.resolveSource(
+          sourceContext.slug,
+          layout
+        );
         composablesRequires.push(
           `./${_path.relative(_path.dirname(this.resourcePath), filename)}`
         );

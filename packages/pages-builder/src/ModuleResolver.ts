@@ -105,13 +105,13 @@ export class ModuleResolver {
                   this.context.mapping &&
                   context.startsWith(this.context.mapping?.from)
                 ) {
-                  const newrequest = this.context.resolveSource(
+                  resolve(this.context.resolveSource(
                     path.relative(this.context.mapping.from, context),
                     request
-                  ).filename;
-
-                  console.info('*******', context, newrequest);
-                  resolve(this.#resolve(context, newrequest, true));
+                  ).then(({ filename }) => {
+                    return this.#resolve(context, filename, true));
+                  }))
+  
                   return;
                 }
               } catch (err2) {}
