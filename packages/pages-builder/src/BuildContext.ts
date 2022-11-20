@@ -128,7 +128,6 @@ export class BuildContext extends Context {
       forceCompileExtensions: Array.from(
         new Set([
           ...(resolver.forceCompileExtensions ?? []),
-          '.md',
           '.pages.yml',
           '.pages.yaml',
           '.pages.json',
@@ -146,15 +145,8 @@ export class BuildContext extends Context {
           ...(resolver.esmExtensions ?? []),
           '.scss',
           '.css',
-          '.jpeg',
-          '.jpg',
-          '.png',
-          '.webp',
-          '.gif',
-          '.svg',
           '.pages.yml',
           '.pages.yaml',
-          '.md',
           '.jsx',
           '.ts',
           '.tsx',
@@ -213,6 +205,10 @@ export class BuildContext extends Context {
 
   addCompilationRoot(...paths: string[]) {
     this.resolverConfig.forceCompileRoots.push(...paths);
+  }
+
+  addResolveExtension(...extensions: string[]) {
+    this.resolverConfig.extensions.push(...extensions);
   }
 
   addEsmExtension(...extensions: string[]) {
