@@ -2,4 +2,12 @@
   background: var(--color-header-background);
   color: var(--color-header);
   padding: 1em;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+
+.logo {
+  color: white;
+  margin-right: 0.5em;
 }

@@ -2,11 +2,11 @@
 @import "./reset.global.scss";
 
 :root {
-  --color: white;
-  --color-heading: rgb(244, 220, 60);
-  --color-header-background: rgb(36, 50, 77);
-  --color-header: var(--color-heading);
-  --color-background: rgb(47, 66, 105);
+  --color: rgb(64, 46, 73);
+  --color-heading: var(--color);
+  --color-header-background: rgb(123, 25, 235);
+  --color-header: white;
+  --color-background: rgb(249, 236, 255);
   --font-primary: 400 16px 'Open Sans';
 }
 
@@ -26,6 +26,8 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+  
   & + p {
     margin-top: 0.25em;
   }
@@ -33,4 +35,10 @@ h1, h2, h3, h4, h5, h6 {
 
 * + p {
   margin-top: 0.75em;
+}
+
+svg {
+  path {
+    fill: currentColor;
+  }
 }
