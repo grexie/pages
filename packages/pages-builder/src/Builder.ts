@@ -366,17 +366,6 @@ export class Builder {
           },
           {
             type: 'javascript/esm',
-            test: /\.(md|mdx)$/,
-            exclude: /(node_modules|bower_components)/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-module-loader', {
-                handler: '@grexie/pages-plugin-markdown',
-              }),
-            ],
-          },
-          {
-            type: 'javascript/esm',
             test: /\.(jsx?|mjs|cjs)$/,
             include: [this.context.rootDir],
             //include: [/node_modules\/@mdx-js/],

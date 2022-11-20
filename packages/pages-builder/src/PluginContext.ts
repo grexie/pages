@@ -2,6 +2,7 @@ import { EventManager, Events } from './EventManager.js';
 import type { ReadableFileSystem } from './FileSystem.js';
 import type { BuildContext } from './BuildContext.js';
 import resolve from 'enhanced-resolve';
+import { DescriptionFileUtils } from 'enhanced-resolve/lib/util';
 import path from 'path';
 import { createRequire } from 'module';
 
@@ -66,7 +67,7 @@ export class PluginContext {
     return resolve.ResolverFactory.createResolver({
       modules: modulesDirs,
       fileSystem: this.#fs as any,
-      exportsFields: ['@grexie/pages'],
+      conditionNames: ['@grexie/pages'],
       resolveToContext,
       useSyncFileSystemCalls: true,
     });
@@ -79,11 +80,11 @@ export class PluginContext {
 
     let resolved: string | boolean;
     try {
-      resolved = this.createPluginResolver(true).resolveSync(
-        {},
-        context,
-        request
-      );
+      const resolver = this.createPluginResolver(false);
+      resolver.hooks.result.tap('describe', (request, context) => {
+        resolved = request.descriptionFileRoot;
+      });
+      resolver.resolveSync({}, context, request);
 
       if (!resolved) {
         return;
@@ -125,7 +126,9 @@ export class PluginContext {
       );
       this.#plugins.set(request, plugin);
       this.createPlugins(path.resolve(resolved, 'package.json'));
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   protected createPlugins(descriptionFile: string) {
