@@ -10,6 +10,7 @@
     "tools/*"
   ],
   "scripts": {
+    "example": "monorepo example",
     "clean": "git clean -dfX && yarn install --force && yarn build",
     "start": "npm-run-all -p start:types start:build",
     "start:types": "yarn build:types -w --preserveWatchOutput",
