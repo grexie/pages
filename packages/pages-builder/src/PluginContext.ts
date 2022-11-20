@@ -2,7 +2,6 @@ import { EventManager, Events } from './EventManager.js';
 import type { ReadableFileSystem } from './FileSystem.js';
 import type { BuildContext } from './BuildContext.js';
 import resolve from 'enhanced-resolve';
-import { DescriptionFileUtils } from 'enhanced-resolve/lib/util';
 import path from 'path';
 import { createRequire } from 'module';
 
@@ -78,11 +77,11 @@ export class PluginContext {
       return;
     }
 
-    let resolved: string | boolean;
+    let resolved: string | false = false;
     try {
       const resolver = this.createPluginResolver(false);
       resolver.hooks.result.tap('describe', (request, context) => {
-        resolved = request.descriptionFileRoot;
+        resolved = request.descriptionFileRoot ?? false;
       });
       resolver.resolveSync({}, context, request);
 

@@ -28,7 +28,8 @@ export default async function ModuleLoader(
     console.info('module-loader', this.resourcePath);
   }
 
-  const { context, ...options } = this.getOptions();
+  let { ...options } = this.getOptions();
+  const context = this._compilation.pagesContext as BuildContext;
 
   const modules = context.getModuleContext(this._compilation!);
 
@@ -101,17 +102,13 @@ export default async function ModuleLoader(
     }
 
     for (let layout of layouts) {
-      if (/^\./.test(layout)) {
-        layout = _path.resolve(_path.dirname(this.resourcePath), layout);
+      try {
+        const { filename } = context.resolveSource(sourceContext.slug, layout);
         composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
+          `./${_path.relative(_path.dirname(this.resourcePath), filename)}`
         );
-      } else if (/^\//.test(layout)) {
-        layout = _path.resolve(context.rootDir, layout.substring(1));
-        composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
-        );
-      } else {
+        layout = filename;
+      } catch (err) {
         composablesRequires.push(layout);
       }
 

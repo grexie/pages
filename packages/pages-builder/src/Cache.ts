@@ -30,7 +30,7 @@ export interface ICache extends IReadOnlyCache {
   set: (
     filename: string,
     content: Buffer | string,
-    modified: Date | number
+    modified?: Date | number
   ) => Promise<void>;
   remove: (filename: string) => Promise<void>;
   create: (name: string, storage?: CacheType) => ICache;

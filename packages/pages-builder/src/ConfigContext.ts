@@ -5,6 +5,7 @@ import type { InstantiatedModule } from './ModuleLoader.js';
 import { ObjectProxy } from '@grexie/proxy';
 import path from 'path';
 import type { Compilation } from 'webpack';
+import { Registry } from './Registry.js';
 
 export interface ConfigOptions {
   parent?: ConfigModule;

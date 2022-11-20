@@ -367,7 +367,7 @@ export class Builder {
           {
             type: 'javascript/esm',
             test: /\.(jsx?|mjs|cjs)$/,
-            include: [this.context.rootDir],
+            include: [this.context.isRootDir.bind(this.context)],
             //include: [/node_modules\/@mdx-js/],
             exclude: /(node_modules|bower_components)/,
             use: [
@@ -396,7 +396,7 @@ export class Builder {
           {
             type: 'javascript/esm',
             test: /\.(ts|tsx)$/,
-            include: [this.context.rootDir],
+            include: [this.context.isRootDir.bind(this.context)],
             exclude: /(node_modules|bower_components)/,
             use: [
               this.loader('@grexie/pages-cache-loader'),

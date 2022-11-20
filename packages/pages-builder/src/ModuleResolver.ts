@@ -67,14 +67,14 @@ export class ModuleResolver {
     this.#realpath = promisify(this.#fs, this.#fs.realpath!);
     this.#stat = promisify(this.#fs, this.#fs.stat);
     this.#require = createRequire(import.meta.url);
-    this.#forceCompileRoots = [...new Set([...(forceCompileRoots ?? [])])];
-    this.#extensions = extensions;
-    this.#forceCompileExtensions = forceCompileExtensions;
-    this.#esmExtensions = esmExtensions;
+    this.#forceCompileRoots = forceCompileRoots ?? [];
+    this.#extensions = extensions ?? [];
+    this.#forceCompileExtensions = forceCompileExtensions ?? [];
+    this.#esmExtensions = esmExtensions ?? [];
 
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
-      conditionNames: ['default', 'require', 'import'],
+      conditionNames: ['import', 'default', 'require'],
       mainFields: ['module', 'main'],
       extensions: extensions,
       modules: context.modulesDirs,
@@ -82,27 +82,60 @@ export class ModuleResolver {
 
     this.#resolve = async (
       context: string,
-      request: string
+      request: string,
+      fullySpecified: boolean = false
     ): Promise<WebpackResolveInfo> => {
-      return new Promise((resolve, reject) =>
-        resolver.resolve({}, context, request, {}, (err, result, request) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+      console.info('88888', context, request);
+      let _resolver = resolver;
+      if (fullySpecified) {
+        _resolver = resolver.withOptions({
+          fullySpecified: true,
+        });
+      }
+      return new Promise((resolve, reject) => {
+        _resolver.resolve(
+          {},
+          context,
+          request,
+          {},
+          (err, result, requestResult) => {
+            if (err) {
+              try {
+                if (
+                  this.context.mapping &&
+                  context.startsWith(this.context.mapping?.from)
+                ) {
+                  const newrequest = this.context.resolveSource(
+                    path.relative(this.context.mapping.from, context),
+                    request
+                  ).filename;
 
-          if (typeof result !== 'string') {
-            reject(new Error('not found'));
-          }
+                  console.info('*******', context, newrequest);
+                  resolve(this.#resolve(context, newrequest, true));
+                  return;
+                }
+              } catch (err2) {}
+              reject(err);
+              return;
+            }
 
-          resolve({
-            filename: result as string,
-            descriptionFile: request?.descriptionFilePath,
-            descriptionFileRoot: request?.descriptionFileRoot,
-            descriptionFileData: request?.descriptionFileData,
-          });
-        })
-      );
+            if (/Header/.test(request)) {
+              console.info(result, requestResult);
+            }
+
+            if (typeof result !== 'string') {
+              reject(new Error('not found'));
+            }
+
+            resolve({
+              filename: result as string,
+              descriptionFile: requestResult?.descriptionFilePath,
+              descriptionFileRoot: requestResult?.descriptionFileRoot,
+              descriptionFileData: requestResult?.descriptionFileData,
+            });
+          }
+        );
+      });
     };
   }
 
@@ -179,7 +212,7 @@ export class ModuleResolver {
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
-      console.info(err);
+      // console.info(err);
       return this.#buildImport(request, { builtin: true });
     }
 

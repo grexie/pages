@@ -9,6 +9,7 @@ import { transform } from '@svgr/core';
 import { transform as babelTransform } from '@babel/core';
 import babelPresetReact from '@babel/preset-react';
 import babelPresetEnv from '@babel/preset-env';
+import { promisify } from '@grexie/promisify';
 
 const { RawSource } = webpack.sources;
 
@@ -47,7 +48,9 @@ export default async function ImageLoader(
       .substring(0, 6);
     const filename = path.join('images', `${basename}-${hash}${extname}`);
 
-    const content = await context.fs.readFile(this.resourcePath);
+    const readFile = promisify(context.fs, context.fs.readFile);
+
+    const content = await readFile(this.resourcePath);
     const image = await sharp(content);
     const metadata = await image.metadata();
 

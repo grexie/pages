@@ -1,9 +1,9 @@
 import fs from 'fs';
 import { Provider } from '../Provider.js';
-import { BuildContext } from '../BuildContext.js';
+import { RootBuildContext } from '../BuildContext.js';
 
 export default async () => {
-  const context = new BuildContext({
+  const context = new RootBuildContext({
     providers: [
       {
         provider: Provider,
