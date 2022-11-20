@@ -433,7 +433,7 @@ export class Builder {
         },
         conditionNames: ['deno', 'default', 'require', 'import'],
         mainFields: ['module', 'main'],
-        extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
+        extensions: this.context.resolverConfig.extensions,
         modules: this.context.modulesDirs,
         fallback: {
           fs: false,

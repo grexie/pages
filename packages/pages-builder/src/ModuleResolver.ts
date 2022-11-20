@@ -68,19 +68,15 @@ export class ModuleResolver {
     this.#stat = promisify(this.#fs, this.#fs.stat);
     this.#require = createRequire(import.meta.url);
     this.#forceCompileRoots = [...new Set([...(forceCompileRoots ?? [])])];
-    this.#extensions = [
-      ...new Set(['.js', '.cjs', '.mjs', ...(extensions ?? [])]),
-    ];
-    this.#forceCompileExtensions = [
-      ...new Set([...(forceCompileExtensions ?? [])]),
-    ];
-    this.#esmExtensions = [...new Set(['.mjs', ...(esmExtensions ?? [])])];
+    this.#extensions = extensions;
+    this.#forceCompileExtensions = forceCompileExtensions;
+    this.#esmExtensions = esmExtensions;
 
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
       conditionNames: ['default', 'require', 'import'],
       mainFields: ['module', 'main'],
-      extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
+      extensions: extensions,
       modules: context.modulesDirs,
     });
 

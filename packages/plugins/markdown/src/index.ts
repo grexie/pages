@@ -11,7 +11,7 @@ export default (context: Events<BuildContext>) => {
     console.info('here');
     config.module?.rules?.push({
       type: 'javascript/esm',
-      test: /\.(md|mdx)$/,
+      test: /\.mdx?$/,
       exclude: /(node_modules|bower_components)/,
       use: [
         context.builder.loader('@grexie/pages-cache-loader'),
@@ -23,9 +23,8 @@ export default (context: Events<BuildContext>) => {
   });
 
   context.after('config', (context: BuildContext) => {
-    for (const ext of extensions) {
-      context.addEsmExtension(ext);
-      context.addCompileExtension(ext);
-    }
+    context.addResolveExtension(...extensions);
+    context.addEsmExtension(...extensions);
+    context.addCompileExtension(...extensions);
   });
 };

@@ -78,13 +78,18 @@ export class Provider {
         );
       }
 
-      const files = await globAsync(`**/*.{ts,tsx,js,jsx,md,pages.yml}`, {
-        cwd: this.context.rootDir,
-        nodir: true,
-        dot: true,
-        fs: this.context.fs as any,
-        ignore,
-      });
+      const files = await globAsync(
+        `**/*.{${this.context.resolverConfig.extensions
+          .map(ext => ext.substring(1))
+          .join(',')}}`,
+        {
+          cwd: this.context.rootDir,
+          nodir: true,
+          dot: true,
+          fs: this.context.fs as any,
+          ignore,
+        }
+      );
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>

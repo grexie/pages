@@ -116,7 +116,6 @@ export class BuildContext extends Context {
           ...(resolver.extensions ?? []),
           '.yml',
           '.yaml',
-          '.md',
           '.js',
           '.cjs',
           '.mjs',
