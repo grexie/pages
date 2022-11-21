@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-image",
-  "version": "0.0.15",
+  "version": "0.0.17",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -13,9 +13,9 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.15",
-    "@grexie/pages-builder": "^0.0.15",
-    "@grexie/pages-image-loader": "^0.0.15",
+    "@grexie/pages": "^0.0.17",
+    "@grexie/pages-builder": "^0.0.17",
+    "@grexie/pages-image-loader": "^0.0.17",
     "raw-loader": "^4.0.2"
   },
   "exports": {
