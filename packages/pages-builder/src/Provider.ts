@@ -11,12 +11,24 @@ const globAsync = promisify(glob);
 export class Provider {
   readonly context: BuildContext;
   readonly #exclude: string[];
+  readonly rootDir: string;
+  readonly parentRootDir: string;
+  readonly basePath: string[];
   #scanning: boolean = false;
   #sources: ResolvablePromise<Record<string, Source>>;
   #configs: ResolvablePromise<Record<string, Source>>;
 
-  constructor({ context, exclude = [] }: ProviderOptions) {
+  constructor({
+    context,
+    rootDir = context.rootDir,
+    parentRootDir = context.rootDir,
+    basePath = [],
+    exclude = [],
+  }: ProviderOptions) {
     this.context = context;
+    this.parentRootDir = parentRootDir;
+    this.rootDir = rootDir;
+    this.basePath = basePath;
 
     this.#sources = createResolver();
     this.#configs = createResolver();
@@ -27,8 +39,10 @@ export class Provider {
     filename: string,
     rootDir: string
   ): Promise<Source | undefined> {
-    const path = this.context.builder.filenameToPath(filename, rootDir);
-    filename = `./${_path.relative(this.context.rootDir, filename)}`;
+    let path = this.context.builder.filenameToPath(filename, rootDir);
+    path = [...this.basePath, ...path];
+
+    filename = `./${_path.relative(this.context.root.rootDir, filename)}`;
 
     return new Source({
       context: this.context,
@@ -60,38 +74,34 @@ export class Provider {
         ...this.#exclude,
       ];
 
-      if (this.context.outputDir.startsWith(this.context.rootDir)) {
+      if (this.context.outputDir.startsWith(this.rootDir)) {
         ignore.push(
-          _path.relative(
-            this.context.rootDir,
-            _path.join(this.context.outputDir, '**')
-          )
+          _path.relative(this.rootDir, _path.join(this.context.outputDir, '**'))
         );
       }
 
-      if (this.context.cacheDir.startsWith(this.context.rootDir)) {
+      if (this.context.cacheDir.startsWith(this.rootDir)) {
         ignore.push(
-          _path.relative(
-            this.context.rootDir,
-            _path.join(this.context.cacheDir, '**')
-          )
+          _path.relative(this.rootDir, _path.join(this.context.cacheDir, '**'))
         );
       }
 
-      const files = await globAsync(`**/*.{ts,tsx,js,jsx,md,pages.yml}`, {
-        cwd: this.context.rootDir,
-        nodir: true,
-        dot: true,
-        fs: this.context.fs as any,
-        ignore,
-      });
+      const files = await globAsync(
+        `**/*.{${this.context.resolverConfig.extensions
+          .map(ext => ext.substring(1))
+          .join(',')}}`,
+        {
+          cwd: this.rootDir,
+          nodir: true,
+          dot: true,
+          fs: this.context.fs as any,
+          ignore,
+        }
+      );
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>
-          this.create(
-            _path.resolve(this.context.rootDir, filename),
-            this.context.rootDir
-          )
+          this.create(_path.resolve(this.rootDir, filename), this.rootDir)
         )
       );
 

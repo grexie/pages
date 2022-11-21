@@ -67,46 +67,63 @@ export class ModuleResolver {
     this.#realpath = promisify(this.#fs, this.#fs.realpath!);
     this.#stat = promisify(this.#fs, this.#fs.stat);
     this.#require = createRequire(import.meta.url);
-    this.#forceCompileRoots = [...new Set([...(forceCompileRoots ?? [])])];
-    this.#extensions = [
-      ...new Set(['.js', '.cjs', '.mjs', ...(extensions ?? [])]),
-    ];
-    this.#forceCompileExtensions = [
-      ...new Set([...(forceCompileExtensions ?? [])]),
-    ];
-    this.#esmExtensions = [...new Set(['.mjs', ...(esmExtensions ?? [])])];
+    this.#forceCompileRoots = forceCompileRoots ?? [];
+    this.#extensions = extensions ?? [];
+    this.#forceCompileExtensions = forceCompileExtensions ?? [];
+    this.#esmExtensions = esmExtensions ?? [];
 
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
-      conditionNames: ['default', 'require', 'import'],
+      conditionNames: ['import', 'default', 'require'],
       mainFields: ['module', 'main'],
-      extensions: ['.md', '.js', '.jsx', '.ts', '.tsx', '.cjs', '.mjs'],
+      extensions: extensions,
       modules: context.modulesDirs,
+      fullySpecified: false,
     });
 
     this.#resolve = async (
       context: string,
-      request: string
+      request: string,
+      fullySpecified: boolean = false
     ): Promise<WebpackResolveInfo> => {
-      return new Promise((resolve, reject) =>
-        resolver.resolve({}, context, request, {}, (err, result, request) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+      let _resolver = resolver;
+      return new Promise((resolve, reject) => {
+        _resolver.resolve(
+          {},
+          context,
+          request,
+          {},
+          (err, result, requestResult) => {
+            if (err) {
+              this.context.sources
+                .resolve({
+                  context: path
+                    .relative(this.context.rootDir, context)
+                    .split(/\//g)
+                    .filter(x => !!x),
+                  request,
+                })
+                .then(({ abspath }) => {
+                  return this.#resolve(context, abspath, true);
+                })
+                .then(resolve, reject);
 
-          if (typeof result !== 'string') {
-            reject(new Error('not found'));
-          }
+              return;
+            }
 
-          resolve({
-            filename: result as string,
-            descriptionFile: request?.descriptionFilePath,
-            descriptionFileRoot: request?.descriptionFileRoot,
-            descriptionFileData: request?.descriptionFileData,
-          });
-        })
-      );
+            if (typeof result !== 'string') {
+              reject(new Error('not found'));
+            }
+
+            resolve({
+              filename: result as string,
+              descriptionFile: requestResult?.descriptionFilePath,
+              descriptionFileRoot: requestResult?.descriptionFileRoot,
+              descriptionFileData: requestResult?.descriptionFileData,
+            });
+          }
+        );
+      });
     };
   }
 
@@ -183,7 +200,6 @@ export class ModuleResolver {
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
-      console.info(err);
       return this.#buildImport(request, { builtin: true });
     }
 

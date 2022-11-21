@@ -1,6 +1,6 @@
 import { FC, ComponentType } from 'react';
 import type { Metadata } from 'sharp';
-import styles from './image.global.css';
+import styles from './index.global.css';
 
 interface ImageSize {
   size?: number | string;

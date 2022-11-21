@@ -1,15 +1,22 @@
-import type { Source, BuildContext } from '@grexie/pages-builder';
+import { Source, BuildContext, Provider } from '@grexie/pages-builder';
 import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { Renderer } from '@grexie/pages-builder';
 import { WritableBuffer } from '@grexie/stream';
-import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
+import { ResourceDependency } from '@grexie/pages-builder';
+import { Config, Mapping, NormalizedMapping } from '@grexie/pages';
 
 const { RawSource } = webpack.sources;
 
 export interface ResourcesPluginOptions {
   context: BuildContext;
+  mapping?: {
+    source: Source;
+    mapping: NormalizedMapping;
+    config: Config;
+  };
+  seen?: Set<string>;
 }
 
 export interface CompilationContextOptions {
@@ -36,10 +43,12 @@ class CompilationContext {
 class SourceCompiler {
   readonly context: CompilationContext;
   readonly source: Source;
+  readonly config: Config;
 
-  constructor(context: CompilationContext, source: Source) {
+  constructor(context: CompilationContext, source: Source, config: Config) {
     this.context = context;
     this.source = source;
+    this.config = config;
   }
 
   async render(compilation: Compilation, scripts: string[]) {
@@ -56,7 +65,6 @@ class SourceCompiler {
         '@grexie/stream',
         this.source.abspath
       );
-    // const exports = await modules.require(import.meta, this.source.filename);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendering', this.source.filename);
@@ -82,7 +90,11 @@ class SourceCompiler {
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.rootDir,
-        new EntryDependency(this.source.filename),
+        new ResourceDependency({
+          request: this.source.filename,
+          context: this.context.build,
+          source: this.source,
+        }),
         {
           name: this.source.slug,
           filename: this.source.slug
@@ -154,6 +166,7 @@ class SourceCompiler {
           ),
           buffer!
         );
+
         compilation.emitAsset(
           path.join(this.source.slug, 'index.html'),
           new RawSource(buffer!)
@@ -172,9 +185,17 @@ class SourceCompiler {
 
 export class ResourcesPlugin {
   readonly context: BuildContext;
+  readonly mapping?;
+  readonly seen;
 
-  constructor({ context }: ResourcesPluginOptions) {
+  constructor({
+    context,
+    mapping,
+    seen = new Set<string>(),
+  }: ResourcesPluginOptions) {
     this.context = context;
+    this.mapping = mapping;
+    this.seen = seen;
   }
 
   getEntries(compilation: Compilation) {
@@ -186,43 +207,135 @@ export class ResourcesPlugin {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(
-        EntryDependency,
+        ResourceDependency,
         compilation.params.normalModuleFactory
       );
 
-      let sources = await this.context.registry.list();
+      const thisContext = this.context.sources.createChild(compilation, {
+        providers: [
+          {
+            provider: Provider,
+            ...(this.mapping
+              ? {
+                  rootDir: path.resolve(
+                    this.mapping.source.dirname,
+                    this.mapping.mapping.from
+                  ),
+                  basePath: this.mapping.mapping.to,
+                }
+              : {}),
+          },
+        ],
+        mapping: this.mapping?.mapping,
+        rootDir: this.mapping
+          ? path.resolve(this.mapping.source.dirname, this.mapping.mapping.from)
+          : this.context.rootDir,
+      });
+
+      let sources = await thisContext.registry.list();
 
       const context = new CompilationContext({
-        build: this.context,
+        build: thisContext,
         compilation,
       });
 
       context.modules.reset();
 
-      sources = (
+      const sourceConfigs = (
         await Promise.all(
           sources.map(async source => {
             const config = await (
               await context.build.config.create(compilation, source.path)
             ).create();
 
-            if (config.render) {
-              return source;
+            if (this.seen.has(source.slug)) {
+              return;
             }
+
+            if (!config.render) {
+              return;
+            }
+
+            this.seen.add(source.slug);
+
+            return { source, config };
           })
         )
-      ).filter(x => !!x) as Source[];
+      ).filter(x => !!x);
 
-      await Promise.all(
-        sources.map(async source => {
-          const sourceCompiler = new SourceCompiler(context, source);
+      const normalizeMapping = (mapping: Mapping): NormalizedMapping => {
+        if (typeof mapping === 'string') {
+          const [from, to] = mapping.split(/:/g);
+          mapping = { from, to };
+        } else {
+          mapping = { ...mapping };
+        }
+
+        if (typeof mapping.to === 'string') {
+          mapping.to = mapping.to.split(/\//g);
+          mapping.to = mapping.to.filter(x => !!x);
+        }
+
+        return mapping as NormalizedMapping;
+      };
+
+      const mappings: {
+        source: Source;
+        config: Config;
+        mapping: NormalizedMapping;
+      }[] = [];
+      const stack = sourceConfigs.slice();
+      let el: { config: Config; source: Source } | undefined;
+      while ((el = stack.shift())) {
+        if (el.config.mappings.length) {
+          for (const mapping of el.config.mappings) {
+            mappings.push({ ...el, mapping: normalizeMapping(mapping) });
+          }
+        }
+      }
+
+      const promises: Promise<void>[] = [];
+      for (const mapping of mappings) {
+        thisContext.addCompilationRoot(
+          path.resolve(mapping.source.dirname, mapping.mapping.from)
+        );
+        const compiler = compilation.createChildCompiler(
+          'ResourcesPlugin',
+          {},
+          [
+            new ResourcesPlugin({
+              context: thisContext,
+              mapping,
+              seen: this.seen,
+            }),
+          ]
+        );
+
+        promises.push(
+          new Promise((resolve, reject) => {
+            compiler.runAsChild(err => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve();
+            });
+          })
+        );
+      }
+
+      await Promise.all([
+        ...sourceConfigs.map(async ({ source, config }) => {
+          const sourceCompiler = new SourceCompiler(context, source, config);
           await sourceCompiler.makeHook(
             'ResourcesPlugin',
             compiler,
             compilation
           );
-        })
-      );
+        }),
+        ...promises,
+      ]);
     });
   }
 }

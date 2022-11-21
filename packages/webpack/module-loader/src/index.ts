@@ -1,4 +1,4 @@
-import type { LoaderContext } from 'webpack';
+import type { Dependency, LoaderContext } from 'webpack';
 import type { BuildContext } from '@grexie/pages-builder';
 import type { InstantiatedModule } from '@grexie/pages-builder';
 import type { Handler } from '@grexie/pages-builder';
@@ -10,6 +10,7 @@ import babelEnvPreset from '@babel/preset-env';
 import reactRefreshPlugin from 'react-refresh/babel';
 import { offsetLines } from '@grexie/source-maps';
 import { createComposable } from '@grexie/compose';
+import webpack from 'webpack';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
@@ -24,16 +25,29 @@ export default async function ModuleLoader(
   const callback = this.async();
   this.cacheable(false);
 
+  const { getModuleDependency, ResourceDependency } = await import(
+    '@grexie/pages-builder'
+  );
+
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
   }
 
-  const { context, ...options } = this.getOptions();
+  let { context, ...options } = this.getOptions();
+
+  const dependency = getModuleDependency(
+    this._compilation,
+    this._module
+  ) as ResourceDependency;
+
+  if (dependency instanceof ResourceDependency) {
+    context = dependency.context;
+  }
 
   const modules = context.getModuleContext(this._compilation!);
 
   try {
-    const path = context.builder.filenameToPath(this.resourcePath);
+    let path = context.builder.filenameToPath(this.resourcePath);
 
     const createHandler = async () => {
       let handlerModule: InstantiatedModule;
@@ -101,17 +115,18 @@ export default async function ModuleLoader(
     }
 
     for (let layout of layouts) {
-      if (/^\./.test(layout)) {
-        layout = _path.resolve(_path.dirname(this.resourcePath), layout);
+      try {
+        const { abspath } = await context.sources.resolve({
+          context: sourceContext.path,
+          request: layout,
+        });
+
         composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
+          `./${_path.relative(_path.dirname(this.resourcePath), abspath)}`
         );
-      } else if (/^\//.test(layout)) {
-        layout = _path.resolve(context.rootDir, layout.substring(1));
-        composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), layout)}`
-        );
-      } else {
+        layout = abspath;
+      } catch (err) {
+        console.error(this.resourcePath, err);
         composablesRequires.push(layout);
       }
 

@@ -1,4 +1,4 @@
-import { BuildContext } from './BuildContext.js';
+import { BuildContext, RootBuildContext } from './BuildContext.js';
 import { Provider } from './Provider.js';
 import { ResourceMetadata } from '@grexie/pages/api';
 import { Volume } from 'memfs';
@@ -98,7 +98,7 @@ export interface MockBuilderOptions {
   clean?: boolean;
 }
 
-export class MockBuilder extends BuildContext {
+export class MockBuilder extends RootBuildContext {
   constructor({ builder, clean = true }: MockBuilderOptions = {}) {
     const providers = [
       {

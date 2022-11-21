@@ -1,7 +1,7 @@
 import http from 'http';
 import {
   Stats,
-  BuildContext,
+  RootBuildContext,
   BuildContextOptions,
 } from '@grexie/pages-builder';
 import { ResolvablePromise, createResolver } from '@grexie/resolvable';
@@ -21,7 +21,7 @@ interface ServerContextOptions extends ServerOptions {
   server: Server;
 }
 
-export class ServerContext extends BuildContext {
+export class ServerContext extends RootBuildContext {
   readonly server: Server;
 
   readonly port: number;
