@@ -1,5 +1,7 @@
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 import webpack from 'webpack';
+import type { BuildContext } from './BuildContext.js';
+import type { Source } from './Source.js';
 
 export interface ResourceDependencyOptions {
   request: string;

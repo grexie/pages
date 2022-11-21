@@ -17,6 +17,7 @@ import { Compiler, Compilation, EntryOptions } from 'webpack';
 import type { ModuleResolverConfig } from './ModuleResolver.js';
 import type { SourceContextOptions } from './SourceContext.js';
 import { SourceContext } from './SourceContext.js';
+import { Source } from './Source.js';
 import resolve from 'enhanced-resolve';
 import { createResolver } from '@grexie/resolvable';
 import { Events, EventManager, EventPhase } from './EventManager.js';
@@ -100,7 +101,7 @@ class SourceResolver {
   readonly children = new Set<SourceResolver>();
   // readonly mappings: Record<string, SourceResolver> = {};
 
-  get parent() {
+  get parent(): SourceResolver | undefined {
     if (!this.context.parent) {
       return;
     }
@@ -153,22 +154,22 @@ class SourceResolver {
 
   get ancestors() {
     let out: SourceResolver[] = [];
-    let el: SourceResolver = this;
+    let el: SourceResolver | undefined = this;
 
     while ((el = el.parent)) {
-      out.push(el);
+      out.push(el!);
     }
 
     return out;
   }
 
-  async getSource({ path }): Promise<Source> {
+  async getSource({ path }: { path: string[] }): Promise<Source> {
     let stack: SourceResolver[] = [
       ...this.ancestors,
       this,
       ...this.descendants,
     ];
-    let el: SourceResolver;
+    let el: SourceResolver | undefined;
 
     let out = [];
 
@@ -234,7 +235,7 @@ class SourceResolver {
           contextPath.pop();
           requestPath.shift();
         } else {
-          contextPath.push(requestPath.shift());
+          contextPath.push(requestPath.shift()!);
         }
       }
       path = contextPath;
@@ -288,15 +289,15 @@ export class RootBuildContext extends Context implements BuildContext {
   readonly resolverConfig: Required<ModuleResolverConfig>;
   readonly #readyResolver = createResolver<BuildContext>();
   readonly ready = this.#readyResolver.finally(() => {});
-  readonly #events = EventManager.get<BuildContext>(this);
+  readonly #events = EventManager.get<BuildContext>(this as BuildContext);
   #plugins?: PluginContext;
-  readonly sources = SourceResolver.getInstance(this);
+  readonly sources = SourceResolver.getInstance(this as BuildContext);
 
   get plugins() {
     return this.#plugins?.plugins;
   }
 
-  get root(): string {
+  get root(): BuildContext {
     return this;
   }
 
@@ -338,19 +339,19 @@ export class RootBuildContext extends Context implements BuildContext {
 
     this.outputDir = path.resolve(this.rootDir, 'build');
 
-    this.registry = new Registry(this);
+    this.registry = new Registry(this as BuildContext);
     this.builder = builder ?? new Builder(this, fs, defaultFiles, fsOptions);
 
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
         new provider({
-          context: this,
+          context: this as BuildContext,
           ...config,
         })
       );
     });
 
-    this.config = new ConfigContext({ context: this });
+    this.config = new ConfigContext({ context: this as BuildContext });
     this.resolverConfig = {
       extensions: Array.from(
         new Set([
@@ -405,25 +406,8 @@ export class RootBuildContext extends Context implements BuildContext {
       this.#plugins = plugins;
       await this.initializePlugins([...plugins.plugins]);
       await this.#events.emit(EventPhase.after, 'config', this);
-      this.#readyResolver.resolve(this);
+      this.#readyResolver.resolve(this as BuildContext);
     });
-  }
-
-  isRootDir(value: string): boolean {
-    let { rootDir } = this;
-    if (rootDir[rootDir.length - 1] !== '/') {
-      rootDir += '/';
-    }
-    if (value.startsWith(rootDir)) {
-      return true;
-    }
-
-    for (const context of this.children) {
-      if (context.isRootDir(value)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   get defaultFiles() {
@@ -489,7 +473,7 @@ export class RootBuildContext extends Context implements BuildContext {
 }
 
 class ChildBuildContext extends Context implements BuildContext {
-  readonly sources = SourceResolver.getInstance(this);
+  readonly sources = SourceResolver.getInstance(this as BuildContext);
   readonly parent: BuildContext;
   readonly compilation: Compilation;
 
@@ -498,7 +482,7 @@ class ChildBuildContext extends Context implements BuildContext {
   readonly config: ConfigContext;
   readonly mapping?: NormalizedMapping;
 
-  get root(): string {
+  get root(): BuildContext {
     return this.parent.root;
   }
 
@@ -549,10 +533,6 @@ class ChildBuildContext extends Context implements BuildContext {
     return this.parent.fs;
   }
 
-  getModuleContext(compilation: Compilation) {
-    return this.parent.getModuleContext(compilation);
-  }
-
   createSourceContext(options: SourceContextOptions) {
     return this.parent.createSourceContext(options);
   }
@@ -596,7 +576,7 @@ class ChildBuildContext extends Context implements BuildContext {
       this.parent.sources.addMapping(mapping, this.sources);
     }
     this.compilation = compilation;
-    compilation.pagesContext = this;
+    (compilation as any).pagesContext = this;
     this.rootDir = rootDir;
     this.registry = new Registry(this);
     for (const { provider, ...config } of providers ?? []) {
