@@ -4,7 +4,7 @@ import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { Renderer } from '@grexie/pages-builder';
 import { WritableBuffer } from '@grexie/stream';
-import { ResourceDependency } from '@grexie/pages-builder';
+import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 import { Config, Mapping, NormalizedMapping } from '@grexie/pages';
 
 const { RawSource } = webpack.sources;
@@ -90,11 +90,7 @@ class SourceCompiler {
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.rootDir,
-        new ResourceDependency({
-          request: this.source.filename,
-          context: this.context.build,
-          source: this.source,
-        }),
+        new EntryDependency(this.source.filename),
         {
           name: this.source.slug,
           filename: this.source.slug
@@ -207,7 +203,7 @@ export class ResourcesPlugin {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(
-        ResourceDependency,
+        EntryDependency,
         compilation.params.normalModuleFactory
       );
 
@@ -261,7 +257,7 @@ export class ResourcesPlugin {
             return { source, config };
           })
         )
-      ).filter(x => !!x);
+      ).filter(x => !!x) as { source: Source; config: Config }[];
 
       const normalizeMapping = (mapping: Mapping): NormalizedMapping => {
         if (typeof mapping === 'string') {
@@ -327,7 +323,7 @@ export class ResourcesPlugin {
 
       await Promise.all([
         ...sourceConfigs.map(async ({ source, config }) => {
-          const sourceCompiler = new SourceCompiler(context, source, config);
+          const sourceCompiler = new SourceCompiler(context, source!, config!);
           await sourceCompiler.makeHook(
             'ResourcesPlugin',
             compiler,

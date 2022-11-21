@@ -1,4 +1,5 @@
 declare module '@grexie/pages-resources-plugin';
+declare module 'webpack/lib/dependencies/EntryDependency.js';
 
 declare module 'vm' {
   export * from 'node:vm';

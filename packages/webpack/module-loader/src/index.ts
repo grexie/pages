@@ -35,10 +35,7 @@ export default async function ModuleLoader(
 
   let { context, ...options } = this.getOptions();
 
-  const dependency = getModuleDependency(
-    this._compilation,
-    this._module
-  ) as ResourceDependency;
+  const dependency = getModuleDependency(this._compilation!, this._module!);
 
   if (dependency instanceof ResourceDependency) {
     context = dependency.context;

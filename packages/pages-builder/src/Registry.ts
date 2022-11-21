@@ -18,6 +18,7 @@ export interface ListOptions {
 export interface ProviderOptions {
   context: BuildContext;
   rootDir?: string;
+  parentRootDir?: string;
   basePath?: string[];
   exclude?: string[];
 }
