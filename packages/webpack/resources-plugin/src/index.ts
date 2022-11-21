@@ -4,7 +4,7 @@ import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { Renderer } from '@grexie/pages-builder';
 import { WritableBuffer } from '@grexie/stream';
-import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
+import { ResourceDependency } from '@grexie/pages-builder';
 import { Config, Mapping, NormalizedMapping } from '@grexie/pages';
 
 const { RawSource } = webpack.sources;
@@ -65,7 +65,6 @@ class SourceCompiler {
         '@grexie/stream',
         this.source.abspath
       );
-    // const exports = await modules.require(import.meta, this.source.filename);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendering', this.source.filename);
@@ -91,7 +90,11 @@ class SourceCompiler {
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.rootDir,
-        new EntryDependency(this.source.filename),
+        new ResourceDependency({
+          request: this.source.filename,
+          context: this.context.build,
+          source: this.source,
+        }),
         {
           name: this.source.slug,
           filename: this.source.slug
@@ -112,10 +115,6 @@ class SourceCompiler {
     compilation.hooks.processAssets.tapPromise(
       { name: 'SourceCompiler', stage: Infinity },
       async () => {
-        // if (!this.config.render) {
-        //   return;
-        // }
-
         const files = new Set<string>();
 
         let publicPath = compilation.outputOptions.publicPath ?? '/';
@@ -208,17 +207,11 @@ export class ResourcesPlugin {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(
-        EntryDependency,
+        ResourceDependency,
         compilation.params.normalModuleFactory
       );
 
-      if (!this.mapping) {
-        console.info('NO MAPPINGS');
-      } else {
-        console.info('MAPPINGS');
-      }
-
-      const thisContext = this.context.createChild(compilation, {
+      const thisContext = this.context.sources.createChild(compilation, {
         providers: [
           {
             provider: Provider,
@@ -258,6 +251,11 @@ export class ResourcesPlugin {
             if (this.seen.has(source.slug)) {
               return;
             }
+
+            if (!config.render) {
+              return;
+            }
+
             this.seen.add(source.slug);
 
             return { source, config };
@@ -292,14 +290,18 @@ export class ResourcesPlugin {
         console.info(el);
         if (el.config.mappings.length) {
           for (const mapping of el.config.mappings) {
-            console.info('MAPPINGS:', el.source.filename, el.config.mappings);
             mappings.push({ ...el, mapping: normalizeMapping(mapping) });
           }
         }
       }
 
+      console.info(mappings);
+
       const promises: Promise<void>[] = [];
       for (const mapping of mappings) {
+        thisContext.addCompilationRoot(
+          path.resolve(mapping.source.dirname, mapping.mapping.from)
+        );
         const compiler = compilation.createChildCompiler(
           'ResourcesPlugin',
           {},

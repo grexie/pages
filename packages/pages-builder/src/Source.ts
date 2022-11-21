@@ -1,8 +1,4 @@
-import type {
-  ContentResource,
-  Resource,
-  ResourceMetadata,
-} from '@grexie/pages/api';
+import { ContentResource, Resource, ResourceMetadata } from '@grexie/pages/api';
 import path from 'path';
 import EventEmitter from 'events';
 import type { BuildContext } from './BuildContext.js';

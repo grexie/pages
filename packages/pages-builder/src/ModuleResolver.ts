@@ -78,6 +78,7 @@ export class ModuleResolver {
       mainFields: ['module', 'main'],
       extensions: extensions,
       modules: context.modulesDirs,
+      fullySpecified: false,
     });
 
     this.#resolve = async (
@@ -87,12 +88,13 @@ export class ModuleResolver {
     ): Promise<WebpackResolveInfo> => {
       console.info('88888', context, request);
       let _resolver = resolver;
-      if (fullySpecified) {
-        _resolver = resolver.withOptions({
-          fullySpecified: true,
-        });
-      }
       return new Promise((resolve, reject) => {
+        console.info(
+          'trying to resolve',
+          context,
+          request,
+          this.context.mapping
+        );
         _resolver.resolve(
           {},
           context,
@@ -100,27 +102,34 @@ export class ModuleResolver {
           {},
           (err, result, requestResult) => {
             if (err) {
-              try {
-                if (
-                  this.context.mapping &&
-                  context.startsWith(this.context.mapping?.from)
-                ) {
-                  resolve(this.context.resolveSource(
-                    path.relative(this.context.mapping.from, context),
-                    request
-                  ).then(({ filename }) => {
-                    return this.#resolve(context, filename, true));
-                  }))
-  
-                  return;
-                }
-              } catch (err2) {}
-              reject(err);
-              return;
-            }
+              this.context.sources
+                .resolve({
+                  context: path
+                    .relative(this.context.rootDir, context)
+                    .split(/\//g)
+                    .filter(x => !!x),
+                  request,
+                })
+                .then(({ abspath }) => {
+                  console.info(abspath);
+                  if (
+                    abspath ===
+                    '/Users/tim/src/grexie/grexie-pages/examples/multi-repo/basic/components/Footer'
+                  ) {
+                    let x = 0;
+                  }
 
-            if (/Header/.test(request)) {
-              console.info(result, requestResult);
+                  if (
+                    abspath ===
+                    '/Users/tim/src/grexie/grexie-pages/examples/multi-repo/basic/components/Header'
+                  ) {
+                    let y = 1;
+                  }
+                  return this.#resolve(context, abspath, true);
+                })
+                .then(resolve, reject);
+
+              return;
             }
 
             if (typeof result !== 'string') {
@@ -212,7 +221,6 @@ export class ModuleResolver {
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
-      // console.info(err);
       return this.#buildImport(request, { builtin: true });
     }
 

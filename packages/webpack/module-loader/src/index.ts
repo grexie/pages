@@ -1,4 +1,4 @@
-import type { LoaderContext } from 'webpack';
+import type { Dependency, LoaderContext } from 'webpack';
 import type { BuildContext } from '@grexie/pages-builder';
 import type { InstantiatedModule } from '@grexie/pages-builder';
 import type { Handler } from '@grexie/pages-builder';
@@ -10,6 +10,7 @@ import babelEnvPreset from '@babel/preset-env';
 import reactRefreshPlugin from 'react-refresh/babel';
 import { offsetLines } from '@grexie/source-maps';
 import { createComposable } from '@grexie/compose';
+import webpack from 'webpack';
 
 interface ModuleLoaderOptions {
   context: BuildContext;
@@ -24,17 +25,31 @@ export default async function ModuleLoader(
   const callback = this.async();
   this.cacheable(false);
 
+  const { getModuleDependency, ResourceDependency } = await import(
+    '@grexie/pages-builder'
+  );
+
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
   }
 
-  let { ...options } = this.getOptions();
-  const context = this._compilation.pagesContext as BuildContext;
-  console.info('MAPPING', this.resourcePath, context.mapping);
+  let { context, ...options } = this.getOptions();
+
+  const dependency = getModuleDependency(
+    this._compilation,
+    this._module
+  ) as ResourceDependency;
+
+  if (dependency instanceof ResourceDependency) {
+    context = dependency.context;
+  }
+
   const modules = context.getModuleContext(this._compilation!);
 
   try {
-    const path = context.builder.filenameToPath(this.resourcePath);
+    let path = context.builder.filenameToPath(this.resourcePath);
+
+    console.info('PATH', path);
 
     const createHandler = async () => {
       let handlerModule: InstantiatedModule;
@@ -103,15 +118,15 @@ export default async function ModuleLoader(
 
     for (let layout of layouts) {
       try {
-        console.info(this.resourcePath);
-        const { filename } = await context.resolveSource(
-          sourceContext.slug,
-          layout
-        );
+        const { abspath } = await context.sources.resolve({
+          context: sourceContext.path,
+          request: layout,
+        });
+        console.info(abspath);
         composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), filename)}`
+          `./${_path.relative(_path.dirname(this.resourcePath), abspath)}`
         );
-        layout = filename;
+        layout = abspath;
       } catch (err) {
         console.error(this.resourcePath, err);
         composablesRequires.push(layout);
