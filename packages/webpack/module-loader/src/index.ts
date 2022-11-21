@@ -49,8 +49,6 @@ export default async function ModuleLoader(
   try {
     let path = context.builder.filenameToPath(this.resourcePath);
 
-    console.info('PATH', path);
-
     const createHandler = async () => {
       let handlerModule: InstantiatedModule;
       if (typeof options.handler === 'string') {
@@ -122,7 +120,7 @@ export default async function ModuleLoader(
           context: sourceContext.path,
           request: layout,
         });
-        console.info(abspath);
+
         composablesRequires.push(
           `./${_path.relative(_path.dirname(this.resourcePath), abspath)}`
         );

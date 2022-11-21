@@ -86,15 +86,8 @@ export class ModuleResolver {
       request: string,
       fullySpecified: boolean = false
     ): Promise<WebpackResolveInfo> => {
-      console.info('88888', context, request);
       let _resolver = resolver;
       return new Promise((resolve, reject) => {
-        console.info(
-          'trying to resolve',
-          context,
-          request,
-          this.context.mapping
-        );
         _resolver.resolve(
           {},
           context,
@@ -111,20 +104,6 @@ export class ModuleResolver {
                   request,
                 })
                 .then(({ abspath }) => {
-                  console.info(abspath);
-                  if (
-                    abspath ===
-                    '/Users/tim/src/grexie/grexie-pages/examples/multi-repo/basic/components/Footer'
-                  ) {
-                    let x = 0;
-                  }
-
-                  if (
-                    abspath ===
-                    '/Users/tim/src/grexie/grexie-pages/examples/multi-repo/basic/components/Header'
-                  ) {
-                    let y = 1;
-                  }
                   return this.#resolve(context, abspath, true);
                 })
                 .then(resolve, reject);

@@ -287,15 +287,12 @@ export class ResourcesPlugin {
       const stack = sourceConfigs.slice();
       let el: { config: Config; source: Source } | undefined;
       while ((el = stack.shift())) {
-        console.info(el);
         if (el.config.mappings.length) {
           for (const mapping of el.config.mappings) {
             mappings.push({ ...el, mapping: normalizeMapping(mapping) });
           }
         }
       }
-
-      console.info(mappings);
 
       const promises: Promise<void>[] = [];
       for (const mapping of mappings) {
