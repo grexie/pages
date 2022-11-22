@@ -3,7 +3,7 @@
   "version": "0.0.19",
   "license": "MIT",
   "bin": {
-    "pages": "bin/index.js"
+    "pages": "bin/cli.sh"
   },
   "type": "module",
   "main": "lib/index.js",
