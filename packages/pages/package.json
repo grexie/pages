@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.js",
@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@grexie/compose": "^0.1.17",
-    "@grexie/context": "^0.0.19",
-    "@grexie/hash-object": "^0.0.19",
-    "@grexie/proxy": "^0.0.19",
+    "@grexie/context": "^0.0.20",
+    "@grexie/hash-object": "^0.0.20",
+    "@grexie/proxy": "^0.0.20",
     "react-is": "^18.2.0"
   },
   "devDependencies": {
