@@ -254,7 +254,7 @@ export class ResourcesPlugin {
             return { source, config };
           })
         )
-      ).filter(x => !!x);
+      ).filter(x => !!x) as { source: Source; config: Config };
 
       const normalizeMapping = (mapping: Mapping): NormalizedMapping => {
         if (typeof mapping === 'string') {
