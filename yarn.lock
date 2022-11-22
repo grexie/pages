@@ -1130,11 +1130,6 @@
   resolved "https://registry.yarnpkg.com/@grexie/pages-cache-loader/-/pages-cache-loader-0.0.15.tgz#ae629fb0740d374dd590ebde3ba1195831be4d62"
   integrity sha512-YpBeRWuI3gE8F7/v+o3qpgN9z1PdET0OmUdFiDXIQ12RbsEPY8D7YZm/HQUuHy29Fiz7tBjvW8WqN5ixSUsdmg==
 
-"@grexie/pages-cache-loader@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@grexie/pages-cache-loader/-/pages-cache-loader-0.0.17.tgz#1f7e6c7e385e0ae179db4e717c3281b5166474ce"
-  integrity sha512-N4h0jidxYYekxJb1YNk5d1HXegmkV/ANoYwZl+tNOXcBqQ64H78MKDSLh6EyQQ6aRurUuBAy/gVRc4f6OnTyMA==
-
 "@grexie/pages-config-loader@^0.0.15":
   version "0.0.15"
   resolved "https://registry.yarnpkg.com/@grexie/pages-config-loader/-/pages-config-loader-0.0.15.tgz#a8067881b1ef51850fe4b1c55cbf606ae87ba38d"
@@ -1188,16 +1183,6 @@
     "@grexie/resolvable" "^0.0.15"
     "@grexie/source-maps" "^0.0.15"
 
-"@grexie/pages-style-loader@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@grexie/pages-style-loader/-/pages-style-loader-0.0.17.tgz#295e668aff4dc6ccaf99693f71fea57c9a6547ba"
-  integrity sha512-aN5aTtNi1lEQF4s3iFPW8sYIFnlc0ZN4joVK8cp1/miGhSywl7LUSr12+JYmSWXUqB1lYP2owZfk0N8mxII54g==
-  dependencies:
-    "@grexie/resolvable" "^0.0.17"
-    "@grexie/source-maps" "^0.0.17"
-    css-loader "^6.7.2"
-    sass-loader "^13.2.0"
-
 "@grexie/pages-yaml-loader@^0.0.15":
   version "0.0.15"
   resolved "https://registry.yarnpkg.com/@grexie/pages-yaml-loader/-/pages-yaml-loader-0.0.15.tgz#0da89939857f3aacaa68dd48fde972e4188102b7"
@@ -1232,22 +1217,10 @@
   resolved "https://registry.yarnpkg.com/@grexie/resolvable/-/resolvable-0.0.15.tgz#c76207132c2328a2035418281afa6a68473457ef"
   integrity sha512-qUpxNUw5V39GmjY8lcu2cMVar9IjYAqA8utdBwNBRsI5kB1Jg1Xqmlulz+tuwi587p4ryRTH8S9kLXeV0WbuXg==
 
-"@grexie/resolvable@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@grexie/resolvable/-/resolvable-0.0.17.tgz#0057180b9e47d2791239575d74beb5670d3a0ed7"
-  integrity sha512-N0NafFRArlPkTnwRHBJjYw99qJJUgVt2W4Gwi9j4+SlSnR6GNVy3zehlijxTZ9DQxOq1AaD77PQagruk1qdf3Q==
-
 "@grexie/source-maps@^0.0.15":
   version "0.0.15"
   resolved "https://registry.yarnpkg.com/@grexie/source-maps/-/source-maps-0.0.15.tgz#259191079aa1f1656cb554afbae54f961f536191"
   integrity sha512-Kf+amWXQI39Sbo8k+uKif4ckWDKsBa836fYAhB0vc1k0mXnzzjn4KAI+9o1N9Ll+0BJDtB1K1K6HGrgLkXsfhw==
-  dependencies:
-    source-map "^0.7.4"
-
-"@grexie/source-maps@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@grexie/source-maps/-/source-maps-0.0.17.tgz#f2d19166eec7ac84cda69e691cae157f8924e05a"
-  integrity sha512-vgRAWSoSfko3QKANoTq8ceHLH9+6IqQyRF4RSIIq2Wmi+XBNW0AsWj4C0rbsjnZOpHapstZifUgkBUWga7XGSA==
   dependencies:
     source-map "^0.7.4"
 

@@ -5,12 +5,17 @@ import path from 'path';
 const baseUrl = new URL('file://');
 baseUrl.pathname = `${process.cwd()}/`;
 
-export async function resolve(specifier, { parentModuleUrl = baseUrl }, next) {
+export const resolve: NodeJS.LoaderHooks.Resolve = async (
+  specifier,
+  context,
+  next
+) => {
+  const { parentURL = baseUrl } = context;
   const loader = (global as any).PagesModuleLoader as ModuleLoader;
 
   if (loader) {
     const reference = await loader.resolver.resolve(
-      new URL(parentModuleUrl).pathname,
+      new URL(parentURL).pathname,
       specifier
     );
 
@@ -19,7 +24,7 @@ export async function resolve(specifier, { parentModuleUrl = baseUrl }, next) {
     if (reference.compile) {
       const url = new URL(`file://`);
       url.pathname = path.resolve(
-        new URL(parentModuleUrl).pathname,
+        new URL(parentURL).pathname,
         reference.filename
       );
 
@@ -30,31 +35,34 @@ export async function resolve(specifier, { parentModuleUrl = baseUrl }, next) {
     }
   }
 
-  return next(specifier);
-}
+  return next(specifier, context);
+};
 
-export async function load(url, { parentModuleUrl = baseUrl }, next) {
+export const load: NodeJS.LoaderHooks.Load = async (url, context, next) => {
   const loader = (global as any).PagesModuleLoader as ModuleLoader;
 
   if (loader) {
     const reference = await loader.resolver.resolve(
-      new URL(parentModuleUrl).pathname,
+      path.dirname(new URL(url).pathname),
       new URL(url).pathname
     );
 
     if (reference.compile) {
       const module = await loader.context.requireModule(
-        new URL(parentModuleUrl).pathname,
+        path.dirname(new URL(url).pathname),
         new URL(url).pathname
       );
 
       return {
-        format: reference.loader === 'esm' ? 'module' : 'commonjs',
+        format:
+          reference.loader === 'esm'
+            ? NodeJS.LoaderHooks.ModuleFormat.module
+            : NodeJS.LoaderHooks.ModuleFormat.commonjs,
         shortCircuit: true,
         source: module.source,
       };
     }
   }
 
-  return next(url);
-}
+  return next(url, context);
+};

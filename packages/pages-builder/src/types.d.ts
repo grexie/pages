@@ -1,6 +1,56 @@
 declare module '@grexie/pages-resources-plugin';
 declare module 'webpack/lib/dependencies/EntryDependency.js';
 
+declare namespace NodeJS {
+  namespace LoaderHooks {
+    enum ModuleFormat {
+      builtin = 'builtin',
+      commonjs = 'commonjs',
+      json = 'json',
+      module = 'module',
+      wasm = 'wasm',
+    }
+
+    export type Resolve = (
+      specifier: string,
+      context: {
+        conditions: string[];
+        importAssertions: any;
+        parentURL?: string;
+      },
+      nextResolve: (
+        specifier: string,
+        context: object
+      ) => { format?: ModuleFormat | null; shortCircuit?: boolean; url: string }
+    ) => Promise<{
+      format?: ModuleFormat | null;
+      shortCircuit?: boolean;
+      url: string;
+    }>;
+
+    export type Load = (
+      url: string,
+      context: {
+        conditions: string[];
+        importAssertions: any;
+        format?: ModuleFormat | null;
+      },
+      nextLoad: (
+        url: string,
+        context: object
+      ) => {
+        format?: ModuleFormat | null;
+        shortCircuit?: boolean;
+        source: string;
+      }
+    ) => Promise<{
+      format?: ModuleFormat | null;
+      shortCircuit?: boolean;
+      source: string;
+    }>;
+  }
+}
+
 declare module 'vm' {
   export * from 'node:vm';
   export enum ModuleStatus {
