@@ -1,6 +1,6 @@
 {
   "name": "@grexie/stream",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,7 +19,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/resolvable": "^0.0.20"
+    "@grexie/resolvable": "^0.0.21"
   },
   "exports": {
     ".": {

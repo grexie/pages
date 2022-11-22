@@ -1,6 +1,6 @@
 {
   "name": "@grexie/promisify",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
