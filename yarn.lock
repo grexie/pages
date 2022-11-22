@@ -1057,11 +1057,6 @@
   resolved "https://registry.yarnpkg.com/@grexie/compose/-/compose-0.1.17.tgz#929e31da1fce426d34aec09c4726547a98bfc12e"
   integrity sha512-+SSWW4rdszJP67mN5YIX5gcwEvPtSV1CFnAQMZ9DndAUM4ocDhpx+V3ncQAGUmkdLCVzYBxjOpLwcl8x4DNrdQ==
 
-"@grexie/pages-runtime-image@^0.0.20":
-  version "0.0.20"
-  resolved "https://registry.yarnpkg.com/@grexie/pages-runtime-image/-/pages-runtime-image-0.0.20.tgz#2992bb26ee710719e49ed195995782608f4d3c7b"
-  integrity sha512-D/Bgy5djezdxNyKOsLHMP4BcXthXHkI91scziefKsn6mYWj2aV+yVfqP9Cu5uN+kXdQR6B7FwT/yQmxVAkBlzQ==
-
 "@iarna/toml@2.2.5":
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
