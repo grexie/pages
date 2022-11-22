@@ -98,11 +98,6 @@ export class Builder {
   readonly #builder: BuilderBase;
   readonly #events = EventManager.get<Builder>(this);
   readonly cache: Cache;
-  #compiler?: webpack.Compiler;
-
-  get compiler() {
-    return this.#compiler;
-  }
 
   get fs() {
     return this.#builder.fs;
@@ -501,15 +496,9 @@ export class Builder {
   }
 
   async build(): Promise<WebpackStats> {
-    if (this.compiler) {
-      throw new Error('compiler already created');
-    }
-
     await this.context.ready;
     const config = await this.config();
-    const compiler = this.#builder.build({ config });
-    this.#compiler = compiler;
-    return compiler;
+    return this.#builder.build({ config });
   }
 
   async watch(): Promise<Watcher> {
@@ -519,14 +508,8 @@ export class Builder {
   }
 
   async createCompiler(): Promise<webpack.Compiler> {
-    if (this.compiler) {
-      throw new Error('compiler already created');
-    }
-
     await this.context.ready;
     const config = await this.config();
-    const compiler = await this.#builder.compiler({ config });
-    this.#compiler = compiler;
-    return compiler;
+    return this.#builder.compiler({ config });
   }
 }
