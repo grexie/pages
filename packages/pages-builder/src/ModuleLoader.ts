@@ -9,6 +9,11 @@ import path from 'path';
 import { isPlainObject } from '@grexie/is-plain-object';
 import type { BuildContext } from './BuildContext.js';
 
+const vmGlobal = { process } as any;
+vmGlobal.global = vmGlobal;
+attachHotReload(vmGlobal);
+const vmContext = vm.createContext(vmGlobal);
+
 export enum ModuleLoaderType {
   commonjs = 'commonjs',
   esm = 'esm',
@@ -68,15 +73,11 @@ export abstract class ModuleLoader {
     this.globalModules = GlobalModuleCacheTable.get(context.build)!;
 
     if (!GlobalTable.has(compilation)) {
-      const global = { process } as any;
-      global.global = global;
-      attachHotReload(global);
-      GlobalTable.set(compilation, global);
+      GlobalTable.set(compilation, vmGlobal);
     }
     this.vmGlobal = GlobalTable.get(compilation);
 
     if (!VMContextTable.has(compilation)) {
-      const vmContext = vm.createContext(this.vmGlobal);
       VMContextTable.set(compilation, vmContext);
     }
     this.vmContext = VMContextTable.get(compilation);
@@ -144,6 +145,7 @@ export abstract class ModuleLoader {
     const reference = await this.resolver.resolve(context, request);
 
     const module = this.lookup(reference.filename);
+
     if (module) {
       return module;
     }
@@ -198,8 +200,6 @@ export abstract class ModuleLoader {
       return module;
     }
 
-    console.info(reference);
-
     if (reference.compile) {
       return this.load(context, request);
     }
@@ -210,7 +210,7 @@ export abstract class ModuleLoader {
     try {
       (global as any).PagesModuleLoader = this;
       const exports = await import(reference.filename);
-      delete (global as any).PagesModuleLoader;
+      // delete (global as any).PagesModuleLoader;
 
       let usedExports: string[];
 

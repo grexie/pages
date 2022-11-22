@@ -19,9 +19,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
       specifier
     );
 
-    console.info(reference);
-
-    if (reference.compile) {
+    if (!reference.builtin) {
       const url = new URL(`file://`);
       url.pathname = path.resolve(
         new URL(parentURL).pathname,
@@ -47,6 +45,8 @@ export const load: NodeJS.LoaderHooks.Load = async (url, context, next) => {
       new URL(url).pathname
     );
 
+    console.info(url, reference);
+
     if (reference.compile) {
       const module = await loader.context.requireModule(
         path.dirname(new URL(url).pathname),
@@ -54,10 +54,9 @@ export const load: NodeJS.LoaderHooks.Load = async (url, context, next) => {
       );
 
       return {
-        format:
-          reference.loader === 'esm'
-            ? NodeJS.LoaderHooks.ModuleFormat.module
-            : NodeJS.LoaderHooks.ModuleFormat.commonjs,
+        format: (reference.loader === 'esm'
+          ? 'module'
+          : 'commonjs') as NodeJS.LoaderHooks.ModuleFormat,
         shortCircuit: true,
         source: module.source,
       };

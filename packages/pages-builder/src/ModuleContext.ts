@@ -131,6 +131,7 @@ export class ModuleContext {
     if (/Header/.test(request)) {
       let a = 1;
     }
+
     const reference = await this.resolver.resolve(context, request);
     return this.loaders[reference.loader].require(context, request);
   }

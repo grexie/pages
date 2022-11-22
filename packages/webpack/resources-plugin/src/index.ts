@@ -58,13 +58,10 @@ class SourceCompiler {
 
     const { modules } = this.context;
 
-    const [{ Renderer }, { WritableBuffer }, exports] =
-      await modules.requireMany(
-        import.meta,
-        '@grexie/pages-builder',
-        '@grexie/stream',
-        this.source.abspath
-      );
+    const [exports] = await modules.requireMany(
+      import.meta,
+      this.source.abspath
+    );
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('render:rendering', this.source.filename);
@@ -257,7 +254,7 @@ export class ResourcesPlugin {
             return { source, config };
           })
         )
-      ).filter(x => !!x) as { source: Source; config: Config }[];
+      ).filter(x => !!x);
 
       const normalizeMapping = (mapping: Mapping): NormalizedMapping => {
         if (typeof mapping === 'string') {
@@ -323,7 +320,7 @@ export class ResourcesPlugin {
 
       await Promise.all([
         ...sourceConfigs.map(async ({ source, config }) => {
-          const sourceCompiler = new SourceCompiler(context, source!, config!);
+          const sourceCompiler = new SourceCompiler(context, source, config);
           await sourceCompiler.makeHook(
             'ResourcesPlugin',
             compiler,
