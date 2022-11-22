@@ -243,20 +243,6 @@ class SourceResolver {
 
     let mapping = this.lookupMapping(context)?.context?.mapping?.to ?? [];
 
-    console.info(context, request, mapping);
-
-    // let i = 0;
-    // while (mapping.length) {
-    //   if (mapping[0] === '.') {
-    //     mapping.shift();
-    //   } else if (mapping[0] === '..') {
-    //     mapping.shift();
-    //     path.splice(i, 1);
-    //   } else {
-    //     path.splice(i++, 0, mapping.shift());
-    //   }
-    // }
-
     path.unshift(...mapping);
 
     return this.getSource({ path });
@@ -408,6 +394,8 @@ export class RootBuildContext extends Context implements BuildContext {
       await this.#events.emit(EventPhase.after, 'config', this);
       this.#readyResolver.resolve(this as BuildContext);
     });
+
+    (global as any).PagesBuildContext = this;
   }
 
   get defaultFiles() {

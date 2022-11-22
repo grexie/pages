@@ -1,9 +1,4 @@
-import {
-  InstantiatedModule,
-  Module,
-  ModuleLoader,
-  vmContext,
-} from './ModuleLoader.js';
+import { InstantiatedModule, Module, ModuleLoader } from './ModuleLoader.js';
 import vm from 'vm';
 import { createRequire, Module as NodeModule } from 'module';
 import path from 'path';
@@ -28,7 +23,7 @@ export class CommonJsModuleLoader extends ModuleLoader {
     const script = new vm.Script(wrapScript(module.source), {
       filename: module.filename,
       displayErrors: true,
-    }).runInContext(vmContext) as WrappedScript;
+    }).runInContext(this.vmContext) as WrappedScript;
 
     const scriptModule = new NodeModule(module.filename);
     scriptModule.require = createRequire(module.filename);
@@ -63,7 +58,7 @@ export class CommonJsModuleLoader extends ModuleLoader {
         }
       },
       {
-        context: vmContext,
+        context: this.vmContext,
       }
     );
 

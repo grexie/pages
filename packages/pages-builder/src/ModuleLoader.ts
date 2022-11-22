@@ -9,11 +9,6 @@ import path from 'path';
 import { isPlainObject } from '@grexie/is-plain-object';
 import type { BuildContext } from './BuildContext.js';
 
-const vmGlobal = { process } as any;
-vmGlobal.global = vmGlobal;
-attachHotReload(vmGlobal);
-export const vmContext = vm.createContext(vmGlobal);
-
 export enum ModuleLoaderType {
   commonjs = 'commonjs',
   esm = 'esm',
@@ -44,6 +39,8 @@ type ModuleCache = Record<string, Promise<InstantiatedModule> | undefined>;
 
 const ModuleCacheTable = new WeakMap<Compilation, ModuleCache>();
 const GlobalModuleCacheTable = new WeakMap<BuildContext, ModuleCache>();
+const GlobalTable = new WeakMap<Compilation, any>();
+const VMContextTable = new WeakMap<Compilation, any>();
 
 export abstract class ModuleLoader {
   readonly context: ModuleContext;
@@ -51,6 +48,8 @@ export abstract class ModuleLoader {
   readonly compilation: Compilation;
   readonly modules: ModuleCache;
   readonly globalModules: ModuleCache;
+  readonly vmGlobal: any;
+  readonly vmContext: vm.Context;
   #nextId = 0;
 
   constructor({ context, resolver, compilation }: ModuleLoaderOptions) {
@@ -67,6 +66,20 @@ export abstract class ModuleLoader {
       GlobalModuleCacheTable.set(context.build, {});
     }
     this.globalModules = GlobalModuleCacheTable.get(context.build)!;
+
+    if (!GlobalTable.has(compilation)) {
+      const global = { process } as any;
+      global.global = global;
+      attachHotReload(global);
+      GlobalTable.set(compilation, global);
+    }
+    this.vmGlobal = GlobalTable.get(compilation);
+
+    if (!VMContextTable.has(compilation)) {
+      const vmContext = vm.createContext(this.vmGlobal);
+      VMContextTable.set(compilation, vmContext);
+    }
+    this.vmContext = VMContextTable.get(compilation);
   }
 
   static reset(compilation: webpack.Compilation) {
@@ -185,6 +198,8 @@ export abstract class ModuleLoader {
       return module;
     }
 
+    console.info(reference);
+
     if (reference.compile) {
       return this.load(context, request);
     }
@@ -193,7 +208,9 @@ export abstract class ModuleLoader {
     this.globalModules[reference.filename] = resolver;
 
     try {
+      (global as any).PagesModuleLoader = this;
       const exports = await import(reference.filename);
+      delete (global as any).PagesModuleLoader;
 
       let usedExports: string[];
 
@@ -224,7 +241,7 @@ export abstract class ModuleLoader {
           }
         },
         {
-          context: vmContext,
+          context: this.vmContext,
         }
       );
 

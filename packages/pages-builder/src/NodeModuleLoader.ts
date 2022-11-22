@@ -1,9 +1,4 @@
-import {
-  InstantiatedModule,
-  Module,
-  ModuleLoader,
-  vmContext,
-} from './ModuleLoader.js';
+import { InstantiatedModule, Module, ModuleLoader } from './ModuleLoader.js';
 import vm from 'vm';
 import { isPlainObject } from '@grexie/is-plain-object';
 import webpack from 'webpack';
@@ -42,7 +37,7 @@ export class NodeModuleLoader extends ModuleLoader {
         }
       },
       {
-        context: vmContext,
+        context: this.vmContext,
       }
     );
 

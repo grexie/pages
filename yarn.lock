@@ -1057,6 +1057,200 @@
   resolved "https://registry.yarnpkg.com/@grexie/compose/-/compose-0.1.17.tgz#929e31da1fce426d34aec09c4726547a98bfc12e"
   integrity sha512-+SSWW4rdszJP67mN5YIX5gcwEvPtSV1CFnAQMZ9DndAUM4ocDhpx+V3ncQAGUmkdLCVzYBxjOpLwcl8x4DNrdQ==
 
+"@grexie/context@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/context/-/context-0.0.15.tgz#743dbb07bf4cf4ad23deda56979ab65e8d209a64"
+  integrity sha512-xP0n8gblTrV/GnODCSKodvy+/49Tijn8fAngRduq7wW50Txk28rAwfHI+FMLQ/4j4zB/Rg/yh8mv2cWpPWaJzQ==
+  dependencies:
+    "@grexie/compose" "^0.1.17"
+
+"@grexie/hash-object@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/hash-object/-/hash-object-0.0.15.tgz#52364b39585af9f43b4f8870de28fd5ebe2eac1a"
+  integrity sha512-biSDkGeIckByLMq34jm+uIVRqnUSiMhL+w+/ecMrLR1LJZpVJGmjpzULz9n2zFZiknTZpa2EExa3gZWTvockbw==
+  dependencies:
+    object-hash "^3.0.0"
+
+"@grexie/is-plain-object@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/is-plain-object/-/is-plain-object-0.0.15.tgz#0c64713f4d29c6bbd079a47f9c1a83ef0a5e295e"
+  integrity sha512-jPd0lrOJR2D19Df/BFyY+AGrnG5MMwfutPOtBUHLDCv5WINiHKXKyAs0N0CRiVxsHiUSrf19LoN9QV8TYkq+ZQ==
+
+"@grexie/mutex@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/mutex/-/mutex-0.0.15.tgz#ca50f117b7d19240bd5c183a5ed354f52a4fc048"
+  integrity sha512-VBCvIXFdc29TJl1FfP7wOzS1cnSCIRwDi8DVa1q8o/6/ALFwdIascda81EmhFz94K6LfdF/1cwYr6qen3Z2fJA==
+  dependencies:
+    "@grexie/resolvable" "^0.0.15"
+
+"@grexie/pages-builder@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-builder/-/pages-builder-0.0.15.tgz#175573b422f4ced45f7d305005b8281ee20929ba"
+  integrity sha512-HfiLk6pYwEr8DQ8EvcT3VlBfWxGVolbhaaNroPd8NSt0w8PgOshBg6FTFiYgUUJH5V5aNuaVlx2fKc/6verycw==
+  dependencies:
+    "@babel/cli" "^7.17.10"
+    "@babel/core" "^7.18.2"
+    "@babel/preset-env" "^7.18.2"
+    "@babel/preset-typescript" "^7.17.12"
+    "@grexie/compose" "^0.1.17"
+    "@grexie/is-plain-object" "^0.0.15"
+    "@grexie/mutex" "^0.0.15"
+    "@grexie/pages" "^0.0.15"
+    "@grexie/pages-cache-loader" "^0.0.15"
+    "@grexie/pages-config-loader" "^0.0.15"
+    "@grexie/pages-image-loader" "^0.0.15"
+    "@grexie/pages-module-loader" "^0.0.15"
+    "@grexie/pages-resources-plugin" "^0.0.15"
+    "@grexie/pages-runtime-hmr" "^0.0.15"
+    "@grexie/pages-style-loader" "^0.0.15"
+    "@grexie/pages-yaml-loader" "^0.0.15"
+    "@grexie/promisify" "^0.0.15"
+    "@grexie/proxy" "^0.0.15"
+    "@grexie/resolvable" "^0.0.15"
+    "@types/jest" "^28.1.3"
+    "@types/node" "^17.0.41"
+    "@types/source-map-support" "^0.5.4"
+    babel-loader "^9.1.0"
+    babel-plugin-source-map-support "^2.1.3"
+    chalk "^5.1.2"
+    create-hash "^1.2.0"
+    crypto-browserify "^3.12.0"
+    glob "^8.0.3"
+    memfs "^3.4.11"
+    path-browserify "^1.0.1"
+    progress-bar-webpack-plugin "^2.1.0"
+    stream-browserify "^3.0.0"
+    timers-browserify "^2.0.12"
+    ts-node "^10.8.1"
+    tty-browserify "^0.0.1"
+    typescript "^4.7.3"
+
+"@grexie/pages-cache-loader@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-cache-loader/-/pages-cache-loader-0.0.15.tgz#ae629fb0740d374dd590ebde3ba1195831be4d62"
+  integrity sha512-YpBeRWuI3gE8F7/v+o3qpgN9z1PdET0OmUdFiDXIQ12RbsEPY8D7YZm/HQUuHy29Fiz7tBjvW8WqN5ixSUsdmg==
+
+"@grexie/pages-cache-loader@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-cache-loader/-/pages-cache-loader-0.0.17.tgz#1f7e6c7e385e0ae179db4e717c3281b5166474ce"
+  integrity sha512-N4h0jidxYYekxJb1YNk5d1HXegmkV/ANoYwZl+tNOXcBqQ64H78MKDSLh6EyQQ6aRurUuBAy/gVRc4f6OnTyMA==
+
+"@grexie/pages-config-loader@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-config-loader/-/pages-config-loader-0.0.15.tgz#a8067881b1ef51850fe4b1c55cbf606ae87ba38d"
+  integrity sha512-pFuV/ZSU0fyzdQ+58mn+t6rVC/DIgSavoTZBRuMIDoF6NUa15qIX7HfIbgQ78WDywbbL5ksxeISGBIZhCUtYXQ==
+
+"@grexie/pages-image-loader@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-image-loader/-/pages-image-loader-0.0.15.tgz#9565be11df1c16027613d827642688bc26376aa8"
+  integrity sha512-R/rQOKLrm1g43dU5FBCV0eYuhFp0SdxRyJW2727hRxI0NUwIV8nDYeVxKCTa8XbraoiTTFDOnX0DIdwj4Kkzow==
+  dependencies:
+    "@babel/core" "^7.20.2"
+    "@babel/preset-env" "^7.20.2"
+    "@babel/preset-react" "^7.18.6"
+    "@svgr/core" "^6.5.1"
+    sharp "^0.31.2"
+
+"@grexie/pages-module-loader@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-module-loader/-/pages-module-loader-0.0.15.tgz#fae7b04c38a79e66483d80d1db5c35220b69de78"
+  integrity sha512-etfvchky/QTDeaH8zo+fTmT1SxrQBre3HpTRbLzrBAO8jGl45+sknw08zwGNflhcMB2YqZN7mZhVZX5W2pFh9w==
+  dependencies:
+    "@babel/core" "^7.20.2"
+    "@babel/preset-env" "^7.20.2"
+    "@grexie/source-maps" "^0.0.15"
+    react-refresh "^0.14.0"
+
+"@grexie/pages-resources-plugin@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-resources-plugin/-/pages-resources-plugin-0.0.15.tgz#55e1c3a74ea89eb820471f78718b231d0a30b9d3"
+  integrity sha512-qZ5jtvJlnTFFSD4pYisa2C5FZ31Z0PEQ9MaiaSvNw+lzbdteRhB35hAlYkAHDMon6kkBrEBKgNDwOsZeIG9dKw==
+
+"@grexie/pages-runtime-hmr@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-runtime-hmr/-/pages-runtime-hmr-0.0.15.tgz#cb4863d02c405263095cc7d26e9d4c5f81926d31"
+  integrity sha512-ZIjg2npu62CF52yKovCGUnhPyWFn1GnvG9RmZuCic4dBCrZiHIbu9mcnAu+jUr3F5tRitvwCEDr7rywzANhEhQ==
+  dependencies:
+    react-refresh "^0.14.0"
+
+"@grexie/pages-runtime-styles@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-runtime-styles/-/pages-runtime-styles-0.0.15.tgz#55dd05a224f1bbe9530b7e26c6866e2fb33e0cce"
+  integrity sha512-yRPy5e1mKD/RCW6MD3tSMBCmQF8RpOcbFiAjZxRfOzFK/Nkm5Krw9CEujVCitUgxa9lxll9uc/cUQMdAA6UDmA==
+  dependencies:
+    "@grexie/pages" "0.0.15"
+
+"@grexie/pages-style-loader@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-style-loader/-/pages-style-loader-0.0.15.tgz#f315265c73391fa3a76d4376b19f2a83e063194f"
+  integrity sha512-Ihafr6zvb8IUdgF6gxmdnnHZTVqyFT2E15RE2w6uY05cKvZrBiHhl9qQsG3mFXmBRlcSEZmzdh4dKpIBmPnYyg==
+  dependencies:
+    "@grexie/resolvable" "^0.0.15"
+    "@grexie/source-maps" "^0.0.15"
+
+"@grexie/pages-style-loader@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-style-loader/-/pages-style-loader-0.0.17.tgz#295e668aff4dc6ccaf99693f71fea57c9a6547ba"
+  integrity sha512-aN5aTtNi1lEQF4s3iFPW8sYIFnlc0ZN4joVK8cp1/miGhSywl7LUSr12+JYmSWXUqB1lYP2owZfk0N8mxII54g==
+  dependencies:
+    "@grexie/resolvable" "^0.0.17"
+    "@grexie/source-maps" "^0.0.17"
+    css-loader "^6.7.2"
+    sass-loader "^13.2.0"
+
+"@grexie/pages-yaml-loader@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-yaml-loader/-/pages-yaml-loader-0.0.15.tgz#0da89939857f3aacaa68dd48fde972e4188102b7"
+  integrity sha512-95mXTJrMh32RQHS43oDt8cjUK4yjRCflnp7+pAZ+ZUIdVV6JB85+uuCw7+usLJP8Uddh6yQlZ4Imsp0N9S7O7w==
+  dependencies:
+    source-map "^0.7.4"
+    yaml "^2.1.3"
+
+"@grexie/pages@0.0.15", "@grexie/pages@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/pages/-/pages-0.0.15.tgz#9082c2f32141f75dd60c9e93d1d1eb29f224cae5"
+  integrity sha512-U4MU+t+bEzPmVf+vU9ruq6x5YT87Ns6pXQn6lyEirYsj/496CVZvkPw83WIshZkGwcjSdZYFGPaVQwe3Kamu+A==
+  dependencies:
+    "@grexie/compose" "^0.1.17"
+    "@grexie/context" "^0.0.15"
+    "@grexie/hash-object" "^0.0.15"
+    "@grexie/proxy" "^0.0.15"
+    react-is "^18.2.0"
+
+"@grexie/promisify@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/promisify/-/promisify-0.0.15.tgz#0f9446b1e93b8c90dd9f00e98484004b02f756f8"
+  integrity sha512-C5yBTWcYg+T+0eygOVr47l9jH1Xvd7BGSidLeIxURVhpGVmgUsJzQTJCkYwAni+eOCGZUg9hSN06Mri4EC9O/Q==
+
+"@grexie/proxy@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/proxy/-/proxy-0.0.15.tgz#04192e8d6f7006a288f109e85d2263ef8f9f75b5"
+  integrity sha512-/CcNBPFzgwAYP5v1Trc57WM4Ju4ztUTbCXjUGSJNw2ndzpgIPVd2lKELNVAJkTd4TEC2eThfJB0lJz+XHd4F6Q==
+
+"@grexie/resolvable@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/resolvable/-/resolvable-0.0.15.tgz#c76207132c2328a2035418281afa6a68473457ef"
+  integrity sha512-qUpxNUw5V39GmjY8lcu2cMVar9IjYAqA8utdBwNBRsI5kB1Jg1Xqmlulz+tuwi587p4ryRTH8S9kLXeV0WbuXg==
+
+"@grexie/resolvable@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@grexie/resolvable/-/resolvable-0.0.17.tgz#0057180b9e47d2791239575d74beb5670d3a0ed7"
+  integrity sha512-N0NafFRArlPkTnwRHBJjYw99qJJUgVt2W4Gwi9j4+SlSnR6GNVy3zehlijxTZ9DQxOq1AaD77PQagruk1qdf3Q==
+
+"@grexie/source-maps@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@grexie/source-maps/-/source-maps-0.0.15.tgz#259191079aa1f1656cb554afbae54f961f536191"
+  integrity sha512-Kf+amWXQI39Sbo8k+uKif4ckWDKsBa836fYAhB0vc1k0mXnzzjn4KAI+9o1N9Ll+0BJDtB1K1K6HGrgLkXsfhw==
+  dependencies:
+    source-map "^0.7.4"
+
+"@grexie/source-maps@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@grexie/source-maps/-/source-maps-0.0.17.tgz#f2d19166eec7ac84cda69e691cae157f8924e05a"
+  integrity sha512-vgRAWSoSfko3QKANoTq8ceHLH9+6IqQyRF4RSIIq2Wmi+XBNW0AsWj4C0rbsjnZOpHapstZifUgkBUWga7XGSA==
+  dependencies:
+    source-map "^0.7.4"
+
 "@iarna/toml@2.2.5":
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
@@ -7505,7 +7699,7 @@ sass-loader@^13.2.0:
     klona "^2.0.4"
     neo-async "^2.6.2"
 
-sass@^1.29.0:
+sass@^1.29.0, sass@^1.56.1:
   version "1.56.1"
   resolved "https://registry.yarnpkg.com/sass/-/sass-1.56.1.tgz#94d3910cd468fd075fa87f5bb17437a0b617d8a7"
   integrity sha512-VpEyKpyBPCxE7qGDtOcdJ6fFbcpOM+Emu7uZLxVrkX8KVU/Dp5UF7WLvzqRuUhB6mqqQt1xffLoG+AndxTZrCQ==

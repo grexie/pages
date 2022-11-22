@@ -54,7 +54,7 @@ export class Server {
       throw new Error('already started');
     }
 
-    const compiler = await this.context.builder.compiler();
+    const compiler = await this.context.builder.createCompiler();
 
     this.#server = createResolver<http.Server>();
     // const handler = new RequestHandler(this.context);
@@ -83,18 +83,6 @@ export class Server {
       this.#server?.resolve(server);
     });
     return this.#server;
-  }
-
-  async #watch(): Promise<void> {
-    const watcher = await this.context.builder.watch();
-    watcher.on('build', (err: Error | null | undefined, stats?: Stats) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-
-      console.info((stats as any).toString({ colors: true }));
-    });
   }
 
   async stop() {

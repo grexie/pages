@@ -25,21 +25,13 @@ export default async function ModuleLoader(
   const callback = this.async();
   this.cacheable(false);
 
-  const { getModuleDependency, ResourceDependency } = await import(
-    '@grexie/pages-builder'
-  );
+  // const { getModuleDependency } = await import('@grexie/pages-builder');
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
   }
 
   let { context, ...options } = this.getOptions();
-
-  const dependency = getModuleDependency(this._compilation!, this._module!);
-
-  if (dependency instanceof ResourceDependency) {
-    context = dependency.context;
-  }
 
   const modules = context.getModuleContext(this._compilation!);
 

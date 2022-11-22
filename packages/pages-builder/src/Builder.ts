@@ -98,6 +98,11 @@ export class Builder {
   readonly #builder: BuilderBase;
   readonly #events = EventManager.get<Builder>(this);
   readonly cache: Cache;
+  #compiler?: webpack.Compiler;
+
+  get compiler() {
+    return this.#compiler;
+  }
 
   get fs() {
     return this.#builder.fs;
@@ -275,39 +280,6 @@ export class Builder {
       },
       module: {
         rules: [
-          {
-            type: 'javascript/esm',
-            test: /\.scss$/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-style-loader'),
-              {
-                loader: 'css-loader',
-              },
-              {
-                loader: 'sass-loader',
-              },
-            ],
-            include: /\.global\.scss$/,
-          },
-          {
-            type: 'javascript/esm',
-            test: /\.scss$/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-style-loader'),
-              {
-                loader: 'css-loader',
-                options: {
-                  modules: true,
-                },
-              },
-              {
-                loader: 'sass-loader',
-              },
-            ],
-            include: /\.module\.scss$/,
-          },
           {
             type: 'javascript/esm',
             test: /\.css$/,
@@ -529,9 +501,15 @@ export class Builder {
   }
 
   async build(): Promise<WebpackStats> {
+    if (this.compiler) {
+      throw new Error('compiler already created');
+    }
+
     await this.context.ready;
     const config = await this.config();
-    return this.#builder.build({ config });
+    const compiler = this.#builder.build({ config });
+    this.#compiler = compiler;
+    return compiler;
   }
 
   async watch(): Promise<Watcher> {
@@ -540,9 +518,15 @@ export class Builder {
     return this.#builder.watch({ config });
   }
 
-  async compiler(): Promise<webpack.Compiler> {
+  async createCompiler(): Promise<webpack.Compiler> {
+    if (this.compiler) {
+      throw new Error('compiler already created');
+    }
+
     await this.context.ready;
     const config = await this.config();
-    return this.#builder.compiler({ config });
+    const compiler = await this.#builder.compiler({ config });
+    this.#compiler = compiler;
+    return compiler;
   }
 }

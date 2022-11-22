@@ -1,11 +1,11 @@
 import vm from 'vm';
 import type { InstantiatedModule, Module } from './ModuleLoader.js';
-import { ModuleLoader, vmContext } from './ModuleLoader.js';
+import { ModuleLoader } from './ModuleLoader.js';
 
 export class EsmModuleLoader extends ModuleLoader {
   protected async instantiate(module: Module): Promise<InstantiatedModule> {
     const vmModule = new vm.SourceTextModule(module.source, {
-      context: vmContext,
+      context: this.vmContext,
       initializeImportMeta: () => {},
       identifier: module.filename,
       importModuleDynamically: async request => {

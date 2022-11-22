@@ -60,6 +60,7 @@
       "types": "./lib/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./loader": "./lib/NodeLoaderHook.js",
     "./scripts/build": "./lib/scripts/build.js",
     "./scripts/clean/cache": "./lib/scripts/clean/cache.js",
     "./package.json": "./package.json"
