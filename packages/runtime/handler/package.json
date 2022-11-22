@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-runtime-handler",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -15,8 +15,8 @@
   "sideEffects": false,
   "dependencies": {
     "@grexie/compose": "^0.1.17",
-    "@grexie/pages": "^0.0.18",
-    "@grexie/pages-builder": "^0.0.18",
+    "@grexie/pages": "^0.0.19",
+    "@grexie/pages-builder": "^0.0.19",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

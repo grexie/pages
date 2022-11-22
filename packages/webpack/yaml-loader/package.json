@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-yaml-loader",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,7 +19,7 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.0.18",
+    "@grexie/pages-builder": "^0.0.19",
     "webpack": "^5.75.0"
   },
   "dependencies": {
