@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-markdown",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -13,9 +13,9 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.26",
-    "@grexie/pages-builder": "^0.0.26",
-    "@grexie/pages-runtime-styles": "^0.0.26",
+    "@grexie/pages": "^0.0.27",
+    "@grexie/pages-builder": "^0.0.27",
+    "@grexie/pages-runtime-styles": "^0.0.27",
     "@mdx-js/mdx": "^2.1.1",
     "gray-matter": "^4.0.3",
     "source-map": "^0.7.4"
