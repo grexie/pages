@@ -22,7 +22,7 @@
     "dev:link": "monorepo workspaces yarn link",
     "dev:unlink": "monorepo workspaces yarn unlink",
     "release": "release-it",
-    "test": "NODE_OPTIONS='--no-warnings --loader=@grexie/pages-builder/loader --experimental-specifier-resolution=node --experimental-import-meta-resolve --experimental-vm-modules' jest"
+    "test": "NODE_OPTIONS='--no-warnings --experimental-specifier-resolution=node --experimental-import-meta-resolve --experimental-vm-modules' jest"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",

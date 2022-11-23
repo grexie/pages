@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ModuleLoader2 should build a module 1`] = `
+exports[`ModuleLoader should build a module 1`] = `
 {
   "context": "",
   "filename": "test.jsx",

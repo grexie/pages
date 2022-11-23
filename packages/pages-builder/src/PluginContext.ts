@@ -24,18 +24,26 @@ export interface Plugin {
   handler: PluginHandler;
 }
 
+export interface PluginContextOptions {
+  rootDir: string;
+  fs: ReadableFileSystem;
+  descriptionFile: string;
+}
+
 export class PluginContext {
+  readonly rootDir: string;
   readonly #plugins = new Map<string, Promise<Plugin>>();
   readonly plugins = new Set<Plugin>();
   readonly #fs: ReadableFileSystem;
 
-  private constructor(fs: ReadableFileSystem, descriptionFile: string) {
+  private constructor({ rootDir, fs, descriptionFile }: PluginContextOptions) {
+    this.rootDir = rootDir;
     this.#fs = fs;
     this.createPlugins(descriptionFile);
   }
 
-  static async create(fs: ReadableFileSystem, descriptionFile: string) {
-    const context = new PluginContext(fs, descriptionFile);
+  static async create(options: PluginContextOptions) {
+    const context = new PluginContext(options);
 
     const plugins = await Promise.all(context.#plugins.values());
     for (const plugin of plugins) {
@@ -46,25 +54,23 @@ export class PluginContext {
   }
 
   protected createPluginResolver(resolveToContext: boolean) {
-    const require = createRequire(import.meta.url);
-
-    const pagesDir = path.dirname(
-      require.resolve('@grexie/pages/package.json')
+    const moduleDirs: string[] = [path.resolve(this.rootDir, 'node_modules')];
+    const monorepoRoot = path.resolve(
+      new URL(import.meta.url).pathname,
+      '..',
+      '..',
+      '..',
+      '..',
+      'node_modules'
     );
-    const pagesModules: string[] = [];
-
-    let dirname = pagesDir;
-    while (dirname) {
-      pagesModules.push(path.resolve(dirname, 'node_modules'));
-      if (path.dirname(dirname) === dirname) {
-        break;
+    try {
+      if (this.#fs.statSync(monorepoRoot).isDirectory()) {
+        moduleDirs.push(monorepoRoot);
       }
-      dirname = path.dirname(dirname);
-    }
-    const modulesDirs = [...pagesModules];
+    } catch (err) {}
 
     return resolve.ResolverFactory.createResolver({
-      modules: modulesDirs,
+      modules: moduleDirs,
       fileSystem: this.#fs as any,
       conditionNames: ['@grexie/pages'],
       resolveToContext,
@@ -105,29 +111,25 @@ export class PluginContext {
       return;
     }
 
-    try {
-      const entrypoint = this.createPluginResolver(false).resolveSync(
-        {},
-        context,
-        request
-      );
+    const entrypoint = this.createPluginResolver(false).resolveSync(
+      {},
+      context,
+      request
+    );
 
-      if (!entrypoint) {
-        return;
-      }
-
-      const plugin: Promise<Plugin> = import(entrypoint).then(
-        (exports): Plugin => ({
-          name: request,
-          path: resolved as string,
-          handler: exports.default,
-        })
-      );
-      this.#plugins.set(request, plugin);
-      this.createPlugins(path.resolve(resolved, 'package.json'));
-    } catch (err) {
-      console.error(err);
+    if (!entrypoint) {
+      return;
     }
+
+    const plugin: Promise<Plugin> = import(entrypoint).then(
+      (exports): Plugin => ({
+        name: request,
+        path: resolved as string,
+        handler: exports.default,
+      })
+    );
+    this.#plugins.set(request, plugin);
+    this.createPlugins(path.resolve(resolved, 'package.json'));
   }
 
   protected createPlugins(descriptionFile: string) {
@@ -136,6 +138,8 @@ export class PluginContext {
     } catch (err) {
       return;
     }
+
+    this.createPlugin(path.dirname(descriptionFile), '@grexie/pages');
 
     const descriptionFileData: DescriptionFile = JSON.parse(
       this.#fs.readFileSync(descriptionFile).toString()

@@ -75,8 +75,6 @@ export default async function ModuleLoader(
 
     const config = await configPromise;
 
-    console.info(this.resourcePath, config.render, path);
-
     let resource: Resource | undefined = undefined;
 
     const sourceContext = context.createSourceContext({

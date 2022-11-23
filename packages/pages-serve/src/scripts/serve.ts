@@ -21,10 +21,11 @@ export default async () => {
   );
   const fileSystem = new FileSystem().add('/', fs).add(process.cwd(), volume);
 
-  const context = await PluginContext.create(
-    fileSystem,
-    path.resolve(process.cwd(), 'package.json')
-  );
+  const context = await PluginContext.create({
+    rootDir: process.cwd(),
+    fs: fileSystem,
+    descriptionFile: path.resolve(process.cwd(), 'package.json'),
+  });
 
   const require = createRequire(import.meta.url);
 

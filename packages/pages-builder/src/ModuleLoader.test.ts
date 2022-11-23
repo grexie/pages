@@ -3,7 +3,7 @@ import { MockBuilder } from './MockBuilder.js';
 
 // jest.setTimeout(30000);
 
-describe('ModuleLoader2', () => {
+describe('ModuleLoader', () => {
   let builder: MockBuilder;
 
   beforeEach(async () => {
@@ -14,6 +14,7 @@ describe('ModuleLoader2', () => {
     builder.addSource('test.jsx', 'null', {}).write();
     builder.addConfig('.pages.yml', { metadata: {} });
     const stats = await builder.build();
+
     const loader = builder.getModuleContext(stats.compilation).loaders['esm'];
     const { context, filename, source } = (await loader.modules[
       path.resolve(builder.rootDir, 'test.jsx')

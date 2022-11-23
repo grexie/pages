@@ -370,15 +370,18 @@ export class RootBuildContext extends Context implements BuildContext {
       ),
     };
 
-    PluginContext.create(
-      this.fs,
-      path.resolve(this.rootDir, 'package.json')
-    ).then(async plugins => {
-      this.#plugins = plugins;
-      await this.initializePlugins([...plugins.plugins]);
-      await this.#events.emit(EventPhase.after, 'config', this);
-      this.#readyResolver.resolve(this as BuildContext);
-    });
+    this.#readyResolver.resolve(
+      PluginContext.create({
+        rootDir: this.rootDir,
+        fs: this.fs,
+        descriptionFile: path.resolve(this.rootDir, 'package.json'),
+      }).then(async plugins => {
+        this.#plugins = plugins;
+        await this.initializePlugins([...plugins.plugins]);
+        await this.#events.emit(EventPhase.after, 'config', this);
+        return this;
+      })
+    );
 
     (global as any).PagesBuildContext = this;
   }

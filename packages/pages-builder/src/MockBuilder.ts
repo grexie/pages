@@ -1,8 +1,8 @@
 import { BuildContext, RootBuildContext } from './BuildContext.js';
 import { Provider } from './Provider.js';
 import { ResourceMetadata } from '@grexie/pages/api';
-import { Volume } from 'memfs';
-import { WritableFileSystem } from './FileSystem.js';
+import { vol, Volume } from 'memfs';
+import { FileSystem, WritableFileSystem } from './FileSystem.js';
 import path from 'path';
 import { Config } from '@grexie/pages/api';
 import YAML from 'yaml';
@@ -105,7 +105,9 @@ export class MockBuilder extends RootBuildContext {
         provider: Provider,
       },
     ];
-    let volume = new Volume() as WritableFileSystem;
+    let volume: WritableFileSystem = new FileSystem()
+      .add('/', new Volume(), true)
+      .add('/', fs, false);
     let rootDir = '/pages';
 
     if (process.env.PAGES_TEST_ROOT) {
@@ -129,7 +131,6 @@ export class MockBuilder extends RootBuildContext {
       volume.rmSync(this.rootDir, { recursive: true, force: true });
     }
     volume.mkdirSync(this.rootDir, { recursive: true });
-    this.fs.add(path.resolve(this.pagesDir, '..', '..'), fs, false, 'pagesDir');
     this.fs.add(this.outputDir, volume, true, 'outputDir');
   }
 
