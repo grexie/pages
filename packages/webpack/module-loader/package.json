@@ -21,12 +21,12 @@
   "dependencies": {
     "@babel/core": "^7.20.2",
     "@babel/preset-env": "^7.20.2",
-    "@grexie/source-maps": "0.0.22",
+    "@grexie/source-maps": "^0.0.22",
     "react-refresh": "^0.14.0"
   },
   "peerDependencies": {
-    "@grexie/pages": "0.0.22",
-    "@grexie/pages-builder": "0.0.22",
+    "@grexie/pages": "^0.0.22",
+    "@grexie/pages-builder": "^0.0.22",
     "webpack": "^5.75.0"
   },
   "exports": {

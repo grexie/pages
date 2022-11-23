@@ -14,12 +14,12 @@
     "react-dom": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages-cli": "0.0.22",
-    "@grexie/pages-builder": "0.0.22",
+    "@grexie/pages-cli": "^0.0.22",
+    "@grexie/pages-builder": "^0.0.22",
     "@grexie/compose": "^0.1.17",
-    "@grexie/context": "0.0.22",
-    "@grexie/hash-object": "0.0.22",
-    "@grexie/proxy": "0.0.22",
+    "@grexie/context": "^0.0.22",
+    "@grexie/hash-object": "^0.0.22",
+    "@grexie/proxy": "^0.0.22",
     "react-is": "^18.2.0"
   },
   "devDependencies": {
