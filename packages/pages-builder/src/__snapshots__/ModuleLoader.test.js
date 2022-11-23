@@ -47,7 +47,6 @@ import { metadata as __pages_metadata_2 } from "@grexie/pages/defaults.pages"
       __pages_hydrate(resource, __pages_handler);
 
       export default __pages_handler;
-
       
       if (typeof module === 'undefined') {
         __pages_refresh_runtime.update(import.meta.webpackHot);

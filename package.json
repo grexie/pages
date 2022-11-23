@@ -41,6 +41,8 @@
     "jest-light-runner": "^0.4.1",
     "npm-run-all": "^4.1.5",
     "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-lorem-ipsum": "^1.4.10",
     "release-it": "^15.5.0",
     "ts-node": "^10.8.1",
@@ -59,25 +61,7 @@
           "packages/runtime/*",
           "packages/utils/*",
           "packages/webpack/*"
-        ],
-        "additionalManifests": {
-          "versionUpdates": [
-            "package.json",
-            "packages/pages*/package.json",
-            "packages/plugins/*/package.json",
-            "packages/runtime/*/package.json",
-            "packages/utils/*/package.json",
-            "packages/webpack/*/package.json"
-          ],
-          "dependencyUpdates": [
-            "package.json",
-            "packages/pages*/package.json",
-            "packages/plugins/*/package.json",
-            "packages/runtime/*/package.json",
-            "packages/utils/*/package.json",
-            "packages/webpack/*/package.json"
-          ]
-        }
+        ]
       }
     },
     "npm": false

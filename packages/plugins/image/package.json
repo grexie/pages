@@ -13,9 +13,9 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.21",
-    "@grexie/pages-builder": "^0.0.21",
-    "@grexie/pages-image-loader": "^0.0.21",
+    "@grexie/pages": "*",
+    "@grexie/pages-builder": "*",
+    "@grexie/pages-image-loader": "*",
     "raw-loader": "^4.0.2"
   },
   "exports": {
