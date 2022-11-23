@@ -27,6 +27,7 @@
   "peerDependencies": {
     "@grexie/pages": "^0.0.24",
     "@grexie/pages-builder": "^0.0.24",
+    "@grexie/pages-runtime-handler": "^0.0.24",
     "webpack": "^5.75.0"
   },
   "exports": {
