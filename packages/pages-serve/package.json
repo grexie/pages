@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-serve",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -13,9 +13,9 @@
     "webpack": ">=5.75.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.24",
-    "@grexie/pages-builder": "^0.0.24",
-    "@grexie/resolvable": "^0.0.24",
+    "@grexie/pages": "^0.0.25",
+    "@grexie/pages-builder": "^0.0.25",
+    "@grexie/resolvable": "^0.0.25",
     "chalk": "^5.1.2",
     "express": "^4.18.2",
     "nodemon": "^2.0.20",
