@@ -170,7 +170,7 @@ export default async function ModuleLoader(
             (id, i) =>
               `import __pages_composable_${i} from ${JSON.stringify(id)};`
           )
-          .join(',\n')}
+          .join('\n')}
         import __pages_handler_component from ${JSON.stringify(
           options.handler
         )};
@@ -258,14 +258,16 @@ export default async function ModuleLoader(
           (id, i) =>
             `import __pages_composable_${i} from ${JSON.stringify(id)};`
         )
-        .join(',\n')}
+        .join('\n')}
 
         ${hmrHeader}
       `;
 
       const footer = `
       ${serializedResource.code};
-      const __pages_handler = __pages_wrap_handler(
+      ${
+        config.render
+          ? `const __pages_handler = __pages_wrap_handler(
         resource,
         __pages_handler_component,
         ${composablesRequires
@@ -275,8 +277,9 @@ export default async function ModuleLoader(
 
       __pages_hydrate(resource, __pages_handler);
 
-      export default __pages_handler;
-
+      export default __pages_handler;`
+          : ''
+      }
       ${hmrFooter}
     `;
 

@@ -9,6 +9,7 @@ const server = new Server({
   providers: [
     {
       provider: Provider,
+      exclude: ['assets/**'],
     },
   ],
   fs,

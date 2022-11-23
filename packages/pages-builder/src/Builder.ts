@@ -285,7 +285,7 @@ export class Builder {
                 loader: 'css-loader',
               },
             ],
-            include: /\.global\.css$/,
+            exclude: /\.module\.css$/,
           },
           {
             type: 'javascript/esm',

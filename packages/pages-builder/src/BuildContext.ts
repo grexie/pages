@@ -271,6 +271,9 @@ export class RootBuildContext extends Context implements BuildContext {
   readonly modulesDirs: string[];
   readonly builder: Builder;
   readonly config: ConfigContext;
+  readonly providerConfig: Partial<ProviderConfig> = {
+    exclude: [],
+  };
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly resolverConfig: Required<ModuleResolverConfig>;
   readonly #readyResolver = createResolver<BuildContext>();
@@ -332,7 +335,12 @@ export class RootBuildContext extends Context implements BuildContext {
       this.registry.providers.add(
         new provider({
           context: this as BuildContext,
+          ...this.providerConfig,
           ...config,
+          exclude: [
+            ...(this.providerConfig.exclude ?? []),
+            ...(config.exclude ?? []),
+          ],
         })
       );
     });
@@ -363,14 +371,12 @@ export class RootBuildContext extends Context implements BuildContext {
           '.jsx',
           '.ts',
           '.tsx',
-          '.scss',
           '.css',
         ])
       ),
       esmExtensions: [
         ...new Set([
           ...(resolver.esmExtensions ?? []),
-          '.scss',
           '.css',
           '.pages.yml',
           '.pages.yaml',
@@ -430,6 +436,10 @@ export class RootBuildContext extends Context implements BuildContext {
 
   createSourceContext(options: SourceContextOptions) {
     return new SourceContext(options);
+  }
+
+  addExcludeGlob(...globs: string[]) {
+    this.providerConfig.exclude.push(...globs);
   }
 
   addCompilationRoot(...paths: string[]) {
@@ -525,6 +535,10 @@ class ChildBuildContext extends Context implements BuildContext {
     return this.parent.createSourceContext(options);
   }
 
+  addExcludeGlob(...globs: string[]) {
+    return this.parent.addExcludeGlobs(...globs);
+  }
+
   addCompilationRoot(...paths: string[]) {
     return this.parent.addCompilationRoot(...paths);
   }
@@ -568,7 +582,15 @@ class ChildBuildContext extends Context implements BuildContext {
     this.rootDir = rootDir;
     this.registry = new Registry(this);
     for (const { provider, ...config } of providers ?? []) {
-      const p = new provider({ context: this, ...config });
+      const p = new provider({
+        context: this,
+        ...(parent.providerConfig ?? {}),
+        ...config,
+        exclude: [
+          ...(parent.providerConfig.exclude ?? []),
+          ...(config.exclude ?? []),
+        ],
+      });
       this.registry.providers.add(p);
     }
     this.config = new ConfigContext({ context: this });

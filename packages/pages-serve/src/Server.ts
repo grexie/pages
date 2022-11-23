@@ -3,11 +3,14 @@ import {
   Stats,
   RootBuildContext,
   BuildContextOptions,
+  EventManager,
+  EventPhase,
 } from '@grexie/pages-builder';
 import { ResolvablePromise, createResolver } from '@grexie/resolvable';
 import WebpackHotMiddleware from 'webpack-hot-middleware';
 import WebpackDevMiddleware from 'webpack-dev-middleware';
 import express from 'express';
+import path from 'path';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;
@@ -40,6 +43,7 @@ export class ServerContext extends RootBuildContext {
 export class Server {
   readonly context: ServerContext;
   #server: ResolvablePromise<http.Server> | null = null;
+  readonly #events = EventManager.get<BuildContext>(this as BuildContext);
 
   constructor(options: ServerOptions) {
     this.context = new ServerContext({ server: this, ...options });
@@ -60,6 +64,7 @@ export class Server {
     // const handler = new RequestHandler(this.context);
     const app = express();
 
+    await this.#events.emit(EventPhase.before, 'routes', app);
     app.use(
       WebpackDevMiddleware(compiler, {
         publicPath: compiler.options.output.publicPath,
@@ -75,6 +80,7 @@ export class Server {
         })
       );
     }
+    await this.#events.emit(EventPhase.after, 'routes', app, express);
 
     const server = http.createServer(app);
     server.listen(this.context.port, () => {

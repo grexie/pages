@@ -1,9 +1,20 @@
 import type { RootBuildContext } from './BuildContext.js';
 import type { ModuleLoader } from './ModuleLoader.js';
+import enhancedResolve from 'enhanced-resolve';
 import path from 'path';
+import fs from 'fs';
 
 const baseUrl = new URL('file://');
 baseUrl.pathname = `${process.cwd()}/`;
+
+const resolver = enhancedResolve.ResolverFactory.createResolver({
+  fileSystem: fs,
+  modules: [
+    path.resolve(process.cwd(), 'node_modules'),
+    path.resolve(new URL(import.meta.url).pathname, '..', 'node_modules'),
+  ],
+  fullySpecified: false,
+});
 
 export const resolve: NodeJS.LoaderHooks.Resolve = async (
   specifier,
@@ -33,7 +44,29 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
     }
   }
 
-  return next(specifier, context);
+  try {
+    return await next(specifier, context);
+  } catch (err) {
+    return await new Promise<string>((resolve, reject) =>
+      resolver.resolve(
+        {},
+        path.dirname(new URL(parentURL).pathname),
+        specifier,
+        {},
+        (err, result) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve({
+            url: `file://${result}`,
+            shortCircuit: true,
+          });
+        }
+      )
+    );
+  }
 };
 
 export const load: NodeJS.LoaderHooks.Load = async (url, context, next) => {
@@ -44,8 +77,6 @@ export const load: NodeJS.LoaderHooks.Load = async (url, context, next) => {
       path.dirname(new URL(url).pathname),
       new URL(url).pathname
     );
-
-    console.info(url, reference);
 
     if (reference.compile) {
       const module = await loader.context.requireModule(
