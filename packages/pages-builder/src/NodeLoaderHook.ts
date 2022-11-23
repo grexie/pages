@@ -8,7 +8,7 @@ const baseUrl = new URL('file://');
 baseUrl.pathname = `${process.cwd()}/`;
 
 const resolver = enhancedResolve.ResolverFactory.createResolver({
-  fileSystem: fs,
+  fileSystem: fs as any,
   modules: [
     path.resolve(process.cwd(), 'node_modules'),
     path.resolve(new URL(import.meta.url).pathname, '..', 'node_modules'),
@@ -47,24 +47,25 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
   try {
     return await next(specifier, context);
   } catch (err) {
-    return await new Promise<string>((resolve, reject) =>
-      resolver.resolve(
-        {},
-        path.dirname(new URL(parentURL).pathname),
-        specifier,
-        {},
-        (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+    return await new Promise<{ url: string; shortCircuit?: boolean }>(
+      (resolve, reject) =>
+        resolver.resolve(
+          {},
+          path.dirname(new URL(parentURL).pathname),
+          specifier,
+          {},
+          (err, result) => {
+            if (err) {
+              reject(err);
+              return;
+            }
 
-          resolve({
-            url: `file://${result}`,
-            shortCircuit: true,
-          });
-        }
-      )
+            resolve({
+              url: `file://${result}`,
+              shortCircuit: true,
+            });
+          }
+        )
     );
   }
 };

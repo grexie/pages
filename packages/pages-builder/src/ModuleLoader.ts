@@ -8,7 +8,6 @@ import type { ModuleContext } from './ModuleContext.js';
 import path from 'path';
 import { isPlainObject } from '@grexie/is-plain-object';
 import type { BuildContext } from './BuildContext.js';
-import { URL, URLSearchParams } from 'whatwg-url';
 
 const vmGlobal = { process, URL, URLSearchParams } as any;
 vmGlobal.global = vmGlobal;

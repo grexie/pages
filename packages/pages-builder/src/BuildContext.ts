@@ -7,7 +7,12 @@ import {
 import path from 'path';
 import type { FileSystemOptions, WritableFileSystem } from './FileSystem.js';
 import { Builder } from './Builder.js';
-import { ProviderConfig, Registry } from './Registry.js';
+import {
+  ProviderConfig,
+  ProviderConstructor,
+  ProviderOptions,
+  Registry,
+} from './Registry.js';
 import { ModuleContext } from './ModuleContext.js';
 import os from 'os';
 import { ConfigContext } from './ConfigContext.js';
@@ -76,6 +81,7 @@ export interface BuildContext extends Context {
   readonly ready: Promise<BuildContext>;
   readonly plugins?: Set<Plugin>;
   readonly defaultFiles: WritableFileSystem;
+  readonly providerConfig: Partial<ProviderConfig>;
   readonly cache: ICache;
   readonly fs: WritableFileSystem;
   readonly compilation?: Compilation;
@@ -86,6 +92,7 @@ export interface BuildContext extends Context {
 
   getModuleContext(compilation: Compilation): ModuleContext;
   createSourceContext(options: SourceContextOptions): SourceContext;
+  addExcludeGlob(...globs: string[]): void;
   addCompilationRoot(...paths: string[]): void;
   addResolveExtension(...extensions: string[]): void;
   addEsmExtension(...extensions: string[]): void;
@@ -439,7 +446,10 @@ export class RootBuildContext extends Context implements BuildContext {
   }
 
   addExcludeGlob(...globs: string[]) {
-    this.providerConfig.exclude.push(...globs);
+    if (!this.providerConfig.exclude) {
+      this.providerConfig.exclude = [];
+    }
+    this.providerConfig.exclude!.push(...globs);
   }
 
   addCompilationRoot(...paths: string[]) {
@@ -507,6 +517,10 @@ class ChildBuildContext extends Context implements BuildContext {
     return this.parent.builder;
   }
 
+  get providerConfig() {
+    return this.parent.providerConfig;
+  }
+
   get resolverConfig() {
     return this.parent.resolverConfig;
   }
@@ -536,7 +550,7 @@ class ChildBuildContext extends Context implements BuildContext {
   }
 
   addExcludeGlob(...globs: string[]) {
-    return this.parent.addExcludeGlobs(...globs);
+    return this.parent.addExcludeGlob(...globs);
   }
 
   addCompilationRoot(...paths: string[]) {

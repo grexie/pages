@@ -43,7 +43,7 @@ export class ServerContext extends RootBuildContext {
 export class Server {
   readonly context: ServerContext;
   #server: ResolvablePromise<http.Server> | null = null;
-  readonly #events = EventManager.get<BuildContext>(this as BuildContext);
+  readonly #events = EventManager.get<Server>(this);
 
   constructor(options: ServerOptions) {
     this.context = new ServerContext({ server: this, ...options });

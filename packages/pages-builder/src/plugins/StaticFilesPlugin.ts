@@ -1,3 +1,4 @@
+import type { BuildContext } from '../BuildContext.js';
 import type { PluginHandler } from '../PluginContext.js';
 import type { Events } from '../EventManager.js';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
