@@ -1,6 +1,6 @@
 {
   "name": "@grexie/mutex",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,7 +19,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/resolvable": "^0.0.29"
+    "@grexie/resolvable": "^0.0.30"
   },
   "exports": {
     ".": {
