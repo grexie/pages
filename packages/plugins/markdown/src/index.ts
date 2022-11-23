@@ -22,6 +22,7 @@ export default (context: Events<BuildContext>) => {
   });
 
   context.after('config', (context: BuildContext) => {
+    context.addSourceExtension(...extensions);
     context.addResolveExtension(...extensions);
     context.addEsmExtension(...extensions);
     context.addCompileExtension(...extensions);

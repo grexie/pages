@@ -10,7 +10,6 @@ const globAsync = promisify(glob);
 
 export class Provider {
   readonly context: BuildContext;
-  readonly #exclude: string[];
   readonly rootDir: string;
   readonly parentRootDir: string;
   readonly basePath: string[];
@@ -23,7 +22,6 @@ export class Provider {
     rootDir = context.rootDir,
     parentRootDir = context.rootDir,
     basePath = [],
-    exclude = [],
   }: ProviderOptions) {
     this.context = context;
     this.parentRootDir = parentRootDir;
@@ -32,7 +30,6 @@ export class Provider {
 
     this.#sources = createResolver();
     this.#configs = createResolver();
-    this.#exclude = exclude;
   }
 
   private async create(
@@ -71,7 +68,7 @@ export class Provider {
         'yarn-error.log',
         'yarn.lock',
         'package-lock.json',
-        ...this.#exclude,
+        ...(this.context.providerConfig.exclude ?? []),
       ];
 
       if (this.context.outputDir.startsWith(this.rootDir)) {
@@ -87,7 +84,10 @@ export class Provider {
       }
 
       const files = await globAsync(
-        `**/*.{${this.context.resolverConfig.extensions
+        `**/*{${[
+          ...(this.context.providerConfig.extensions ?? []),
+          ...(this.context.providerConfig.configExtensions ?? []),
+        ]
           .map(ext => ext.substring(1))
           .join(',')}}`,
         {

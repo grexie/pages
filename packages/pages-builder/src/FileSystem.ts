@@ -1,6 +1,6 @@
 import path from 'path';
 import { Compiler } from 'webpack';
-import { EventEmitter } from 'events';
+import EventEmitter from 'events';
 
 interface ReadableFileSystemSync {
   readFileSync(filename: string): Buffer | string;

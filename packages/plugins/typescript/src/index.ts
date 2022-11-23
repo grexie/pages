@@ -13,8 +13,8 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.pages\.ts$/,
         use: [
-          this.loader('@grexie/pages-cache-loader'),
-          this.loader('@grexie/pages-config-loader'),
+          context.builder.loader('@grexie/pages-cache-loader'),
+          context.builder.loader('@grexie/pages-config-loader'),
           {
             loader: 'babel-loader',
             options: {
@@ -30,8 +30,8 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.tsx?$/,
         use: [
-          this.loader('@grexie/pages-cache-loader'),
-          this.loader('@grexie/pages-module-loader'),
+          context.builder.loader('@grexie/pages-cache-loader'),
+          context.builder.loader('@grexie/pages-module-loader'),
           {
             loader: 'babel-loader',
             options: {
@@ -46,9 +46,7 @@ export default (context: Events<BuildContext>) => {
                   },
                 ],
               ],
-              plugins: hot ? ['react-refresh/babel'] : [],
-              cwd: context.rootDir,
-              root: context.rootDir,
+              plugins: config.devServer?.hot ? ['react-refresh/babel'] : [],
               sourceMaps: true,
             },
           },
@@ -58,6 +56,8 @@ export default (context: Events<BuildContext>) => {
   });
 
   context.after('config', (context: BuildContext) => {
+    context.addSourceExtension(...extensions);
+    context.addConfigExtension('.pages.ts');
     context.addResolveExtension(...extensions);
     context.addEsmExtension(...extensions);
     context.addCompileExtension(...extensions);

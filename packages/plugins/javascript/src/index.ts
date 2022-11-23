@@ -13,14 +13,12 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.pages\.([mc]?js)$/,
         use: [
-          this.loader('@grexie/pages-cache-loader'),
-          this.loader('@grexie/pages-config-loader'),
+          context.builder.loader('@grexie/pages-cache-loader'),
+          context.builder.loader('@grexie/pages-config-loader'),
           {
             loader: 'babel-loader',
             options: {
               presets: [['@babel/env', { modules: false }]],
-              cwd: this.context.pagesDir,
-              root: this.context.rootDir,
             },
           },
         ],
@@ -28,9 +26,10 @@ export default (context: Events<BuildContext>) => {
       {
         type: 'javascript/esm',
         test: /\.jsx?$/,
+        include: [(filename: string) => context.sources.isRootDir(filename)],
         use: [
-          this.loader('@grexie/pages-cache-loader'),
-          this.loader('@grexie/pages-module-loader'),
+          context.builder.loader('@grexie/pages-cache-loader'),
+          context.builder.loader('@grexie/pages-module-loader'),
           {
             loader: 'babel-loader',
             options: {
@@ -44,7 +43,7 @@ export default (context: Events<BuildContext>) => {
                   },
                 ],
               ],
-              plugins: hot ? ['react-refresh/babel'] : [],
+              plugins: config.devServer?.hot ? ['react-refresh/babel'] : [],
               sourceMaps: true,
             },
           },
@@ -54,9 +53,16 @@ export default (context: Events<BuildContext>) => {
   });
 
   context.after('config', (context: BuildContext) => {
+    context.addSourceExtension('.js', '.jsx');
+    context.addConfigExtension('.pages.js', '.pages.mjs', '.pages.cjs');
     context.addResolveExtension(...extensions);
-    context.addCompileExtension('.jsx');
-    context.addEsmExtension('.mjs');
-    context.addCompilationRoot(pages.rootDir);
+    context.addCompileExtension(
+      '.jsx',
+      '.pages.js',
+      '.pages.mjs',
+      '.pages.cjs'
+    );
+    context.addEsmExtension('.jsx', '.mjs');
+    context.addCompilationRoot(context.rootDir);
   });
 };

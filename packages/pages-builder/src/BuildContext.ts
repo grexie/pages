@@ -92,6 +92,8 @@ export interface BuildContext extends Context {
 
   getModuleContext(compilation: Compilation): ModuleContext;
   createSourceContext(options: SourceContextOptions): SourceContext;
+  addSourceExtension(...extensions: string[]): void;
+  addConfigExtension(...extensions: string[]): void;
   addExcludeGlob(...globs: string[]): void;
   addCompilationRoot(...paths: string[]): void;
   addResolveExtension(...extensions: string[]): void;
@@ -137,7 +139,10 @@ class SourceResolver {
     if (rootDir[rootDir.length - 1] !== '/') {
       rootDir += '/';
     }
-    if (value.startsWith(rootDir)) {
+    if (
+      value.startsWith(rootDir) &&
+      !value.startsWith(path.resolve(rootDir, 'node_modules'))
+    ) {
       return true;
     }
 
@@ -280,6 +285,8 @@ export class RootBuildContext extends Context implements BuildContext {
   readonly config: ConfigContext;
   readonly providerConfig: Partial<ProviderConfig> = {
     exclude: [],
+    extensions: [],
+    configExtensions: [],
   };
   #defaultFiles: WritableFileSystem = new Volume() as WritableFileSystem;
   readonly resolverConfig: Required<ModuleResolverConfig>;
@@ -344,31 +351,20 @@ export class RootBuildContext extends Context implements BuildContext {
           context: this as BuildContext,
           ...this.providerConfig,
           ...config,
-          exclude: [
-            ...(this.providerConfig.exclude ?? []),
-            ...(config.exclude ?? []),
-          ],
+          exclude: this.providerConfig.exclude,
+          extensions: this.providerConfig.extensions,
+          configExtensions: this.providerConfig.configExtensions,
         })
       );
     });
 
     this.config = new ConfigContext({ context: this as BuildContext });
     this.resolverConfig = {
-      extensions: Array.from(
-        new Set([
-          ...(resolver.extensions ?? []),
-        ])
-      ),
+      extensions: Array.from(new Set([...(resolver.extensions ?? [])])),
       forceCompileExtensions: Array.from(
-        new Set([
-          ...(resolver.forceCompileExtensions ?? []),
-        ])
+        new Set([...(resolver.forceCompileExtensions ?? [])])
       ),
-      esmExtensions: [
-        ...new Set([
-          ...(resolver.esmExtensions ?? []),
-        ]),
-      ],
+      esmExtensions: [...new Set([...(resolver.esmExtensions ?? [])])],
       forceCompileRoots: Array.from(
         new Set([...(resolver.forceCompileRoots ?? [this.rootDir])])
       ),
@@ -419,6 +415,20 @@ export class RootBuildContext extends Context implements BuildContext {
 
   createSourceContext(options: SourceContextOptions) {
     return new SourceContext(options);
+  }
+
+  addSourceExtension(...extensions: string[]) {
+    if (!this.providerConfig.extensions) {
+      this.providerConfig.extensions = [];
+    }
+    this.providerConfig.extensions!.push(...extensions);
+  }
+
+  addConfigExtension(...extensions: string[]) {
+    if (!this.providerConfig.configExtensions) {
+      this.providerConfig.configExtensions = [];
+    }
+    this.providerConfig.configExtensions!.push(...extensions);
   }
 
   addExcludeGlob(...globs: string[]) {
@@ -525,6 +535,14 @@ class ChildBuildContext extends Context implements BuildContext {
     return this.parent.createSourceContext(options);
   }
 
+  addSourceExtension(...extensions: string[]): void {
+    return this.parent.addSourceExtension(...extensions);
+  }
+
+  addConfigExtension(...extensions: string[]): void {
+    return this.parent.addConfigExtension(...extensions);
+  }
+
   addExcludeGlob(...globs: string[]) {
     return this.parent.addExcludeGlob(...globs);
   }
@@ -576,10 +594,9 @@ class ChildBuildContext extends Context implements BuildContext {
         context: this,
         ...(parent.providerConfig ?? {}),
         ...config,
-        exclude: [
-          ...(parent.providerConfig.exclude ?? []),
-          ...(config.exclude ?? []),
-        ],
+        exclude: parent.providerConfig.exclude,
+        extensions: parent.providerConfig.extensions,
+        configExtensions: parent.providerConfig.configExtensions,
       });
       this.registry.providers.add(p);
     }

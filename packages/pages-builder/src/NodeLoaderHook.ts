@@ -7,12 +7,15 @@ import fs from 'fs';
 const baseUrl = new URL('file://');
 baseUrl.pathname = `${process.cwd()}/`;
 
+const NODE_PATH = process.env.NODE_PATH?.split(/[:;]/g) ?? [
+  path.resolve(process.cwd(), 'node_modules'),
+];
+
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
-  modules: [
-    path.resolve(process.cwd(), 'node_modules'),
-    path.resolve(new URL(import.meta.url).pathname, '..', 'node_modules'),
-  ],
+  mainFields: ['module', 'main'],
+  conditionNames: ['node', 'import', 'default'],
+  modules: NODE_PATH,
   fullySpecified: false,
 });
 
@@ -45,8 +48,6 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
   }
 
   try {
-    return await next(specifier, context);
-  } catch (err) {
     return await new Promise<{ url: string; shortCircuit?: boolean }>(
       (resolve, reject) =>
         resolver.resolve(
@@ -67,6 +68,8 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
           }
         )
     );
+  } catch (err) {
+    return await next(specifier, context);
   }
 };
 

@@ -106,6 +106,7 @@ export class ConfigContext {
   ): Promise<ConfigModule> {
     const sources = await this.context.registry.listConfig({ path });
     sources.sort((a, b) => a.path.length - b.path.length);
+
     let configModule: ConfigModule | undefined;
     for (const source of sources) {
       configModule = await this.#createConfigModule(

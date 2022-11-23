@@ -24,8 +24,10 @@ export class Source extends EventEmitter {
   get isPagesConfig() {
     const lastPath = this.#path[this.#path.length - 1];
     return (
-      ['.yml', '.yaml', '.json'].includes(path.extname(this.filename)) &&
-      ['.pages', 'pages'].includes(path.extname(lastPath) || lastPath)
+      this.context.providerConfig.configExtensions?.reduce(
+        (a, b) => a || this.filename.endsWith(b),
+        false
+      ) ?? false
     );
   }
 

@@ -21,6 +21,8 @@ export interface ProviderOptions {
   parentRootDir?: string;
   basePath?: string[];
   exclude?: string[];
+  extensions?: string[];
+  configExtensions?: string[];
 }
 
 export type ProviderConstructor<O extends ProviderOptions> = new (

@@ -264,7 +264,16 @@ export class ModuleResolver {
       )
     ) {
       if (
-        roots.reduce((a, b) => a || containsPath(b, resolved.filename), false)
+        roots.reduce(
+          (a, b) =>
+            a ||
+            (!containsPath(
+              path.resolve(b, 'node_modules'),
+              resolved.filename
+            ) &&
+              containsPath(b, resolved.filename)),
+          false
+        )
       ) {
         return this.#buildImport(resolved.filename, {
           compile: true,
