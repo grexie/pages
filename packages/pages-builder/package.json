@@ -31,6 +31,7 @@
     "@grexie/pages-module-loader": "^0.0.26",
     "@grexie/pages-resources-plugin": "^0.0.26",
     "@grexie/pages-runtime-hmr": "^0.0.26",
+    "@grexie/pages-runtime-util": "^0.0.26",
     "@grexie/pages-style-loader": "^0.0.26",
     "@grexie/pages-yaml-loader": "^0.0.26",
     "@grexie/promisify": "^0.0.26",
