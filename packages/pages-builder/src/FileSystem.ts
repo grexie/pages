@@ -440,7 +440,20 @@ export class FileSystem extends EventEmitter implements WritableFileSystem {
     filename: string,
     callback?: (err: null | NodeJS.ErrnoException, stats?: Stats) => void
   ) {
-    return this.#call('stat', false, callback, [filename], stats => stats);
+    if (arguments.length === 3) {
+      callback = arguments[2];
+      const options = arguments[1];
+
+      return this.#call(
+        'stat',
+        false,
+        callback,
+        [filename, options],
+        stats => stats
+      );
+    } else {
+      return this.#call('stat', false, callback, [filename], stats => stats);
+    }
   }
   statSync(filename: string): Stats {
     return this.#callSync('statSync', false, [filename]);
