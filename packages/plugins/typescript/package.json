@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-typescript",
-  "version": "0.0.26",
+  "version": "0.0.28",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -13,10 +13,10 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.27",
-    "@grexie/pages-builder": "^0.0.27",
-    "@grexie/pages-module-loader": "^0.0.27",
-    "@grexie/pages-config-loader": "^0.0.27",
+    "@grexie/pages": "^0.0.28",
+    "@grexie/pages-builder": "^0.0.28",
+    "@grexie/pages-module-loader": "^0.0.28",
+    "@grexie/pages-config-loader": "^0.0.28",
     "@babel/preset-typescript": "^7.17.12",
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
