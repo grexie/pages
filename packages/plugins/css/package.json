@@ -13,11 +13,11 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.26",
-    "@grexie/pages-builder": "^0.0.26",
-    "@grexie/pages-cache-loader": "^0.0.26",
-    "@grexie/pages-runtime-styles": "^0.0.26",
-    "@grexie/pages-style-loader": "^0.0.26",
+    "@grexie/pages": "^0.0.27",
+    "@grexie/pages-builder": "^0.0.27",
+    "@grexie/pages-cache-loader": "^0.0.27",
+    "@grexie/pages-runtime-styles": "^0.0.27",
+    "@grexie/pages-style-loader": "^0.0.27",
     "css-loader": "^6.7.2"
   },
   "exports": {
