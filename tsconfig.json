@@ -31,7 +31,25 @@
       "path": "packages/pages"
     },
     {
+      "path": "packages/plugins/css"
+    },
+    {
+      "path": "packages/plugins/image"
+    },
+    {
+      "path": "packages/plugins/javascript"
+    },
+    {
       "path": "packages/plugins/markdown"
+    },
+    {
+      "path": "packages/plugins/sass"
+    },
+    {
+      "path": "packages/plugins/typescript"
+    },
+    {
+      "path": "packages/plugins/yaml"
     },
     {
       "path": "packages/runtime/handler"
@@ -82,13 +100,13 @@
       "path": "packages/webpack/cache-loader"
     },
     {
+      "path": "packages/webpack/config-loader"
+    },
+    {
       "path": "packages/webpack/image-loader"
     },
     {
       "path": "packages/webpack/module-loader"
-    },
-    {
-      "path": "packages/webpack/config-loader"
     },
     {
       "path": "packages/webpack/resources-plugin"

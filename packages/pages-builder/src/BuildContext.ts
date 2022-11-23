@@ -29,7 +29,6 @@ import { Events, EventManager, EventPhase } from './EventManager.js';
 import { PluginContext, Plugin } from './PluginContext.js';
 import { ICache } from './Cache.js';
 import webpack from 'webpack';
-import { string } from 'prop-types';
 
 export interface ChildBuildOptions {
   providers: ProviderConfig[];

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "chalk": "^5.1.2",
-    "enhanced-resolve": "^5.10.0",
+    "enhanced-resolve": "^5.12.0",
     "source-map-support": "^0.5.21"
   },
   "exports": {

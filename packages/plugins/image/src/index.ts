@@ -18,8 +18,6 @@ export default (context: Events<BuildContext>) => {
   });
 
   context.after('config', (context: BuildContext) => {
-    context.addCompilationRoot(require.resolve('@grexie/pages-runtime-image'));
-
     for (const ext of extensions) {
       context.addEsmExtension(ext);
       context.addCompileExtension(ext);
