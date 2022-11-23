@@ -248,24 +248,12 @@ export class Builder {
         children: true,
       },
       mode: production ? 'production' : 'development',
-      // devtool: 'source-map',
       output: {
         path: this.context.outputDir,
         filename: `assets/js/[name].js`,
         clean: !!production,
       },
       target: 'web',
-      // externals: [
-      //   nodeExternals({
-      //     modulesDir: this.context.modulesDirs[0],
-      //     additionalModuleDirs: this.context.modulesDirs.slice(1),
-      //   }),
-      // ]
-      // devServer: {
-      //   watchFiles: {
-      //     paths: [this.context.rootDir, ]
-      //   }
-      // },
       watchOptions: {
         ignored: [
           this.context.outputDir,
@@ -274,127 +262,7 @@ export class Builder {
         ],
       },
       module: {
-        rules: [
-          {
-            type: 'javascript/esm',
-            test: /\.css$/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-style-loader'),
-              {
-                loader: 'css-loader',
-              },
-            ],
-            exclude: /\.module\.css$/,
-          },
-          {
-            type: 'javascript/esm',
-            test: /\.css$/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-style-loader'),
-              {
-                loader: 'css-loader',
-                options: {
-                  modules: true,
-                },
-              },
-            ],
-            include: /\.module\.css$/,
-          },
-          {
-            type: 'javascript/esm',
-            test: /\.pages\.([mc]?js|ts)$/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-config-loader'),
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: [
-                    '@babel/typescript',
-                    ['@babel/env', { loose: true, modules: false }],
-                  ],
-                  cwd: this.context.pagesDir,
-                  root: this.context.rootDir,
-                },
-              },
-            ],
-          },
-          {
-            type: 'javascript/esm',
-            test: /(^\.?|\/\.?|\.)pages.ya?ml$/,
-            exclude: /(node_modules|bower_components)/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-config-loader'),
-              this.loader('@grexie/pages-yaml-loader'),
-            ],
-          },
-          {
-            type: 'javascript/esm',
-            test: /\.(jsx?|mjs|cjs)$/,
-            include: [
-              this.context.sources.isRootDir.bind(this.context.sources),
-            ],
-            //include: [/node_modules\/@mdx-js/],
-            exclude: /(node_modules|bower_components)/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-module-loader'),
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: [
-                    ['@babel/react', { runtime: 'automatic' }],
-                    [
-                      '@babel/env',
-                      {
-                        targets: 'node 16',
-                        modules: false,
-                      },
-                    ],
-                  ],
-                  plugins: hot ? ['react-refresh/babel'] : [],
-                  cwd: this.context.pagesDir,
-                  root: this.context.rootDir,
-                },
-              },
-            ],
-          },
-          {
-            type: 'javascript/esm',
-            test: /\.(ts|tsx)$/,
-            include: [
-              this.context.sources.isRootDir.bind(this.context.sources),
-            ],
-            exclude: /(node_modules|bower_components)/,
-            use: [
-              this.loader('@grexie/pages-cache-loader'),
-              this.loader('@grexie/pages-module-loader'),
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: [
-                    '@babel/typescript',
-                    ['@babel/react', { runtime: 'automatic' }],
-                    [
-                      '@babel/env',
-                      {
-                        targets: 'node 16',
-                        modules: false,
-                      },
-                    ],
-                  ],
-                  plugins: hot ? ['react-refresh/babel'] : [],
-                  cwd: this.context.pagesDir,
-                  root: this.context.rootDir,
-                  sourceMaps: true,
-                },
-              },
-            ],
-          },
-        ],
+        rules: [],
       },
       resolve: {
         alias: {

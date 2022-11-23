@@ -357,40 +357,16 @@ export class RootBuildContext extends Context implements BuildContext {
       extensions: Array.from(
         new Set([
           ...(resolver.extensions ?? []),
-          '.yml',
-          '.yaml',
-          '.js',
-          '.cjs',
-          '.mjs',
-          '.jsx',
-          '.ts',
-          '.tsx',
         ])
       ),
       forceCompileExtensions: Array.from(
         new Set([
           ...(resolver.forceCompileExtensions ?? []),
-          '.pages.yml',
-          '.pages.yaml',
-          '.pages.json',
-          '.pages.js',
-          '.pages.ts',
-          '.jsx',
-          '.ts',
-          '.tsx',
-          '.css',
         ])
       ),
       esmExtensions: [
         ...new Set([
           ...(resolver.esmExtensions ?? []),
-          '.css',
-          '.pages.yml',
-          '.pages.yaml',
-          '.jsx',
-          '.ts',
-          '.tsx',
-          '.mjs',
         ]),
       ],
       forceCompileRoots: Array.from(
