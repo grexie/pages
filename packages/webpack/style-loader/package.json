@@ -21,8 +21,6 @@
   "dependencies": {
     "@grexie/resolvable": "^0.0.29",
     "@grexie/source-maps": "^0.0.29",
-    "css-loader": "^6.7.2",
-    "sass-loader": "^13.2.0",
     "webpack": "^5.75.0"
   },
   "peerDependencies": {

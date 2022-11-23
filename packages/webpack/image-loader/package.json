@@ -22,9 +22,10 @@
     "@babel/core": "^7.20.2",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-react": "^7.18.6",
+    "@grexie/pages-runtime-image": "^0.0.29",
+    "@grexie/promisify": "^0.0.29",
     "@svgr/core": "^6.5.1",
     "sharp": "^0.31.2",
-    "@grexie/pages-runtime-image": "^0.0.29",
     "webpack": "^5.75.0"
   },
   "peerDependencies": {

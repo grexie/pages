@@ -21,8 +21,9 @@
   "dependencies": {
     "@babel/core": "^7.20.2",
     "@babel/preset-env": "^7.20.2",
-    "@grexie/source-maps": "^0.0.29",
+    "@grexie/compose": "^0.1.17",
     "@grexie/pages-runtime-handler": "^0.0.29",
+    "@grexie/source-maps": "^0.0.29",
     "react-refresh": "^0.14.0",
     "webpack": "^5.75.0"
   },

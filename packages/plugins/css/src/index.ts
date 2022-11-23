@@ -1,5 +1,4 @@
-import { Events, BuildContext } from '@grexie/pages-builder';
-import { Configuration } from 'webpack';
+import { Events, BuildContext, Configuration } from '@grexie/pages-builder';
 import { createRequire } from 'module';
 
 const require = createRequire(new URL(import.meta.url).pathname);

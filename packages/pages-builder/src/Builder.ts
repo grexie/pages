@@ -19,6 +19,9 @@ import webpack, { dependencies } from 'webpack';
 import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import { EventManager, EventPhase } from './EventManager.js';
+import type { Configuration } from 'webpack';
+
+export type { Configuration };
 
 // const originalResolveRequestArray =
 //   NormalModuleFactory.prototype.resolveRequestArray;
