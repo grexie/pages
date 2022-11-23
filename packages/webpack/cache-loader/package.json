@@ -18,7 +18,9 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.0.29",
+    "@grexie/pages-builder": "^0.0.29"
+  },
+  "dependencies": {
     "webpack": "^5.75.0"
   },
   "exports": {
