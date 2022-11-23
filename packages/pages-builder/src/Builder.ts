@@ -19,9 +19,11 @@ import webpack, { dependencies } from 'webpack';
 import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import { EventManager, EventPhase } from './EventManager.js';
-import type { Configuration } from 'webpack';
+import type { Configuration as WebpackConfiguration } from 'webpack';
 
-export type { Configuration };
+export type Configuration = WebpackConfiguration & {
+  devServer?: webpack.WebpackOptionsNormalized['devServer'];
+};
 
 // const originalResolveRequestArray =
 //   NormalModuleFactory.prototype.resolveRequestArray;
@@ -237,14 +239,12 @@ export class Builder {
     } as any;
   }
 
-  async config(): Promise<webpack.Configuration> {
+  async config(): Promise<Configuration> {
     const require = createRequire(import.meta.url);
     const production = process.env.NODE_ENV === 'production';
     const hot = !production && process.env.WEBPACK_HOT === 'true';
 
-    const config: webpack.Configuration & {
-      devServer?: webpack.WebpackOptionsNormalized['devServer'];
-    } = {
+    const config: Configuration = {
       context: this.context.rootDir,
       entry: {},
       stats: {
