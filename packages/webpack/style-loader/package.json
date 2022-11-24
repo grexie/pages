@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-style-loader",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,12 +19,12 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/resolvable": "^0.0.32",
-    "@grexie/source-maps": "^0.0.32",
+    "@grexie/resolvable": "^0.0.33",
+    "@grexie/source-maps": "^0.0.33",
     "webpack": "^5.75.0"
   },
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.0.32"
+    "@grexie/pages-builder": "^0.0.33"
   },
   "exports": {
     ".": {

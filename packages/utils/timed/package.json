@@ -1,6 +1,6 @@
 {
   "name": "@grexie/timed",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
