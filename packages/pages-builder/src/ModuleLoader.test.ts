@@ -1,3 +1,7 @@
+/**
+ * @jest-testRunner  jest-light-runner
+ */
+
 import path from 'path';
 import { MockBuilder } from './MockBuilder.js';
 

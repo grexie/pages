@@ -19,7 +19,6 @@ class SharedContext {
 
   shareContext(context: React.Context<any>) {
     if (!this.contexts.includes(context)) {
-      console.info('sharing context', context);
       this.contexts.push(context);
     }
   }

@@ -1,11 +1,14 @@
+/** @type {import('jest').Config} */
+
 module.exports = {
   verbose: true,
   clearMocks: true,
   collectCoverage: true,
-  // runner: 'jest-light-runner',
+  runner: 'jest-light-runner',
+  maxWorkers: 10,
+  setupFiles: ['<rootDir>/tools/jest/setup.js'],
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/'],
-  // projects: ['packages/*'],
   testMatch: ['**/*.(spec|test).js'],
   testPathIgnorePatterns: [
     '/node_modules/',

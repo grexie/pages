@@ -25,7 +25,7 @@ exports[`useRenderTree test2 1`] = `
       "order": 4,
     },
   ],
-  "index": undefined,
+  "index": 0,
   "order": 0,
 }
 `;
@@ -66,7 +66,7 @@ exports[`useRenderTree test2 2`] = `
       "order": 6,
     },
   ],
-  "index": undefined,
+  "index": 0,
   "order": 0,
 }
 `;
@@ -124,7 +124,7 @@ exports[`useRenderTree test2 3`] = `
       "order": 9,
     },
   ],
-  "index": undefined,
+  "index": 0,
   "order": 0,
 }
 `;

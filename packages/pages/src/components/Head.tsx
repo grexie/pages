@@ -141,27 +141,12 @@ class HeadContext extends EventEmitter {
         this.on('update', () => {
           clearImmediate(immediate);
           immediate = setImmediate(() => {
-            console.time('rendering');
             const element = this.render();
-            console.timeEnd('rendering');
-            console.time('sending to head');
             (window as any).__PAGES_HEAD__.render(element);
-            console.timeEnd('sending to head');
           });
         });
       });
     }
-  }
-
-  print() {
-    let stack = [this];
-    let el: HeadContext;
-    let out = [];
-    while ((el = stack.shift())) {
-      stack.unshift(...el.children);
-      console.info(el.nodeOrder, el.fragment);
-    }
-    return out;
   }
 
   #mutateCharacterData(mutation: MutationRecord) {
@@ -173,7 +158,7 @@ class HeadContext extends EventEmitter {
           Array.from(source.parentNode.childNodes).indexOf(source)
       ];
 
-    target.textContent = source.textContent;
+    target.innerHTML = source.innerHTML;
   }
 
   #mutateAttributes(mutation: MutationRecord) {
@@ -232,22 +217,17 @@ class HeadContext extends EventEmitter {
   mutate(mutation: MutationRecord) {
     let source: HTMLElement;
 
-    console.info('---');
-    this.root.print();
-
-    console.info(mutation.type);
     switch (mutation.type) {
       case 'attributes':
         return this.#mutateAttributes(mutation);
       case 'characterData':
         return this.#mutateCharacterData(mutation);
-      case '#mutateChildList':
+      case 'childList':
         return this.#mutateChildList(mutation);
     }
   }
 
   setProps(props: HeadProps, contexts: SharedContexts) {
-    console.time('set props');
     let children;
 
     const handleElement = (element: ReactElement, key?: number) => {
@@ -278,8 +258,6 @@ class HeadContext extends EventEmitter {
     this.props = { ...props, children };
 
     this.root.emit('update');
-
-    console.timeEnd('set props');
   }
 
   render(): ReactElement {
@@ -385,15 +363,18 @@ const useHeadPortal = (node: ReactNode) => {
     const observer = new MutationObserver(mutations => {
       mutations.forEach(mutation => head.mutate(mutation));
     });
-    observer.observe(fragment, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributeOldValue: true,
-      attributes: true,
+    const immediate = setImmediate(() => {
+      observer.observe(fragment, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributeOldValue: true,
+        attributes: true,
+      });
     });
 
     return () => {
+      clearImmediate(immediate);
       observer.disconnect();
       unmountComponentAtNode(fragment);
     };

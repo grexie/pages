@@ -60,7 +60,7 @@ export class StylesContext extends EventEmitter {
   }
 }
 
-const { with: withStyles, use: _useStyles } = createContextWithProps<
+export const { with: withStyles, use: useStyles } = createContextWithProps<
   StylesContext,
   StylesProviderProps
 >(Provider => ({ styles, children }) => {
@@ -68,11 +68,9 @@ const { with: withStyles, use: _useStyles } = createContextWithProps<
   return <Provider value={_styles}>{children}</Provider>;
 });
 
-export { withStyles };
-
-export const useStyles = () => {
+export const useWatchStyles = () => {
   const [, setState] = useState({});
-  const styles = _useStyles();
+  const styles = useStyles();
 
   if (typeof window === 'undefined') {
     useMemo(() => {
@@ -84,7 +82,6 @@ export const useStyles = () => {
     }, []);
   } else {
     useEffect(() => {
-      // console.info('calling effect');
       let immediate;
       const handler = () => {
         clearImmediate(immediate);
@@ -102,7 +99,7 @@ export const useStyles = () => {
 };
 
 export const Styles: FC<{}> = () => {
-  const styles = useStyles();
+  const styles = useWatchStyles();
 
   return (
     <Head>
