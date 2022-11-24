@@ -31,12 +31,8 @@ export class Renderer {
     const hookCollector =
       (composables: Composable[]) =>
       async (specifier: string, exportName: string = 'default') => {
-        const url = await import.meta.resolve(
-          specifier,
-          `file://${resource.filename}`
-        );
-        const exports = await import(url);
-        composables.push(exports[exportName]);
+        const exports = await import(specifier);
+        composables.push(createComposable(exports[exportName]));
       };
 
     const beforeRender: Composable[] = [];

@@ -1,4 +1,5 @@
 import { SourceContext } from './SourceContext.js';
+import { Resource } from '@grexie/pages';
 
 export interface ServerModuleHook {
   readonly resource: Resource;
