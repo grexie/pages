@@ -344,7 +344,7 @@ export default async function ModuleLoader(
       const header = `
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
       ${hooksImports.join('\n')}
-      ${hmrHeader}
+      ${this.hot ? hmrHeader : ''}
       `;
 
       const footer = `
@@ -364,7 +364,7 @@ export default async function ModuleLoader(
       export default __pages_handler;`
           : ''
       }
-      ${hmrFooter}
+      ${this.hot ? hmrFooter : ''}
     `;
 
       return callback(
