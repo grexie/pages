@@ -17,5 +17,12 @@
   },
   "devDependencies": {
     "@types/react-refresh": "^0.14.0"
+  },
+  "exports": {
+    ".": {
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
   }
 }

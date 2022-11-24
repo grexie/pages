@@ -3,7 +3,7 @@ module.exports = {
   sourceMaps: 'inline',
   overrides: [
     {
-      test: [/\.tsx?$/],
+      test: [/\.[jt]sx?$/],
       exclude: [/\.(test|spec)\.tsx?$/],
       presets: [
         '@babel/typescript',
