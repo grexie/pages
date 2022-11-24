@@ -8,8 +8,6 @@ exports[`ModuleLoader should build a module 1`] = `
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
       
       
-
-        
       import __pages_refresh_runtime from '@grexie/pages-runtime-hmr';
 
       const __pages_refresh_global = typeof window === 'undefined' ? global : window;
@@ -43,8 +41,21 @@ import { metadata as __pages_metadata_2 } from "@grexie/pages/defaults.pages"
         __pages_handler_component,
         
       );
+      const __pages_hooks = {
+  beforeRender:  [
 
-      __pages_hydrate(resource, __pages_handler);
+  ],
+  beforeDocument:  [
+
+  ],
+  afterDocument:  [
+
+  ],
+  afterRender:  [
+
+  ]
+};
+      __pages_hydrate(resource, __pages_handler, __pages_hooks);
 
       export default __pages_handler;
       
