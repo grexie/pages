@@ -18,7 +18,10 @@ class SharedContext {
   readonly contexts: React.Context<any>[] = [];
 
   shareContext(context: React.Context<any>) {
-    this.contexts.push(context);
+    if (!this.contexts.includes(context)) {
+      console.info('sharing context', context);
+      this.contexts.push(context);
+    }
   }
 
   use(): SharedContexts {

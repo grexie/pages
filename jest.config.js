@@ -2,7 +2,7 @@ module.exports = {
   verbose: true,
   clearMocks: true,
   collectCoverage: true,
-  runner: 'jest-light-runner',
+  // runner: 'jest-light-runner',
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/'],
   // projects: ['packages/*'],

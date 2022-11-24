@@ -25,16 +25,18 @@ export class StylesContext extends EventEmitter {
   #emitUpdate() {
     clearImmediate(this.#updateTimeout);
     this.#updateTimeout = setImmediate(() => {
-      startTransition(() => {
-        this.emit('update');
-      });
+      // startTransition(() => {
+      this.emit('update');
+      // });
     });
   }
 
   add(hash: string, css: string) {
     const entry = { hash, css } as { hash: string; css: string };
-    this.#styles.set(hash, entry);
-    this.#emitUpdate();
+    if (!this.#styles.has(hash)) {
+      this.#styles.set(hash, entry);
+      this.#emitUpdate();
+    }
 
     return () => {
       this.#styles.delete(hash);
@@ -74,13 +76,23 @@ export const useStyles = () => {
 
   if (typeof window === 'undefined') {
     useMemo(() => {
-      styles.on('update', () => setState({}));
+      let immediate;
+      styles.on('update', () => {
+        clearImmediate(immediate);
+        immediate = setImmediate(() => setState({}));
+      });
     }, []);
   } else {
     useEffect(() => {
-      const handler = () => setState({});
+      // console.info('calling effect');
+      let immediate;
+      const handler = () => {
+        clearImmediate(immediate);
+        immediate = setImmediate(() => setState({}));
+      };
       styles.on('update', handler);
       return () => {
+        clearImmediate(immediate);
         styles.removeListener('update', handler);
       };
     }, []);

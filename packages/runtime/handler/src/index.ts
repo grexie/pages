@@ -54,6 +54,7 @@ export const hydrate = (resource: Resource, handler: any) => {
 
   const element = createElement(component as any);
 
+  console.info('rendering');
   if ((window as any).__PAGES_ROOT__) {
     (window as any).__PAGES_ROOT__.render(element);
   } else {
@@ -66,5 +67,6 @@ export const hydrate = (resource: Resource, handler: any) => {
         },
       }
     );
+    (window as any).__PAGES_ROOT__.render(element);
   }
 };
