@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   exclude: [/\.d\.tsx?$/],
   sourceMaps: 'inline',
   overrides: [
@@ -12,7 +12,7 @@ export default {
           '@babel/env',
           {
             targets: 'node 16',
-            modules: false,
+            modules: 'commonjs',
           },
         ],
       ],

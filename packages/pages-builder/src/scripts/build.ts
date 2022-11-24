@@ -3,6 +3,8 @@ import { Provider } from '../Provider.js';
 import { RootBuildContext } from '../BuildContext.js';
 
 export default async () => {
+  process.env.NODE_ENV = process.env.NODE_ENV ?? 'production';
+
   const context = new RootBuildContext({
     providers: [
       {

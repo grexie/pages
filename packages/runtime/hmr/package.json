@@ -2,7 +2,6 @@
   "name": "@grexie/pages-runtime-hmr",
   "version": "0.0.32",
   "license": "MIT",
-  "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
