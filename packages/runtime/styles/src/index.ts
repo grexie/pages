@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useStyles } from '@grexie/pages';
 
 export type Class = string | Record<string, any> | null | undefined;
@@ -24,9 +24,19 @@ export class StyleSheet {
   use() {
     const styles = useStyles();
 
-    return useMemo(() => {
+    const result = useMemo(() => {
       return styles.add(this.hash, this.css);
     }, []);
+
+    if (typeof window !== 'undefined') {
+      useEffect(() => {
+        return () => {
+          result();
+        };
+      }, []);
+    }
+
+    return result;
   }
 
   resolve(cls: string) {

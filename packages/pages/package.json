@@ -14,11 +14,11 @@
     "react-dom": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages-cli": "^0.0.30",
-    "@grexie/pages-builder": "^0.0.30",
     "@grexie/compose": "^0.1.17",
     "@grexie/context": "^0.0.30",
     "@grexie/hash-object": "^0.0.30",
+    "@grexie/pages-builder": "^0.0.30",
+    "@grexie/pages-cli": "^0.0.30",
     "@grexie/proxy": "^0.0.30",
     "react-is": "^18.2.0"
   },

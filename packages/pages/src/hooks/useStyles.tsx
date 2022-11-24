@@ -25,16 +25,18 @@ export class StylesContext extends EventEmitter {
   #emitUpdate() {
     clearImmediate(this.#updateTimeout);
     this.#updateTimeout = setImmediate(() => {
-      startTransition(() => {
-        this.emit('update');
-      });
+      // startTransition(() => {
+      this.emit('update');
+      // });
     });
   }
 
   add(hash: string, css: string) {
     const entry = { hash, css } as { hash: string; css: string };
-    this.#styles.set(hash, entry);
-    this.#emitUpdate();
+    if (!this.#styles.has(hash)) {
+      this.#styles.set(hash, entry);
+      this.#emitUpdate();
+    }
 
     return () => {
       this.#styles.delete(hash);
@@ -58,7 +60,7 @@ export class StylesContext extends EventEmitter {
   }
 }
 
-const { with: withStyles, use: _useStyles } = createContextWithProps<
+export const { with: withStyles, use: useStyles } = createContextWithProps<
   StylesContext,
   StylesProviderProps
 >(Provider => ({ styles, children }) => {
@@ -66,21 +68,28 @@ const { with: withStyles, use: _useStyles } = createContextWithProps<
   return <Provider value={_styles}>{children}</Provider>;
 });
 
-export { withStyles };
-
-export const useStyles = () => {
+export const useWatchStyles = () => {
   const [, setState] = useState({});
-  const styles = _useStyles();
+  const styles = useStyles();
 
   if (typeof window === 'undefined') {
     useMemo(() => {
-      styles.on('update', () => setState({}));
+      let immediate: NodeJS.Immediate;
+      styles.on('update', () => {
+        clearImmediate(immediate);
+        immediate = setImmediate(() => setState({}));
+      });
     }, []);
   } else {
     useEffect(() => {
-      const handler = () => setState({});
+      let immediate: NodeJS.Immediate;
+      const handler = () => {
+        clearImmediate(immediate);
+        immediate = setImmediate(() => setState({}));
+      };
       styles.on('update', handler);
       return () => {
+        clearImmediate(immediate);
         styles.removeListener('update', handler);
       };
     }, []);
@@ -90,7 +99,7 @@ export const useStyles = () => {
 };
 
 export const Styles: FC<{}> = () => {
-  const styles = useStyles();
+  const styles = useWatchStyles();
 
   return (
     <Head>

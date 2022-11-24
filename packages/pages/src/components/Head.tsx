@@ -20,6 +20,11 @@ import {
   useSharedContexts,
   type SharedContexts,
 } from '@grexie/context';
+import {
+  RenderTreeNode,
+  useRenderTreeNode,
+  withRenderTree,
+} from '../hooks/useRenderTree.js';
 import { setImmediate } from 'timers';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -75,20 +80,57 @@ const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
   }
 };
 
-class HeadContext extends EventEmitter {
-  readonly parent?: HeadContext;
-  props: HeadProps = {};
-  children: FC<{}>[] = [];
+const HeadContextNodeTable = new WeakMap<RenderTreeNode, HeadContext>();
 
-  constructor(parent?: HeadContext) {
+class HeadContext extends EventEmitter {
+  readonly #node: RenderTreeNode;
+  fragment?: DocumentFragment;
+  props: HeadProps = {};
+
+  get root() {
+    return HeadContextNodeTable.get(this.#node.root)!;
+  }
+
+  get parent() {
+    return this.#node.parent && HeadContextNodeTable.get(this.#node.parent);
+  }
+
+  get index() {
+    return this.#node.index;
+  }
+
+  get order() {
+    return this.#node.order;
+  }
+
+  get children() {
+    return this.#node.children.map(node => HeadContextNodeTable.get(node)!);
+  }
+
+  get nodeOrder() {
+    let stack = [this.root];
+    let el: HeadContext | undefined;
+    let order = 0;
+    while ((el = stack.shift())) {
+      if (el === this) {
+        break;
+      }
+      stack.unshift(...el.children);
+      order += el.fragment?.childNodes.length ?? 0;
+    }
+    return order;
+  }
+
+  constructor(node: RenderTreeNode) {
     super();
 
-    this.parent = parent;
-    parent?.children.push(() => this.render());
+    this.#node = node;
+    HeadContextNodeTable.set(node, this);
 
     if (typeof window !== 'undefined' && !parent) {
       setImmediate(() => {
         const element = this.render();
+        let immediate: NodeJS.Immediate;
 
         if ((window as any).__PAGES_HEAD__) {
           (window as any).__PAGES_HEAD__.render(this.render());
@@ -97,9 +139,91 @@ class HeadContext extends EventEmitter {
         }
 
         this.on('update', () => {
-          (window as any).__PAGES_HEAD__.render(this.render());
+          clearImmediate(immediate);
+          immediate = setImmediate(() => {
+            const element = this.render();
+            (window as any).__PAGES_HEAD__.render(element);
+          });
         });
       });
+    }
+  }
+
+  #mutateCharacterData(mutation: MutationRecord) {
+    const source = mutation.target.parentElement!;
+
+    const target = document.head.childNodes[
+      this.nodeOrder + Array.from(source.parentNode!.childNodes).indexOf(source)
+    ] as HTMLElement;
+
+    target.innerHTML = source.innerHTML;
+  }
+
+  #mutateAttributes(mutation: MutationRecord) {
+    const source = mutation.target as HTMLElement;
+    const index = Array.from(source.parentNode!.childNodes).indexOf(source);
+    const dest = document.head.childNodes.item(
+      this.nodeOrder + index
+    )! as HTMLElement;
+    if (
+      !source.hasAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!
+      )
+    ) {
+      dest.removeAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!
+      );
+    } else {
+      const value = source.getAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!
+      );
+      dest.setAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!,
+        value!
+      );
+    }
+  }
+
+  #mutateChildList(mutation: MutationRecord) {
+    const nodeOrder = this.nodeOrder;
+
+    const index = mutation.nextSibling
+      ? Array.from(mutation.target.childNodes).indexOf(
+          mutation.nextSibling as ChildNode
+        )
+      : mutation.target.childNodes.length;
+
+    for (let i = index - 1; i >= index - mutation.removedNodes.length; i--) {
+      document.head.childNodes[nodeOrder + i].remove();
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < mutation.addedNodes.length; i++) {
+      fragment.appendChild(mutation.addedNodes.item(i)?.cloneNode(true)!);
+    }
+
+    if (document.head.childNodes.length < nodeOrder + index) {
+      document.head.appendChild(fragment);
+    } else {
+      const sibling = document.head.childNodes.item(nodeOrder + index);
+      document.head.insertBefore(fragment, sibling);
+    }
+  }
+
+  mutate(mutation: MutationRecord) {
+    let source: HTMLElement;
+
+    switch (mutation.type) {
+      case 'attributes':
+        return this.#mutateAttributes(mutation);
+      case 'characterData':
+        return this.#mutateCharacterData(mutation);
+      case 'childList':
+        return this.#mutateChildList(mutation);
     }
   }
 
@@ -133,26 +257,17 @@ class HeadContext extends EventEmitter {
 
     this.props = { ...props, children };
 
-    startTransition(() => {
-      this.root.emit('update');
-    });
-  }
-
-  get root() {
-    let context = this as HeadContext;
-    while (context.parent) {
-      context = context.parent!;
-    }
-    return context;
+    this.root.emit('update');
   }
 
   render(): ReactElement {
     return (
       <>
         {this.props.children}
-        {this.children.map((Child, i) => (
-          <Child key={`${i}`} />
-        ))}
+        {this.children.map((child, i) => {
+          const Child = () => child.render();
+          return <Child key={`${i}`} />;
+        })}
       </>
     );
   }
@@ -162,11 +277,14 @@ export const {
   Provider: HeadProvider,
   use: _useHead,
   with: withHead,
-} = createContext<HeadContext>(Provider => ({ children }) => {
-  const parentContext = _useHead();
-  const context = useMemo(() => new HeadContext(parentContext), []);
-  return <Provider value={context}>{children}</Provider>;
-});
+} = createContext<HeadContext>(Provider =>
+  withRenderTree(({ children }) => {
+    const node = useRenderTreeNode();
+    const parentContext = _useHead();
+    const context = useMemo(() => new HeadContext(node), []);
+    return <Provider value={context}>{children}</Provider>;
+  })
+);
 
 export const useHead = () => {
   const head = _useHead();
@@ -182,7 +300,7 @@ export const useHead = () => {
     useEffect(() => {
       const handler = () => {
         setImmediate(() => {
-          startTransition(() => setState({}));
+          setState({});
         });
       };
       head.root.on('update', handler);
@@ -212,44 +330,60 @@ export const { with: withHeadRendering, use: useHeadRendering } =
 
 interface ServerHeadProps extends HeadProps {}
 
-const ServerHead: FC<ServerHeadProps> = withHead(({ ...props }) => {
+const ServerHead: FC<ServerHeadProps> = withHead(({ children }) => {
   const head = _useHead();
   const contexts = useSharedContexts();
 
   useMemo(() => {
-    head.setProps(props, contexts);
-  }, [hash(props), contexts]);
+    head.setProps({ children }, contexts);
+  }, [hash(children), contexts]);
 
   return null;
 });
 
 interface BrowserHeadProps extends HeadProps {}
 
-const useReactNodeDependency = (node: ReactNode) => {
-  const { fragment, portal } = useMemo(() => {
+const useHeadPortal = (node: ReactNode) => {
+  const [show, setShow] = useState(false);
+  const head = _useHead();
+
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const fragment = useMemo(() => {
     const fragment = document.createDocumentFragment();
-    const portal = createPortal(node, fragment);
-    return { fragment, portal };
+    head.fragment = fragment;
+    return fragment;
   }, []);
 
   useEffect(() => {
-    const observer = new MutationObserver(() => {});
-    observer.observe(fragment);
+    setShow(true);
+
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => head.mutate(mutation));
+    });
+    const immediate = setImmediate(() => {
+      observer.observe(fragment, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributeOldValue: true,
+        attributes: true,
+      });
+    });
 
     return () => {
+      clearImmediate(immediate);
       observer.disconnect();
       unmountComponentAtNode(fragment);
     };
   }, []);
+
+  return show ? createPortal(node, fragment) : null;
 };
 
-const BrowserHead: FC<BrowserHeadProps> = withHead(({ ...props }) => {
-  const head = _useHead();
-  const contexts = useSharedContexts();
-
-  useEffect(() => {
-    head.setProps(props, contexts);
-  }, [hash(props), contexts]);
-
-  return null;
+const BrowserHead: FC<BrowserHeadProps> = withHead(({ children }) => {
+  // const contexts = useSharedContexts();
+  return useHeadPortal(children);
 });
