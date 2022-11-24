@@ -109,7 +109,7 @@ class HeadContext extends EventEmitter {
 
   get nodeOrder() {
     let stack = [this.root];
-    let el: HeadContext;
+    let el: HeadContext | undefined;
     let order = 0;
     while ((el = stack.shift())) {
       if (el === this) {
@@ -130,7 +130,7 @@ class HeadContext extends EventEmitter {
     if (typeof window !== 'undefined' && !parent) {
       setImmediate(() => {
         const element = this.render();
-        let immediate;
+        let immediate: NodeJS.Immediate;
 
         if ((window as any).__PAGES_HEAD__) {
           (window as any).__PAGES_HEAD__.render(this.render());
@@ -152,21 +152,19 @@ class HeadContext extends EventEmitter {
   #mutateCharacterData(mutation: MutationRecord) {
     const source = mutation.target.parentElement!;
 
-    const target =
-      document.head.childNodes[
-        this.nodeOrder +
-          Array.from(source.parentNode.childNodes).indexOf(source)
-      ];
+    const target = document.head.childNodes[
+      this.nodeOrder + Array.from(source.parentNode!.childNodes).indexOf(source)
+    ] as HTMLElement;
 
     target.innerHTML = source.innerHTML;
   }
 
   #mutateAttributes(mutation: MutationRecord) {
-    const source: HTMLElement = mutation.target;
-    const index = Array.from(source.parentNode.childNodes).indexOf(source);
-    const dest: HTMLElement = document.head.childNodes.item(
+    const source = mutation.target as HTMLElement;
+    const index = Array.from(source.parentNode!.childNodes).indexOf(source);
+    const dest = document.head.childNodes.item(
       this.nodeOrder + index
-    );
+    )! as HTMLElement;
     if (
       !source.hasAttributeNS(
         mutation.attributeNamespace,
@@ -185,7 +183,7 @@ class HeadContext extends EventEmitter {
       dest.setAttributeNS(
         mutation.attributeNamespace,
         mutation.attributeName!,
-        value
+        value!
       );
     }
   }
@@ -194,7 +192,9 @@ class HeadContext extends EventEmitter {
     const nodeOrder = this.nodeOrder;
 
     const index = mutation.nextSibling
-      ? Array.from(mutation.target.childNodes).indexOf(mutation.nextSibling)
+      ? Array.from(mutation.target.childNodes).indexOf(
+          mutation.nextSibling as ChildNode
+        )
       : mutation.target.childNodes.length;
 
     for (let i = index - 1; i >= index - mutation.removedNodes.length; i--) {
@@ -203,7 +203,7 @@ class HeadContext extends EventEmitter {
 
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < mutation.addedNodes.length; i++) {
-      fragment.appendChild(mutation.addedNodes.item(i)?.cloneNode(true));
+      fragment.appendChild(mutation.addedNodes.item(i)?.cloneNode(true)!);
     }
 
     if (document.head.childNodes.length < nodeOrder + index) {

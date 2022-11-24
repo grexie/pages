@@ -10,8 +10,8 @@ export class RenderTreeNode {
   }
 
   get order() {
-    let stack = [this.root];
-    let el: RenderTreeNode;
+    let stack: RenderTreeNode[] = [this.root];
+    let el: RenderTreeNode | undefined;
     let order = 0;
     while ((el = stack.shift())) {
       if (el === this) {
@@ -29,9 +29,9 @@ export class RenderTreeNode {
   }
 
   get root() {
-    let el = this;
+    let el: RenderTreeNode = this;
     while (el.parent) {
-      el = el.parent;
+      el = el.parent!;
     }
     return el;
   }
@@ -49,7 +49,7 @@ export const {
   Provider: RenderTreeProvider,
   use: useRenderTreeNode,
   with: withRenderTree,
-} = createContext<RenderNode>(Provider => ({ children }) => {
+} = createContext<RenderTreeNode>(Provider => ({ children }) => {
   const parentNode = useRenderTreeNode();
   const context = useMemo(() => new RenderTreeNode(parentNode), []);
   useEffect(() => {

@@ -74,7 +74,7 @@ export const useWatchStyles = () => {
 
   if (typeof window === 'undefined') {
     useMemo(() => {
-      let immediate;
+      let immediate: NodeJS.Immediate;
       styles.on('update', () => {
         clearImmediate(immediate);
         immediate = setImmediate(() => setState({}));
@@ -82,7 +82,7 @@ export const useWatchStyles = () => {
     }, []);
   } else {
     useEffect(() => {
-      let immediate;
+      let immediate: NodeJS.Immediate;
       const handler = () => {
         clearImmediate(immediate);
         immediate = setImmediate(() => setState({}));
