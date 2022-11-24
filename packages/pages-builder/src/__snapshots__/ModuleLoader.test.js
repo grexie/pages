@@ -8,18 +8,6 @@ exports[`ModuleLoader should build a module 1`] = `
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
       
       
-      import __pages_refresh_runtime from '@grexie/pages-runtime-hmr';
-
-      const __pages_refresh_global = typeof window === 'undefined' ? global : window;
-      const __pages_previous_refreshreg = __pages_refresh_global.$RefreshReg$;
-      const __pages_previous_refreshsig = __pages_refresh_global.$RefreshSig$;
-
-      __pages_refresh_global.$RefreshReg$ = (type, id) => {
-        const fullId = import.meta.url + ' ' + id;
-        __pages_refresh_runtime.register(type, fullId);
-      };
-      __pages_refresh_global.$RefreshSig$ = __pages_refresh_runtime.createSignatureFunctionForTransform;
-    
       var __pages_handler_component = function __pages_handler_component(_ref) {
   var children = _ref.children;
   return null;
@@ -59,14 +47,6 @@ import { metadata as __pages_metadata_2 } from "@grexie/pages/defaults.pages"
 
       export default __pages_handler;
       
-      if (typeof module === 'undefined') {
-        __pages_refresh_runtime.update(import.meta.webpackHot);
-      } else {
-          __pages_refresh_runtime.update(module.hot);
-      }
-      __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
-      __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
-    
     ",
 }
 `;
