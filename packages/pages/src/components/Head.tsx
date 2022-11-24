@@ -164,21 +164,8 @@ class HeadContext extends EventEmitter {
     return out;
   }
 
-  mutate(mutation: MutationRecord) {
-    let source: HTMLElement;
-
-    console.info('---');
-    this.root.print();
-
-    if (mutation.target.nodeType === Node.TEXT_NODE) {
-      source = mutation.target.parentElement;
-    } else if (mutation.target.nodeType === Node.ELEMENT_NODE) {
-      source = mutation.target;
-    }
-
-    if (!source) {
-      return;
-    }
+  #mutateCharacterData(mutation: MutationRecord) {
+    const source = mutation.target.parentElement!;
 
     const target =
       document.head.childNodes[
@@ -186,8 +173,77 @@ class HeadContext extends EventEmitter {
           Array.from(source.parentNode.childNodes).indexOf(source)
       ];
 
-    console.info(source, target);
-    target.replaceWith(source.cloneNode(true));
+    target.textContent = source.textContent;
+  }
+
+  #mutateAttributes(mutation: MutationRecord) {
+    const source: HTMLElement = mutation.target;
+    const index = Array.from(source.parentNode.childNodes).indexOf(source);
+    const dest: HTMLElement = document.head.childNodes.item(
+      this.nodeOrder + index
+    );
+    if (
+      !source.hasAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!
+      )
+    ) {
+      dest.removeAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!
+      );
+    } else {
+      const value = source.getAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!
+      );
+      dest.setAttributeNS(
+        mutation.attributeNamespace,
+        mutation.attributeName!,
+        value
+      );
+    }
+  }
+
+  #mutateChildList(mutation: MutationRecord) {
+    const nodeOrder = this.nodeOrder;
+
+    const index = mutation.nextSibling
+      ? Array.from(mutation.target.childNodes).indexOf(mutation.nextSibling)
+      : mutation.target.childNodes.length;
+
+    for (let i = index - 1; i >= index - mutation.removedNodes.length; i--) {
+      document.head.childNodes[nodeOrder + i].remove();
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < mutation.addedNodes.length; i++) {
+      fragment.appendChild(mutation.addedNodes.item(i)?.cloneNode(true));
+    }
+
+    if (document.head.childNodes.length < nodeOrder + index) {
+      document.head.appendChild(fragment);
+    } else {
+      const sibling = document.head.childNodes.item(nodeOrder + index);
+      document.head.insertBefore(fragment, sibling);
+    }
+  }
+
+  mutate(mutation: MutationRecord) {
+    let source: HTMLElement;
+
+    console.info('---');
+    this.root.print();
+
+    console.info(mutation.type);
+    switch (mutation.type) {
+      case 'attributes':
+        return this.#mutateAttributes(mutation);
+      case 'characterData':
+        return this.#mutateCharacterData(mutation);
+      case '#mutateChildList':
+        return this.#mutateChildList(mutation);
+    }
   }
 
   setProps(props: HeadProps, contexts: SharedContexts) {

@@ -56,8 +56,15 @@ export const {
     const index = context.parent?.children.indexOf(context) ?? -1;
     if (index !== -1) {
       context.parent?.children.splice(index, 1);
-      context.parent?.children.push(context);
     }
+    context.parent?.children.push(context);
+
+    return () => {
+      const index = context.parent?.children.indexOf(context) ?? -1;
+      if (index !== -1) {
+        context.parent?.children.splice(index, 1);
+      }
+    };
   });
   return <Provider value={context}>{children}</Provider>;
 });
