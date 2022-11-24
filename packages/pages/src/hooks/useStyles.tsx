@@ -63,7 +63,7 @@ export class StylesContext extends EventEmitter {
 export const { with: withStyles, use: useStyles } = createContextWithProps<
   StylesContext,
   StylesProviderProps
->(Provider => ({ styles, children }) => {
+>('Pages.Styles', Provider => ({ styles, children }) => {
   const _styles = useMemo(() => styles, [hash(styles)]);
   return <Provider value={_styles}>{children}</Provider>;
 });

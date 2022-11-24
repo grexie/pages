@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useContext,
   createElement,
+  ReactElement,
 } from 'react';
 import { createComposableWithProps } from '@grexie/compose';
 
@@ -75,6 +76,7 @@ export const createContextWithProps = <
   T extends unknown,
   P extends Object = {}
 >(
+  name: string,
   creator: ProviderCreator<T, P>,
   shared: boolean = true
 ) => {
@@ -92,18 +94,32 @@ export const createContextWithProps = <
     Context.Provider as React.Context<T>['Provider']
   );
 
+  let namespace: string[] | string = name.split(/\./g);
+  name = namespace.pop() as string;
+  namespace.push('');
+  namespace = namespace.join('.');
+
   return {
-    Context,
-    Provider: ContextProvider,
-    with: createComposableWithProps<P>(ContextProvider),
-    use: () => _useContext(Context)!,
+    Context: Object.assign(Context, {
+      displayName: `${namespace}${name}`,
+    }),
+    Provider: Object.assign(ContextProvider, {
+      displayName: `${namespace}${name}.Factory`,
+    }),
+    with: Object.assign(createComposableWithProps<P>(ContextProvider), {
+      displayName: `${namespace}with${name}`,
+    }),
+    use: Object.assign(() => _useContext(Context)!, {
+      displayName: `${namespace}use${name}`,
+    }),
   };
 };
 
 export const createContext = <T extends unknown>(
-  creator: (Provider: React.Context<T>['Provider']) => FC<PropsWithChildren<{}>>
+  name: string,
+  creator: ProviderCreator<T, {}>
 ) => {
-  const context = createContextWithProps<T>(creator);
+  const context = createContextWithProps<T>(name, creator);
   return { ...context, with: context.with({}) };
 };
 
@@ -112,6 +128,7 @@ export const {
   use: _useSharedContext,
   with: withSharedContext,
 } = createContextWithProps<SharedContext, SharedContextProps>(
+  'Pages.SharedContext',
   Provider =>
     ({ context, children }) => {
       const existingSharedContext = _useSharedContext();
@@ -126,7 +143,11 @@ export const {
         }
       }, []);
 
-      return <Provider value={sharedContext}>{children}</Provider>;
+      if (existingSharedContext === sharedContext) {
+        return <>{children}</>;
+      } else {
+        return <Provider value={sharedContext}>{children}</Provider>;
+      }
     },
   false
 );

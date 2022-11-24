@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { setImmediate } from 'timers';
 import { createContext } from '@grexie/context';
+import { name } from '../utils/name.js';
 
 class LazyContext {
   readonly #wrapped: Promise<any>[] = [];
@@ -44,77 +45,91 @@ export const {
   Provider: LazyProvider,
   with: withLazy,
   use: useLazyContext,
-} = createContext<LazyContext>(Provider => ({ children }) => {
+} = createContext<LazyContext>('Pages.Lazy', Provider => ({ children }) => {
   const context = useMemo(() => new LazyContext(), []);
   return <Provider value={context}>{children}</Provider>;
 });
 
-export const useLazyBase = (
-  cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
-  dependencies: any[]
-) => {
-  return useMemo(
-    () =>
-      cb.map(cb => {
-        const Component = lazy(async () => {
-          await new Promise(resolve => setImmediate(resolve));
+export const useLazyBase = name(
+  'Pages.useLazyBase',
+  (
+    cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
+    dependencies: any[]
+  ) => {
+    return useMemo(
+      () =>
+        cb.map(cb => {
+          const Component = lazy(async () => {
+            await new Promise(resolve => setImmediate(resolve));
 
-          const Component = await cb();
-          let exports;
+            const Component = await cb();
+            let exports;
 
-          if (!Component) {
-            exports = { default: () => null } as any;
-          } else if (typeof Component === 'object') {
-            exports = Component;
-          } else {
-            exports = { default: Component };
-          }
+            if (!Component) {
+              exports = { default: () => null } as any;
+            } else if (typeof Component === 'object') {
+              exports = Component;
+            } else {
+              exports = { default: Component };
+            }
 
-          return exports;
-        });
+            return exports;
+          });
 
-        return Component;
-      }),
-    dependencies
-  );
-};
+          return Object.assign(Component, {
+            displayName: (Component as any).displayName ?? 'LazyComponent',
+          });
+        }),
+      dependencies
+    );
+  }
+);
 
-export const useLazy = <P extends Object = {}>(
-  cb: () => Promise<FC<P> | null | undefined>,
-  dependencies: any[]
-) => {
-  const context = useLazyContext();
+export const useLazy = name(
+  'Pages.useLazy',
+  <P extends Object = {}>(
+    cb: () => Promise<FC<P> | null | undefined>,
+    dependencies: any[]
+  ) => {
+    const context = useLazyContext();
 
-  return useLazyBase(
-    [async () => context.wrap(cb() as Promise<any>)],
-    dependencies
-  )[0];
-};
+    return useLazyBase(
+      [async () => context.wrap(cb() as Promise<any>)],
+      dependencies
+    )[0];
+  }
+);
 
-export const useLazyComplete = <P extends Object = {}>(
-  cb: () => Promise<FC<P> | null | undefined>,
-  dependencies: any[]
-) => {
-  const context = useLazyContext();
-  const Component = useLazyBase(
-    [async () => context.complete(cb as () => Promise<any>)],
-    dependencies
-  )[0];
+export const useLazyComplete = name(
+  'Pages.useLazyComplete',
+  <P extends Object = {}>(
+    cb: () => Promise<FC<P> | null | undefined>,
+    dependencies: any[]
+  ) => {
+    const context = useLazyContext();
+    const Component = useLazyBase(
+      [async () => context.complete(cb as () => Promise<any>)],
+      dependencies
+    )[0];
 
-  return Component;
-};
+    return Component;
+  }
+);
 
-export const useManyLazy = (
-  cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
-  dependencies: any[]
-) => {
-  const context = useLazyContext();
+export const useManyLazy = name(
+  'Pages.useManyLazy',
+  (
+    cb: (<P extends Object = {}>() => Promise<FC<P> | null | undefined>)[],
+    dependencies: any[]
+  ) => {
+    const context = useLazyContext();
 
-  return useLazyBase(
-    cb.map(cb => () => context.wrap(cb() as Promise<any>)),
-    dependencies
-  )[0];
-};
+    return useLazyBase(
+      cb.map(cb => () => context.wrap(cb() as Promise<any>)),
+      dependencies
+    )[0];
+  }
+);
 
 export const ClientSuspense: FC<SuspenseProps> = ({ children, ...props }) => {
   if (typeof window === 'undefined') {

@@ -29,6 +29,7 @@ import { Events, EventManager, EventPhase } from './EventManager.js';
 import { PluginContext, Plugin } from './PluginContext.js';
 import { ICache } from './Cache.js';
 import webpack from 'webpack';
+import { Renderer } from './Renderer.js';
 
 export interface ChildBuildOptions {
   providers: ProviderConfig[];
@@ -84,6 +85,7 @@ export interface BuildContext extends Context {
   readonly cache: ICache;
   readonly fs: WritableFileSystem;
   readonly compilation?: Compilation;
+  readonly renderer: Renderer;
   readonly sources: SourceResolver;
   readonly mapping?: NormalizedMapping;
 
@@ -281,6 +283,7 @@ export class RootBuildContext extends Context implements BuildContext {
   readonly outputDir: string;
   readonly modulesDirs: string[];
   readonly builder: Builder;
+  readonly renderer: Renderer;
   readonly config: ConfigContext;
   readonly providerConfig: Partial<ProviderConfig> = {
     exclude: [],
@@ -343,6 +346,7 @@ export class RootBuildContext extends Context implements BuildContext {
 
     this.registry = new Registry(this as BuildContext);
     this.builder = builder ?? new Builder(this, fs, defaultFiles, fsOptions);
+    this.renderer = new Renderer(this);
 
     providers.forEach(({ provider, ...config }) => {
       this.registry.providers.add(
@@ -531,6 +535,10 @@ class ChildBuildContext extends Context implements BuildContext {
 
   get fs() {
     return this.parent.fs;
+  }
+
+  get renderer() {
+    return this.parent.renderer;
   }
 
   createSourceContext(options: SourceContextOptions) {

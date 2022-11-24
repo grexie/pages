@@ -191,14 +191,15 @@ class HeadContext extends EventEmitter {
   #mutateChildList(mutation: MutationRecord) {
     const nodeOrder = this.nodeOrder;
 
-    const index = mutation.nextSibling
+    const index = mutation.previousSibling
       ? Array.from(mutation.target.childNodes).indexOf(
-          mutation.nextSibling as ChildNode
-        )
-      : mutation.target.childNodes.length;
+          mutation.previousSibling as ChildNode
+        ) + 1
+      : 0;
 
-    for (let i = index - 1; i >= index - mutation.removedNodes.length; i--) {
-      document.head.childNodes[nodeOrder + i].remove();
+    for (let i = 0; i < mutation.removedNodes.length; i++) {
+      console.info('removing', nodeOrder + index + i);
+      document.head.childNodes[nodeOrder + index + i].remove();
     }
 
     const fragment = document.createDocumentFragment();
@@ -206,10 +207,15 @@ class HeadContext extends EventEmitter {
       fragment.appendChild(mutation.addedNodes.item(i)?.cloneNode(true)!);
     }
 
-    if (document.head.childNodes.length < nodeOrder + index) {
+    if (
+      document.head.childNodes.length <
+      nodeOrder + index + mutation.addedNodes.length
+    ) {
       document.head.appendChild(fragment);
     } else {
-      const sibling = document.head.childNodes.item(nodeOrder + index);
+      const sibling = document.head.childNodes.item(
+        nodeOrder + index + mutation.addedNodes.length
+      );
       document.head.insertBefore(fragment, sibling);
     }
   }
@@ -277,7 +283,7 @@ export const {
   Provider: HeadProvider,
   use: _useHead,
   with: withHead,
-} = createContext<HeadContext>(Provider =>
+} = createContext<HeadContext>('Pages.Head', Provider =>
   withRenderTree(({ children }) => {
     const node = useRenderTreeNode();
     const parentContext = _useHead();
@@ -324,7 +330,7 @@ export const Head: FC<HeadProps> = ({ children, ...props }) => {
 };
 
 export const { with: withHeadRendering, use: useHeadRendering } =
-  createContext<boolean>(Provider => ({ children }) => (
+  createContext<boolean>('Pages.HeadRendering', Provider => ({ children }) => (
     <Provider value={true}>{children}</Provider>
   ));
 

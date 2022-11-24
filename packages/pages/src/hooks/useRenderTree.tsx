@@ -49,22 +49,26 @@ export const {
   Provider: RenderTreeProvider,
   use: useRenderTreeNode,
   with: withRenderTree,
-} = createContext<RenderTreeNode>(Provider => ({ children }) => {
-  const parentNode = useRenderTreeNode();
-  const context = useMemo(() => new RenderTreeNode(parentNode), []);
-  useEffect(() => {
-    const index = context.parent?.children.indexOf(context) ?? -1;
-    if (index !== -1) {
-      context.parent?.children.splice(index, 1);
-    }
-    context.parent?.children.push(context);
+} = createContext<RenderTreeNode>(
+  'Pages.RenderTree',
+  Provider =>
+    ({ children }) => {
+      const parentNode = useRenderTreeNode();
+      const context = useMemo(() => new RenderTreeNode(parentNode), []);
+      useEffect(() => {
+        const index = context.parent?.children.indexOf(context) ?? -1;
+        if (index !== -1) {
+          context.parent?.children.splice(index, 1);
+        }
+        context.parent?.children.push(context);
 
-    return () => {
-      const index = context.parent?.children.indexOf(context) ?? -1;
-      if (index !== -1) {
-        context.parent?.children.splice(index, 1);
-      }
-    };
-  });
-  return <Provider value={context}>{children}</Provider>;
-});
+        return () => {
+          const index = context.parent?.children.indexOf(context) ?? -1;
+          if (index !== -1) {
+            context.parent?.children.splice(index, 1);
+          }
+        };
+      });
+      return <Provider value={context}>{children}</Provider>;
+    }
+);

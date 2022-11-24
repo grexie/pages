@@ -10,6 +10,7 @@ export const {
   with: withContext,
   use: useContext,
 } = createContextWithProps<Context, ContextProviderProps>(
+  'Pages.Context',
   Provider =>
     ({ context, children }) => {
       return <Provider value={context}>{children}</Provider>;

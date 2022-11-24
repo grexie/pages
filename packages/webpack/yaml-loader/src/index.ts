@@ -12,7 +12,7 @@ export default async function YamlLoader(
 ) {
   const callback = this.async();
 
-  const YAML = await import('yaml');
+  const { default: YAML } = await import('yaml');
   const { SourceNode } = await import('source-map');
   this.cacheable(true);
 

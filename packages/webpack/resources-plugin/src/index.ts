@@ -67,9 +67,9 @@ class SourceCompiler {
       console.info('render:rendering', this.source.filename);
     }
 
-    const renderer = new Renderer(this.context.build);
+    // const renderer = new Renderer(this.context.build);
 
-    const buffer = await renderer.render(
+    const buffer = await this.context.build.renderer.render(
       new WritableBuffer(),
       exports.resource,
       scripts,

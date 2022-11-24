@@ -19,6 +19,7 @@ export const {
   with: withResourceContext,
   use: useResourceContext,
 } = createContextWithProps<ResourceContext, ResourceContextProviderProps>(
+  'Pages.ResourceContext',
   Provider =>
     ({ resourceContext, children }) => {
       return <Provider value={resourceContext}>{children}</Provider>;
@@ -39,6 +40,7 @@ const {
   with: withResource,
   use: useResourceUntyped,
 } = createContextWithProps<Resource, ResourceProviderProps>(
+  'Pages.Resource',
   Provider =>
     ({ resource, children }) => {
       const parentResourceContext = useResourceContext();

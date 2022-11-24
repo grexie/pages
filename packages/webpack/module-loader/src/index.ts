@@ -1,5 +1,10 @@
 import type { Dependency, LoaderContext } from 'webpack';
-import type { BuildContext } from '@grexie/pages-builder';
+import type {
+  BuildContext,
+  Builder,
+  ModuleHook,
+  Renderer,
+} from '@grexie/pages-builder';
 import type { InstantiatedModule } from '@grexie/pages-builder';
 import type { Handler } from '@grexie/pages-builder';
 import type { Resource } from '@grexie/pages/api';
@@ -11,10 +16,14 @@ import reactRefreshPlugin from 'react-refresh/babel';
 import { offsetLines } from '@grexie/source-maps';
 import { createComposable } from '@grexie/compose';
 import webpack from 'webpack';
-
 interface ModuleLoaderOptions {
   context: BuildContext;
   handler?: string;
+}
+
+interface ComposableRequire {
+  specifier: string;
+  exportName: string;
 }
 
 export default async function ModuleLoader(
@@ -25,13 +34,15 @@ export default async function ModuleLoader(
   const callback = this.async();
   this.cacheable(false);
 
-  // const { getModuleDependency } = await import('@grexie/pages-builder');
+  const { EventManager, EventPhase } = await import('@grexie/pages-builder');
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.info('module-loader', this.resourcePath);
   }
 
   let { context, ...options } = this.getOptions();
+
+  const events = EventManager.get<Renderer>(context.renderer);
 
   const modules = context.getModuleContext(this._compilation!);
 
@@ -97,7 +108,8 @@ export default async function ModuleLoader(
     }
 
     const composables = [];
-    const composablesRequires = [];
+    const composablesRequires: ComposableRequire[] = [];
+
     let layouts = sourceContext.metadata.layout ?? [];
     if (!Array.isArray(layouts)) {
       layouts = [layouts];
@@ -110,13 +122,16 @@ export default async function ModuleLoader(
           request: layout,
         });
 
-        composablesRequires.push(
-          `./${_path.relative(_path.dirname(this.resourcePath), abspath)}`
-        );
+        composablesRequires.push({
+          specifier: `./${_path.relative(
+            _path.dirname(this.resourcePath),
+            abspath
+          )}`,
+          exportName: 'default',
+        });
         layout = abspath;
       } catch (err) {
-        console.error(this.resourcePath, err);
-        composablesRequires.push(layout);
+        composablesRequires.push({ specifier: layout, exportName: 'default' });
       }
 
       const layoutModule = await modules.requireModule(
@@ -128,6 +143,42 @@ export default async function ModuleLoader(
 
       composables.push(createComposable(layoutModule.exports.default));
     }
+
+    const hookCollector =
+      (requires: { specifier: string; exportName: string }[]) =>
+      async (specifier: string, exportName: string = 'default') => {
+        requires.push({ specifier, exportName });
+
+        const module = await modules.resolver.resolve(
+          _path.dirname(this.resourcePath),
+          specifier
+        );
+
+        this.addDependency(module.filename);
+      };
+
+    const beforeRender: ComposableRequire[] = [];
+    const beforeDocument: ComposableRequire[] = [];
+    const afterDocument: ComposableRequire[] = [];
+    const beforeLayout: ComposableRequire[] = [];
+    const afterLayout: ComposableRequire[] = [];
+    const afterRender: ComposableRequire[] = [];
+
+    await events.emit(EventPhase.before, 'browser', {
+      context: sourceContext,
+      render: hookCollector(beforeRender),
+      document: hookCollector(beforeDocument),
+      layout: hookCollector(beforeLayout),
+    });
+    await events.emit(EventPhase.after, 'browser', {
+      context: sourceContext,
+      render: hookCollector(afterRender),
+      document: hookCollector(afterDocument),
+      layout: hookCollector(afterLayout),
+    });
+
+    composablesRequires.unshift(...beforeLayout);
+    composablesRequires.push(...afterLayout);
 
     sourceContext.emit('end');
 
@@ -157,20 +208,69 @@ export default async function ModuleLoader(
       __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
     `;
 
+    const renderComposableRequires = (
+      basename: string,
+      requires: ComposableRequire[]
+    ) =>
+      requires
+        .map(({ specifier, exportName }, i) => {
+          if (exportName === 'default') {
+            return `import ${basename}${i} from ${JSON.stringify(specifier)};`;
+          } else {
+            return `import { ${exportName} as ${basename}${i} } from ${JSON.stringify(
+              specifier
+            )};`;
+          }
+        })
+        .join('\n');
+
+    const hooksImports = [
+      renderComposableRequires('__pages_prerender_', beforeRender),
+      renderComposableRequires('__pages_predocument_', beforeDocument),
+      renderComposableRequires('__pages_postdocument_', afterDocument),
+      renderComposableRequires('__pages_postrender_', afterRender),
+      renderComposableRequires('__pages_layout_', composablesRequires),
+    ].filter(x => !!x);
+
+    if (hooksImports.length) {
+      hooksImports.unshift(
+        'import { createComposable as __pages_create_composable } from "@grexie/compose";'
+      );
+    }
+
+    const renderComposables = (
+      name: string,
+      basename: string,
+      requires: ComposableRequire[]
+    ) =>
+      `  ${name}:  [\n` +
+      requires
+        .map((_, i) => `    __pages_create_composable(${basename}${i})`)
+        .join(',\n') +
+      '\n  ]';
+
+    const hooksFooter =
+      'const __pages_hooks = {\n' +
+      [
+        renderComposables('beforeRender', '__pages_prerender_', beforeRender),
+        renderComposables(
+          'beforeDocument',
+          '__pages_predocument_',
+          beforeDocument
+        ),
+        renderComposables(
+          'afterDocument',
+          '__pages_postdocument_',
+          afterDocument
+        ),
+        renderComposables('afterRender', '__pages_postrender_', afterRender),
+      ].join(',\n') +
+      '\n};';
+
     if (options.handler) {
       const header = `
         import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
-        ${
-          composablesRequires.length
-            ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'
-            : ''
-        }
-        ${composablesRequires
-          .map(
-            (id, i) =>
-              `import __pages_composable_${i} from ${JSON.stringify(id)};`
-          )
-          .join('\n')}
+        ${hooksImports.join('\n')}
         import __pages_handler_component from ${JSON.stringify(
           options.handler
         )};
@@ -182,11 +282,11 @@ export default async function ModuleLoader(
           resource,
           __pages_handler_component,
           ${composablesRequires
-            .map((_, i) => `__pages_create_composable(__pages_composable_${i})`)
+            .map((_, i) => `__pages_create_composable(__pages_layout_${i})`)
             .join(',\n')}
         );
-
-        __pages_hydrate(resource, __pages_handler);
+        ${hooksFooter}
+        __pages_hydrate(resource, __pages_handler, __pages_hooks);
 
         export default __pages_handler;
 
@@ -248,19 +348,8 @@ export default async function ModuleLoader(
 
       const header = `
       import { wrapHandler as __pages_wrap_handler, hydrate as __pages_hydrate } from "@grexie/pages-runtime-handler";
-      ${
-        composablesRequires.length
-          ? 'import { createComposable as __pages_create_composable } from "@grexie/compose";'
-          : ''
-      }
-      ${composablesRequires
-        .map(
-          (id, i) =>
-            `import __pages_composable_${i} from ${JSON.stringify(id)};`
-        )
-        .join('\n')}
-
-        ${hmrHeader}
+      ${hooksImports.join('\n')}
+      ${hmrHeader}
       `;
 
       const footer = `
@@ -271,11 +360,11 @@ export default async function ModuleLoader(
         resource,
         __pages_handler_component,
         ${composablesRequires
-          .map((_, i) => `__pages_create_composable(__pages_composable_${i})`)
+          .map((_, i) => `__pages_create_composable(__pages_layout_${i})`)
           .join(',\n')}
       );
-
-      __pages_hydrate(resource, __pages_handler);
+      ${hooksFooter}
+      __pages_hydrate(resource, __pages_handler, __pages_hooks);
 
       export default __pages_handler;`
           : ''

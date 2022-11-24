@@ -8,6 +8,7 @@ const {
   with: withDocument,
   use: useDocumentContext,
 } = createContextWithProps<Document, DocumentOptions>(
+  'Pages.Document',
   Provider =>
     ({ children, ...options }) => {
       const document = useMemo(() => new Document(options), []);

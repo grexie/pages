@@ -1,6 +1,6 @@
-import { createElement } from 'react';
+import { createElement, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-import { compose } from '@grexie/compose';
+import { compose, createComposable, Composable } from '@grexie/compose';
 import { ResourceContext } from '@grexie/pages';
 import {
   StylesContext,
@@ -24,7 +24,18 @@ export const wrapHandler = (
   return compose(...composables, withResource({ resource }), handler as any);
 };
 
-export const hydrate = (resource: Resource, handler: any) => {
+export interface RenderHooks {
+  beforeRender: Composable[];
+  beforeDocument: Composable[];
+  afterDocument: Composable[];
+  afterRender: Composable[];
+}
+
+export const hydrate = (
+  resource: Resource,
+  handler: any,
+  hooks: RenderHooks
+) => {
   if (typeof window === 'undefined') {
     return;
   }
@@ -42,19 +53,27 @@ export const hydrate = (resource: Resource, handler: any) => {
   const context = new Context({});
   const resourceContext = new ResourceContext();
 
-  const component = compose(
+  const Component = compose(
+    ...hooks.beforeRender,
     withLazy,
     withContext({ context }),
     withStyles({ styles }),
     withResourceContext({ resourceContext }),
     withDocument({ resourceContext, resource }),
+    ...hooks.beforeDocument,
     withDocumentContent,
+    ...hooks.afterDocument,
+    ...hooks.afterRender,
     handler
   );
 
-  const element = createElement(component as any);
+  const element = <Component />;
+  // const element = (
+  //   <StrictMode>
+  //     <Component />
+  //   </StrictMode>
+  // );
 
-  console.info('rendering');
   if ((window as any).__PAGES_ROOT__) {
     (window as any).__PAGES_ROOT__.render(element);
   } else {
