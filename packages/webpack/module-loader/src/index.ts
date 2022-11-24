@@ -1,10 +1,5 @@
 import type { Dependency, LoaderContext } from 'webpack';
-import type {
-  BuildContext,
-  Builder,
-  ModuleHook,
-  Renderer,
-} from '@grexie/pages-builder';
+import type { BuildContext, Builder, Renderer } from '@grexie/pages-builder';
 import type { InstantiatedModule } from '@grexie/pages-builder';
 import type { Handler } from '@grexie/pages-builder';
 import type { Resource } from '@grexie/pages/api';
