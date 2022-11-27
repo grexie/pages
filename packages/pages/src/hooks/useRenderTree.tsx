@@ -56,18 +56,17 @@ export const {
       const parentNode = useRenderTreeNode();
       const context = useMemo(() => new RenderTreeNode(parentNode), []);
       useEffect(() => {
-        const index = context.parent?.children.indexOf(context) ?? -1;
-        if (index !== -1) {
-          context.parent?.children.splice(index, 1);
-        }
-        context.parent?.children.push(context);
-
-        return () => {
+        const remove = () => {
           const index = context.parent?.children.indexOf(context) ?? -1;
           if (index !== -1) {
             context.parent?.children.splice(index, 1);
           }
         };
+
+        remove();
+        context.parent?.children.push(context);
+
+        return remove;
       });
       return <Provider value={context}>{children}</Provider>;
     }

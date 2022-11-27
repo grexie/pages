@@ -131,6 +131,7 @@ export class MockBuilder extends RootBuildContext {
       volume.rmSync(this.rootDir, { recursive: true, force: true });
     }
     volume.mkdirSync(this.rootDir, { recursive: true });
+    // volume.mkdirSync(this.outputDir, { recursive: true });
     this.fs.add(this.outputDir, volume, true, 'outputDir');
   }
 

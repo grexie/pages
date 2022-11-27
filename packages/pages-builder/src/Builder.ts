@@ -28,7 +28,9 @@ export type Configuration = WebpackConfiguration & {
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export const defaultDescriptionFileData: DescriptionFile = {
+  type: 'module',
   dependencies: {
+    '@grexie/pages': '*',
     '@grexie/pages-plugin-markdown': '*',
     '@grexie/pages-plugin-typescript': '*',
     '@grexie/pages-plugin-image': '*',
@@ -190,6 +192,7 @@ export class Builder {
         children: true,
       },
       mode: production ? 'production' : 'development',
+      devtool: 'source-map',
       output: {
         path: this.context.outputDir,
         filename: `assets/js/[name].js`,
@@ -242,36 +245,40 @@ export class Builder {
           context: this.context,
         },
       },
-      optimization: {
-        usedExports: true,
-        minimize: !!production,
-        splitChunks: {
-          chunks: 'all',
-          minSize: 20000,
-          minRemainingSize: 0,
-          minChunks: 1,
-          maxAsyncRequests: 30,
-          maxInitialRequests: 30,
-          enforceSizeThreshold: 50000,
-          cacheGroups: {
-            defaultVendors: {
-              test: /[\\/]node_modules[\\/]/,
-              filename: 'assets/js/vendor-[chunkhash].js',
-              priority: -10,
-              reuseExistingChunk: true,
+      optimization: hot
+        ? { runtimeChunk: { name: 'runtime' } }
+        : {
+            minimize: !!production,
+            usedExports: true,
+            innerGraph: true,
+            sideEffects: true,
+            splitChunks: {
+              chunks: 'all',
+              minSize: 20000,
+              minRemainingSize: 0,
+              minChunks: 1,
+              maxAsyncRequests: 30,
+              maxInitialRequests: 30,
+              enforceSizeThreshold: 50000,
+              cacheGroups: {
+                defaultVendors: {
+                  test: /[\\/]node_modules[\\/]/,
+                  filename: 'assets/js/vendor-[chunkhash].js',
+                  priority: -10,
+                  reuseExistingChunk: true,
+                },
+                default: {
+                  filename: 'assets/js/site-[chunkhash].js',
+                  minChunks: 2,
+                  priority: -20,
+                  reuseExistingChunk: true,
+                },
+              },
             },
-            default: {
-              filename: 'assets/js/site-[chunkhash].js',
-              minChunks: 2,
-              priority: -20,
-              reuseExistingChunk: true,
+            runtimeChunk: {
+              name: 'runtime',
             },
           },
-        },
-        runtimeChunk: {
-          name: 'runtime',
-        },
-      },
       plugins: [
         new ProgressBarPlugin({
           format: '  build [:bar] :percent (:elapsed seconds) :msg',
@@ -293,7 +300,7 @@ export class Builder {
         },
         '__webpack/hot': {
           import:
-            'webpack-hot-middleware/client?reload=true&path=__webpack/hmr',
+            'webpack-hot-middleware/client?reload=true&overlay=true&overlayWarnings=true&path=__webpack/hmr',
           filename: '__webpack/hot.js',
         },
       });

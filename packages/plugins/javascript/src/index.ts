@@ -18,6 +18,7 @@ export default (context: Events<BuildContext>) => {
             loader: 'babel-loader',
             options: {
               presets: [['@babel/env', { modules: false }]],
+              sourceMaps: !!config.devtool,
             },
           },
         ],
@@ -43,7 +44,7 @@ export default (context: Events<BuildContext>) => {
                 ],
               ],
               plugins: config.devServer?.hot ? ['react-refresh/babel'] : [],
-              sourceMaps: true,
+              sourceMaps: !!config.devtool,
             },
           },
         ],

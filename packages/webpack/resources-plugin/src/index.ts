@@ -105,72 +105,86 @@ class SourceCompiler {
       )
     );
 
+    compilation.fileDependencies.addAll(entryModule.buildInfo.fileDependencies);
+    compilation.buildDependencies.addAll(
+      entryModule.buildInfo.buildDependencies
+    );
+    compilation.contextDependencies.addAll(
+      entryModule.buildInfo.contextDependencies
+    );
+
     compilation.hooks.processAssets.tapPromise(
       { name: 'SourceCompiler', stage: Infinity },
       async () => {
-        const files = new Set<string>();
+        try {
+          const files = new Set<string>();
 
-        let publicPath = compilation.outputOptions.publicPath ?? '/';
-        if (publicPath === 'auto') {
-          publicPath = '/';
-        }
+          let publicPath = compilation.outputOptions.publicPath ?? '/';
+          if (publicPath === 'auto') {
+            publicPath = '/';
+          }
 
-        let entrypoints: string[] = [this.source.slug];
+          let entrypoints: string[] = [this.source.slug];
 
-        if (compilation.options.devServer?.hot) {
-          entrypoints = [
-            '__webpack/react-refresh',
-            '__webpack/hot',
-            ...entrypoints,
-          ];
-        }
+          if (compilation.options.devServer?.hot) {
+            entrypoints = [
+              '__webpack/react-refresh',
+              '__webpack/hot',
+              ...entrypoints,
+            ];
+          }
 
-        entrypoints.forEach(name => {
-          const entrypoint = compilation.entrypoints.get(name);
+          entrypoints.forEach(name => {
+            const entrypoint = compilation.entrypoints.get(name);
 
-          entrypoint?.chunks.forEach(chunk => {
-            chunk.files.forEach(file => {
-              const asset = compilation.getAsset(file);
-              if (!asset) {
-                return;
-              }
+            entrypoint?.chunks.forEach(chunk => {
+              chunk.files.forEach(file => {
+                const asset = compilation.getAsset(file);
+                if (!asset) {
+                  return;
+                }
 
-              const assetMetaInformation = asset.info || {};
-              if (
-                assetMetaInformation.hotModuleReplacement ||
-                assetMetaInformation.development
-              ) {
-                return;
-              }
+                const assetMetaInformation = asset.info || {};
+                if (
+                  assetMetaInformation.hotModuleReplacement ||
+                  assetMetaInformation.development
+                ) {
+                  return;
+                }
 
-              files.add(`${publicPath}${file}`);
+                files.add(`${publicPath}${file}`);
+              });
             });
           });
-        });
 
-        const buffer = await this.render(compilation, [...files]);
+          const buffer = await this.render(compilation, [...files]);
 
-        const cache = this.context.build.cache.create('html');
-        await cache.set(
-          path.resolve(
-            this.context.build.rootDir,
-            this.source.slug,
-            'index.html'
-          ),
-          buffer!
-        );
-
-        compilation.emitAsset(
-          path.join(this.source.slug, 'index.html'),
-          new RawSource(buffer!)
-          // {
-          //   sourceFilename: `./${path.relative(
+          // const cache = this.context.build.cache.create('html');
+          // await cache.set(
+          //   path.resolve(
           //     this.context.build.rootDir,
-          //     this.source.filename
-          //   )}`,
+          //     this.source.slug,
+          //     'index.html'
+          //   ),
+          //   buffer!
+          // );
 
-          // }
-        );
+          compilation.emitAsset(
+            path.join(this.source.slug, 'index.html'),
+            new RawSource(buffer!)
+          );
+        } catch (err) {
+          const stringifiedErr = (err as any).toString();
+
+          if (
+            !compilation.errors.reduce(
+              (a, b) => a || b.toString() === stringifiedErr,
+              false
+            )
+          ) {
+            compilation.errors.push(err as any);
+          }
+        }
       }
     );
   }
@@ -198,6 +212,10 @@ export class ResourcesPlugin {
   }
 
   apply(compiler: Compiler) {
+    compiler.hooks.watchRun.tap('ResourcesPlugin', compiler => {
+      this.seen.clear();
+    });
+
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(
         EntryDependency,
@@ -292,6 +310,7 @@ export class ResourcesPlugin {
         thisContext.addCompilationRoot(
           path.resolve(mapping.source.dirname, mapping.mapping.from)
         );
+
         const compiler = compilation.createChildCompiler(
           'ResourcesPlugin',
           {},
@@ -329,6 +348,10 @@ export class ResourcesPlugin {
         }),
         ...promises,
       ]);
+
+      compiler.hooks.afterDone.tap('ResourcesPlugin', () => {
+        thisContext.dispose();
+      });
     });
   }
 }

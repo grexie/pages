@@ -1,6 +1,6 @@
 export default {
   exclude: [/\.d\.tsx?$/],
-  sourceMaps: 'inline',
+  sourceMaps: true,
   env: {
     esm: {
       test: [/\.tsx?$/],

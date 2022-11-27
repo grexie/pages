@@ -15,6 +15,7 @@ export default (context: Events<BuildContext>) => {
           context.builder.loader('@grexie/pages-style-loader'),
           {
             loader: 'css-loader',
+            options: {},
           },
           {
             loader: 'sass-loader',

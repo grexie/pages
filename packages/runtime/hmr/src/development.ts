@@ -1,5 +1,5 @@
 import runtime from 'react-refresh/runtime';
-
+import { setTimeout, clearTimeout } from 'timers';
 export const createSignatureFunctionForTransform =
   runtime.createSignatureFunctionForTransform;
 export const register = runtime.register;
@@ -11,7 +11,7 @@ export const update = (hot: any) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       runtime.performReactRefresh();
-    }, 30);
+    }, 300);
   }
 };
 

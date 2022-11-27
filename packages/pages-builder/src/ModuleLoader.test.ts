@@ -19,6 +19,8 @@ describe('ModuleLoader', () => {
     builder.addConfig('.pages.yml', { metadata: {} });
     const stats = await builder.build();
 
+    expect(stats.hasErrors()).toBeFalsy();
+
     const loader = builder.getModuleContext(stats.compilation).loaders['esm'];
     const { context, filename, source } = (await loader.modules[
       path.resolve(builder.rootDir, 'test.jsx')

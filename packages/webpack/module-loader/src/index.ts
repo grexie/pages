@@ -63,9 +63,10 @@ export default async function ModuleLoader(
 
     let handlerModule = await createHandler();
 
-    this.addDependency(
-      options.handler ? handlerModule.filename : this.resourcePath
-    );
+    if (options.handler) {
+      this.addDependency(handlerModule.filename);
+    }
+    this.addDependency(this.resourcePath);
 
     const configModule = await context.config.create(this._compilation!, path);
     configModule.ancestors.forEach(({ module }) => {
@@ -102,45 +103,10 @@ export default async function ModuleLoader(
       resource = sourceContext.create();
     }
 
-    const composables = [];
     const composablesRequires: ComposableRequire[] = [];
 
-    let layouts = sourceContext.metadata.layout ?? [];
-    if (!Array.isArray(layouts)) {
-      layouts = [layouts];
-    }
-
-    for (let layout of layouts) {
-      try {
-        const { abspath } = await context.sources.resolve({
-          context: sourceContext.path,
-          request: layout,
-        });
-
-        composablesRequires.push({
-          specifier: `./${_path.relative(
-            _path.dirname(this.resourcePath),
-            abspath
-          )}`,
-          exportName: 'default',
-        });
-        layout = abspath;
-      } catch (err) {
-        composablesRequires.push({ specifier: layout, exportName: 'default' });
-      }
-
-      const layoutModule = await modules.requireModule(
-        _path.dirname(this.resourcePath),
-        layout
-      );
-
-      this.addDependency(layoutModule.filename);
-
-      composables.push(createComposable(layoutModule.exports.default));
-    }
-
     const hookCollector =
-      (requires: { specifier: string; exportName: string }[]) =>
+      (requires: ComposableRequire[]) =>
       async (specifier: string, exportName: string = 'default') => {
         requires.push({ specifier, exportName });
 
@@ -151,6 +117,13 @@ export default async function ModuleLoader(
 
         this.addDependency(module.filename);
       };
+
+    let layouts: string | string[] = sourceContext.metadata.layout ?? [];
+    if (typeof layouts === 'string') {
+      layouts = [layouts];
+    }
+
+    layouts?.forEach(layout => hookCollector(composablesRequires)(layout));
 
     const beforeRender: ComposableRequire[] = [];
     const beforeDocument: ComposableRequire[] = [];
@@ -296,7 +269,7 @@ export default async function ModuleLoader(
           ...(this.hot ? [reactRefreshPlugin] : []),
         ],
         inputSourceMap: await serializedResource.map,
-        sourceMaps: this.sourceMap,
+        sourceMaps: !!this.sourceMap,
       });
 
       const references = await Promise.all(
@@ -308,16 +281,17 @@ export default async function ModuleLoader(
         .filter(({ builtin }) => !builtin)
         .forEach(({ filename }) => this.addDependency(filename));
 
-      return callback(
+      callback(
         null,
         header + compiled!.code + footer,
         compiled!.map
-          ? (offsetLines(
+          ? ((await offsetLines(
               compiled!.map as any,
               header.split(/\r\n|\n/g).length
-            ) as any)
+            )) as any)
           : undefined
       );
+      return;
     } else {
       const requests: string[] = [];
 
@@ -329,7 +303,7 @@ export default async function ModuleLoader(
           ...(this.hot ? [reactRefreshPlugin] : []),
         ],
         inputSourceMap: inputSourceMap || false,
-        sourceMaps: this.sourceMap,
+        sourceMaps: !!this.sourceMap,
       });
 
       const references = await Promise.all(
@@ -350,7 +324,7 @@ export default async function ModuleLoader(
       const footer = `
       ${serializedResource.code};
       ${
-        config.render
+        handler.default
           ? `const __pages_handler = __pages_wrap_handler(
         resource,
         __pages_handler_component,
@@ -359,7 +333,11 @@ export default async function ModuleLoader(
           .join(',\n')}
       );
       ${hooksFooter}
-      __pages_hydrate(resource, __pages_handler, __pages_hooks);
+      ${
+        config.render
+          ? '__pages_hydrate(resource, __pages_handler, __pages_hooks);'
+          : ''
+      }
 
       export default __pages_handler;`
           : ''
@@ -367,20 +345,21 @@ export default async function ModuleLoader(
       ${this.hot ? hmrFooter : ''}
     `;
 
-      return callback(
+      callback(
         null,
         header + compiled!.code! + footer,
         compiled!.map
-          ? (offsetLines(
+          ? ((await offsetLines(
               compiled!.map as any,
               header.split(/\r\n|\n/g).length
-            ) as any)
+            )) as any)
           : undefined
       );
     }
   } catch (err) {
-    console.error(err);
-    return callback(err as any);
+    // this._compilation?.errors.push(err);
+    callback();
+    return;
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
       console.info('module-loader:complete', this.resourcePath);

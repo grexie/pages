@@ -7,6 +7,7 @@ import { createRequire } from 'module';
 
 export interface DescriptionFile {
   name?: string;
+  type?: string;
   exports?: Record<string, string | Record<string, string>>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;

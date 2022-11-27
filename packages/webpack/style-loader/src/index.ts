@@ -57,7 +57,7 @@ export default async function StyleLoader(
     if (this.sourceMap) {
       map =
         inputSourceMap &&
-        offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length);
+        (await offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length));
     }
 
     callback(null, chunk, map as any);

@@ -44,6 +44,7 @@ export interface ChildBuildContextOptions extends ChildBuildOptions {
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
+  cacheDir?: string;
   rootDir?: string;
   fs: WritableFileSystem;
   defaultFiles?: WritableFileSystem;
@@ -51,15 +52,16 @@ export interface BuildOptions extends ContextOptions {
   resolver?: ModuleResolverConfig;
 }
 
-const defaultOptions = () => ({
-  providers: [] as ProviderConfig[],
+const defaultOptions = (): Required<BuildOptions> => ({
+  providers: [],
   rootDir: path.resolve(process.cwd(), process.env.PAGES_ROOT ?? '.'),
   cacheDir: path.resolve(
     process.cwd(),
     process.env.PAGES_CACHE ??
       path.resolve(os.tmpdir(), '@grexie', 'pages', 'cache')
   ),
-  defaultFiles: new Volume(),
+  fs: new Volume() as WritableFileSystem,
+  defaultFiles: new Volume() as WritableFileSystem,
   fsOptions: [],
   resolver: {},
 });

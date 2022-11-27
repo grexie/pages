@@ -15,6 +15,7 @@ import { Context } from '@grexie/pages';
 import { withLazy } from '@grexie/pages';
 import type { Resource } from '@grexie/pages';
 import type { Handler } from '@grexie/pages-builder';
+import { update } from '@grexie/pages-runtime-hmr';
 
 export const wrapHandler = (
   resource: Resource,
@@ -89,3 +90,7 @@ export const hydrate = (
     (window as any).__PAGES_ROOT__.render(element);
   }
 };
+
+if ((import.meta as any).webpackHot) {
+  update((import.meta as any).webpackHot);
+}

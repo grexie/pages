@@ -176,7 +176,7 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       console.info('cache-loader:pitch', this.resourcePath);
     }
 
-    const { content, map, meta } = await cache.readLock(
+    const { content, map, meta, dependencies } = await cache.readLock(
       'cache-loader',
       async cache => {
         const hasChanged = async (
@@ -258,6 +258,14 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       }
     );
 
+    if (typeof content === 'undefined') {
+      return callback();
+    }
+
+    Object.keys(dependencies ?? {}).forEach(dependency =>
+      this.addDependency(dependency)
+    );
+    this.addDependency(this.resourcePath);
     return callback(null, content, map, meta);
   } catch (err) {
     callback(err as any);

@@ -1,6 +1,6 @@
 module.exports = {
   exclude: [/\.d\.tsx?$/],
-  sourceMaps: 'inline',
+  sourceMaps: true,
   overrides: [
     {
       test: [/\.[jt]sx?$/],

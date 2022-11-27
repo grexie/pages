@@ -27,7 +27,7 @@ import {
 } from '../hooks/useRenderTree.js';
 import { setImmediate } from 'timers';
 import { hydrateRoot } from 'react-dom/client';
-import { renderToStaticMarkup } from 'react-dom/server';
+// import { renderToStaticMarkup } from 'react-dom/client';
 import { createPortal, unmountComponentAtNode } from 'react-dom';
 
 const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
@@ -41,7 +41,7 @@ const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
     <SharedContextClone contexts={contexts}>{children}</SharedContextClone>
   );
 
-  const string = html ?? renderToStaticMarkup(<Component />);
+  const string = html; // ?? renderToStaticMarkup(<Component />);
 
   if (
     [

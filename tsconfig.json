@@ -43,6 +43,9 @@
       "path": "packages/plugins/markdown"
     },
     {
+      "path": "packages/plugins/preact"
+    },
+    {
       "path": "packages/plugins/sass"
     },
     {

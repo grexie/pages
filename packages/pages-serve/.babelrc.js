@@ -1,6 +1,6 @@
 export default {
   exclude: [/\.d\.tsx?$/],
-  sourceMaps: 'inline',
+  sourceMaps: true,
   overrides: [
     {
       test: [/\.tsx?$/],

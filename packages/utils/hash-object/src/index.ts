@@ -1,7 +1,13 @@
-import _hash from 'object-hash';
-
 export const hash = (object: any) => {
-  return _hash(object, {
-    ignoreUnknown: true,
+  const seen = new Set<any>();
+  const json = JSON.stringify(object, function (key, value) {
+    seen.add(this);
+    if (typeof value === 'function') {
+      return value.displayName ?? value.name;
+    } else if (seen.has(this)) {
+      return '#CircularReference';
+    }
+    return value;
   });
+  return json;
 };
