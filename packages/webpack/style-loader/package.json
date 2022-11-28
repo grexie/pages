@@ -19,14 +19,14 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/resolvable": "^0.0.34",
-    "@grexie/source-maps": "^0.0.34",
+    "@grexie/resolvable": "^*",
+    "@grexie/source-maps": "^*",
     "ast-traverse": "^0.1.1",
     "css": "^3.0.0",
     "webpack": "^5.75.0"
   },
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.0.35"
+    "@grexie/pages-builder": "^*"
   },
   "exports": {
     ".": {

@@ -13,10 +13,10 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.35",
-    "@grexie/pages-builder": "^0.0.35",
-    "@grexie/pages-module-loader": "^0.0.35",
-    "@grexie/pages-runtime-styles": "^0.0.35",
+    "@grexie/pages": "^*",
+    "@grexie/pages-builder": "^*",
+    "@grexie/pages-module-loader": "^*",
+    "@grexie/pages-runtime-styles": "^*",
     "@mdx-js/mdx": "^2.1.1",
     "gray-matter": "^4.0.3",
     "source-map": "^0.7.4"

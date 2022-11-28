@@ -19,7 +19,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/resolvable": "^0.0.35"
+    "@grexie/resolvable": "^*"
   },
   "exports": {
     ".": {

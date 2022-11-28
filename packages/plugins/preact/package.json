@@ -10,7 +10,7 @@
     "watch": "npm run -s build -- -w"
   },
   "dependencies": {
-    "@grexie/pages-builder": "^0.0.35",
+    "@grexie/pages-builder": "^*",
     "preact": "^10.11.3"
   },
   "exports": {

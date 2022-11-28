@@ -55,7 +55,7 @@
   },
   "release-it": {
     "git": {
-      "commitMessage": "chore: release v${version}"
+      "commit": false
     },
     "plugins": {
       "@release-it-plugins/workspaces": {
