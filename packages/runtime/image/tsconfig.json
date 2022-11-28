@@ -5,9 +5,16 @@
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
-
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages-runtime-styles": ["../styles/src"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../styles"
+    }
+  ]
 }

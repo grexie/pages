@@ -44,6 +44,7 @@ export interface ChildBuildContextOptions extends ChildBuildOptions {
 
 export interface BuildOptions extends ContextOptions {
   providers?: ProviderConfig[];
+  cacheKey?: string;
   cacheDir?: string;
   rootDir?: string;
   fs: WritableFileSystem;
@@ -52,15 +53,19 @@ export interface BuildOptions extends ContextOptions {
   resolver?: ModuleResolverConfig;
 }
 
-const defaultOptions = (): Required<BuildOptions> => ({
+const defaultOptions = ({
+  cacheKey = 'default',
+  fs,
+}: BuildOptions): Required<BuildOptions> => ({
   providers: [],
   rootDir: path.resolve(process.cwd(), process.env.PAGES_ROOT ?? '.'),
+  cacheKey,
   cacheDir: path.resolve(
     process.cwd(),
     process.env.PAGES_CACHE ??
-      path.resolve(os.tmpdir(), '@grexie', 'pages', 'cache')
+      path.resolve(os.tmpdir(), '@grexie', 'pages', 'cache', cacheKey)
   ),
-  fs: new Volume() as WritableFileSystem,
+  fs,
   defaultFiles: new Volume() as WritableFileSystem,
   fsOptions: [],
   resolver: {},
@@ -321,7 +326,7 @@ export class RootBuildContext extends Context implements BuildContext {
       resolver,
       builder,
       ...opts
-    } = Object.assign(defaultOptions(), options);
+    } = Object.assign(defaultOptions(options), options);
     super({ isBuild: true, ...opts });
 
     const require = createRequire(import.meta.url);

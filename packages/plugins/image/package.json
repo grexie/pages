@@ -13,9 +13,10 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.0.35",
-    "@grexie/pages-builder": "^0.0.35",
-    "@grexie/pages-image-loader": "^0.0.35",
+    "@grexie/pages": "^0.0.34",
+    "@grexie/pages-builder": "^0.0.34",
+    "@grexie/pages-image-loader": "^0.0.34",
+    "@grexie/pages-plugin-css": "^0.0.34",
     "raw-loader": "^4.0.2"
   },
   "exports": {

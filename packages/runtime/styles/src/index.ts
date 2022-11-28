@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useStyles } from '@grexie/pages';
+import './declaration';
 
 export type Class = string | Record<string, any> | null | undefined;
 export type StyleUnuseFunction = () => void;
@@ -7,6 +8,7 @@ export type StyleUseFunction = () => StyleUnuseFunction;
 export type StyleFunction = ((...classList: Class[]) => string) & {
   use: StyleUseFunction;
   resolve: (cls: string) => string;
+  var: (name: string) => string;
   styleSheet: StyleSheet;
 };
 
@@ -14,11 +16,18 @@ export class StyleSheet {
   readonly hash: string;
   readonly css: string;
   readonly locals: Record<string, string>;
+  readonly variables: Record<string, string>;
 
-  constructor(hash: string, css: string, locals: Record<string, string>) {
+  constructor(
+    hash: string,
+    css: string,
+    locals: Record<string, string>,
+    variables: Record<string, string>
+  ) {
     this.hash = hash;
     this.css = css;
     this.locals = locals;
+    this.variables = variables;
   }
 
   use() {
@@ -65,18 +74,24 @@ export class StyleSheet {
 
     return [...out].join(' ');
   }
+
+  var(name: string) {
+    return this.variables[name];
+  }
 }
 
 export const wrapStyles = (
   hash: string,
   css: string,
-  locals: Record<string, string> = {}
+  locals: Record<string, string> = {},
+  variables: Record<string, string> = {}
 ) => {
-  const styles = new StyleSheet(hash, css, locals);
+  const styles = new StyleSheet(hash, css, locals, variables);
 
   const out = styles.classes.bind(styles) as StyleFunction;
   out.use = styles.use.bind(styles);
   out.resolve = styles.resolve.bind(styles);
+  out.var = styles.var.bind(styles);
   out.styleSheet = styles;
 
   return out;

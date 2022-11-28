@@ -17,46 +17,36 @@ export type ImageProps = {
   className: string;
 } & ImageDimensions;
 
-type ImageComponentProps = {
-  src: string;
-  metadata: Metadata;
-} & ImageProps &
-  Partial<ImageDimensions>;
+export type Image = FC<ImageProps>;
 
-export const Image: FC<ImageComponentProps> = ({
-  src,
-  size,
-  metadata,
-  className,
-}: Partial<ImageComponentProps>) => {
-  styles.use();
+export const wrapImage = (filename: string, metadata: Metadata): Image => {
+  return ({ width, height, size, className }: ImageProps) => {
+    styles.use();
 
-  return (
-    <div
-      className={styles('pages-image', className)}
-      style={{ maxWidth: size ?? metadata!.width }}
-    >
-      <span className={styles('pages-image-placeholder')} />
-      <img className={styles('pages-image-img')} src={src} />
-    </div>
-  );
-};
-
-export const wrapImage = (filename: string, metadata: Metadata) => {
-  return (props: ImageProps) => (
-    <Image {...props} src={filename} metadata={metadata} />
-  );
+    return (
+      <div
+        className={styles('pages-image', className)}
+        style={{
+          maxWidth: width ?? size ?? metadata!.width,
+          maxHeight: height ?? size ?? metadata!.height,
+        }}
+      >
+        <span className={styles('pages-image-placeholder')} />
+        <img className={styles('pages-image-img')} src={filename} />
+      </div>
+    );
+  };
 };
 
 export const wrapImageComponent = (
   Component: ComponentType<ImageProps>,
   metadata: Metadata
-) => {
+): Image => {
   return ({ width, height, size, className }: ImageProps) => (
     <Component
       className={className}
-      width={width ?? size}
-      height={height ?? size}
+      width={width ?? size ?? metadata.width}
+      height={height ?? size ?? metadata.height}
     />
   );
 };

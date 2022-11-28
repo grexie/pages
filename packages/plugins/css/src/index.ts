@@ -1,7 +1,6 @@
 import { Events, BuildContext, Configuration } from '@grexie/pages-builder';
-import { createRequire } from 'module';
+export type { StyleSheet } from '@grexie/pages-runtime-styles';
 
-const require = createRequire(new URL(import.meta.url).pathname);
 const extensions = ['.sass', '.scss'];
 
 export default (context: Events<BuildContext>) => {

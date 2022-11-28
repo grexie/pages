@@ -12,6 +12,7 @@ export default async () => {
       },
     ],
     fs,
+    cacheKey: 'build',
   });
   context.fs.add(context.outputDir, fs, true);
 

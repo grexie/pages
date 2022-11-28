@@ -1,7 +1,6 @@
 import { Events, BuildContext, Configuration } from '@grexie/pages-builder';
-import { createRequire } from 'module';
+export type { Image } from '@grexie/pages-runtime-image';
 
-const require = createRequire(new URL(import.meta.url).pathname);
 const extensions = ['.jpeg', '.jpg', '.png', '.webp', '.gif', '.svg'];
 
 export default (context: Events<BuildContext>) => {

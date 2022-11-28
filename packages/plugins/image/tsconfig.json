@@ -10,7 +10,7 @@
       "@grexie/pages": ["../../pages/src"],
       "@grexie/pages/api": ["../../pages/src/api"],
       "@grexie/pages-builder": ["../../pages-builder/src"],
-      "@grexie/pages-runtime-styles": ["../../runtime/styles/src"]
+      "@grexie/pages-runtime-styles": ["../../runtime/image/src"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
@@ -23,7 +23,7 @@
       "path": "../../pages-builder"
     },
     {
-      "path": "../../runtime/styles"
+      "path": "../../runtime/image"
     }
   ]
 }

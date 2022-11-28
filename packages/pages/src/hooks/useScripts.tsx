@@ -8,7 +8,8 @@ export const {
   Provider: ScriptsProvider,
   with: withScripts,
   use: useScripts,
-} = createContextWithProps<string[], ScriptsProviderProps>('Pages.Scripts',
+} = createContextWithProps<string[], ScriptsProviderProps>(
+  'Pages.Scripts',
   Provider =>
     ({ scripts, children }) =>
       <Provider value={scripts}>{children}</Provider>

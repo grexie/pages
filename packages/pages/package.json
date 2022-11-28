@@ -9,18 +9,15 @@
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
     "watch": "npm run -s build -- -w"
   },
-  "peerDependencies": {
-    "react": ">=18.2.0",
-    "react-dom": ">=18.2.0"
-  },
   "dependencies": {
     "@grexie/compose": "^0.1.17",
-    "@grexie/context": "^0.0.35",
-    "@grexie/hash-object": "^0.0.35",
-    "@grexie/pages-builder": "^0.0.35",
-    "@grexie/pages-cli": "^0.0.35",
-    "@grexie/proxy": "^0.0.35",
-    "react-is": "^18.2.0"
+    "@grexie/context": "^0.0.34",
+    "@grexie/hash-object": "^0.0.34",
+    "@grexie/pages-builder": "^0.0.34",
+    "@grexie/pages-cli": "^0.0.34",
+    "@grexie/proxy": "^0.0.34",
+    "react": ">=18.2.0",
+    "react-is": ">=18.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.12",

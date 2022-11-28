@@ -9,10 +9,6 @@
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*','**/__snapshots__/*'",
     "watch": "npm run -s build -- -w"
   },
-  "peerDependencies": {
-    "react": ">=18.2.0",
-    "react-dom": ">=18.2.0"
-  },
   "dependencies": {
     "@babel/cli": "^7.17.10",
     "@babel/core": "^7.18.2",
@@ -44,6 +40,8 @@
     "memfs": "^3.4.11",
     "path-browserify": "^1.0.1",
     "progress-bar-webpack-plugin": "^2.1.0",
+    "react-dom": ">=18.2.0",
+    "react": ">=18.2.0",
     "stream-browserify": "^3.0.0",
     "timers-browserify": "^2.0.12",
     "tty-browserify": "^0.0.1",
