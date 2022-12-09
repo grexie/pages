@@ -26,7 +26,7 @@ import { Source } from './Source.js';
 import resolve from 'enhanced-resolve';
 import { createResolver } from '@grexie/resolvable';
 import { Events, EventManager, EventPhase } from './EventManager.js';
-import { PluginContext, Plugin } from './PluginContext.js';
+import { PluginContext, Plugin, PluginHandler } from './PluginContext.js';
 import { ICache } from './Cache.js';
 import webpack from 'webpack';
 import { Renderer } from './Renderer.js';
@@ -307,6 +307,17 @@ export class RootBuildContext extends Context implements BuildContext {
 
   get plugins() {
     return this.#plugins?.plugins;
+  }
+
+  async addPlugin(name: string, handler: PluginHandler) {
+    await this.ready;
+    const plugin: Plugin = {
+      name,
+      handler,
+    };
+    this.#plugins!.plugins.add(plugin);
+    const events = EventManager.get<BuildContext>(this).create(plugin.name);
+    await plugin.handler(events);
   }
 
   get root(): BuildContext {

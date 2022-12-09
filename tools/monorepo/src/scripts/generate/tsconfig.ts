@@ -1,4 +1,4 @@
-import { getWorkspaces } from '../../utils/workspaces';
+import { getWorkspaces } from '../../utils/workspaces.js';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 

@@ -81,7 +81,7 @@ export default async function CacheLoader(
 
     await cache.lock('cache-loader', async cache => {
       if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-        console.info('cache-loader', this.resourcePath);
+        console.debug('cache-loader', this.resourcePath);
       }
 
       await cache.lock(
@@ -158,7 +158,7 @@ export default async function CacheLoader(
     callback(err as any);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('cache-loader:complete', this.resourcePath);
+      console.debug('cache-loader:complete', this.resourcePath);
     }
   }
 }
@@ -173,7 +173,7 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
   const cache = context.cache.create('pages-cache-loader');
   try {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('cache-loader:pitch', this.resourcePath);
+      console.debug('cache-loader:pitch', this.resourcePath);
     }
 
     const { content, map, meta, dependencies } = await cache.readLock(
@@ -271,7 +271,7 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
     callback(err as any);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('cache-loader:pitch-complete', this.resourcePath);
+      console.debug('cache-loader:pitch-complete', this.resourcePath);
     }
   }
 }

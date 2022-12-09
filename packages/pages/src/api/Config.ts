@@ -1,4 +1,4 @@
-import { ResourceMetadata } from './Resource.js';
+import type { Resource, ResourceMetadata } from './Resource.js';
 
 export type NormalizedMapping = {
   from: string;
@@ -10,8 +10,7 @@ export type Mapping =
   | NormalizedMapping
   | (Omit<NormalizedMapping, 'to'> & { to: string });
 
-export interface Config extends Record<string, any> {
-  render: boolean;
-  mappings: Mapping[];
-  metadata: ResourceMetadata;
+export interface Config<M extends ResourceMetadata = any>
+  extends Record<string, any> {
+  metadata: M;
 }

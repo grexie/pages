@@ -33,7 +33,7 @@ class Timed<F extends Function> {
   }
 
   log(...message: any[]) {
-    console.info(
+    console.debug(
       ...message,
       'count',
       this.count,

@@ -32,7 +32,7 @@ export default async () => {
   const watch = [
     path.dirname(require.resolve('@grexie/pages/package.json')),
     path.dirname(require.resolve('@grexie/pages-builder/package.json')),
-    ...[...context.plugins].map(({ path }) => path),
+    ...[...context.plugins].map(({ path }) => path!),
   ];
 
   const options: nodemon.Settings = {

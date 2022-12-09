@@ -1,0 +1,30 @@
+{
+  "name": "@grexie/pages-ssr-loader",
+  "version": "0.0.35",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "watch": "npm run -s build -- -w"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "@grexie/pages-builder": "^*"
+  },
+  "dependencies": {
+    "@babel/core": "^7.20.2",
+    "source-map": "^0.7.4",
+    "webpack": "^5.75.0"
+  },
+  "exports": {
+    ".": {
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  }
+}

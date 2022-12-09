@@ -17,5 +17,5 @@ export default async () => {
   context.fs.add(context.outputDir, fs, true);
 
   const stats = await context.builder.build();
-  console.info(stats.toString({ modulesSpace: 9999, colors: true }));
+  process.stdout.write(stats.toString({ modulesSpace: 9999, colors: true }));
 };

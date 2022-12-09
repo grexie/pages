@@ -40,10 +40,10 @@ export class ConfigModule {
   async create(extra?: Partial<Config>): Promise<Config> {
     const parent = await this.parent?.create();
     const { exports } = this.module;
-    if (!exports.config) {
+    if (!exports.default) {
       throw new Error(`${this.module.filename} has no config export`);
     }
-    const { config: configFactory } = exports;
+    const { default: configFactory } = exports;
     let config = configFactory(parent);
     if (extra) {
       config = ObjectProxy.create<Config>(extra, config);
@@ -53,30 +53,30 @@ export class ConfigModule {
 
   serialize(context: string, imports: boolean, index: number = 1): string {
     if (imports) {
-      const metadataImport = `import { metadata as __pages_metadata_${index} } from ${JSON.stringify(
+      const configImport = `import __pages_config_${index} from ${JSON.stringify(
         `${this.source.relpath(context)}`
       )}`;
 
       if (this.parent) {
-        return `${metadataImport}\n${this.parent.serialize(
+        return `${configImport}\n${this.parent.serialize(
           context,
           true,
           index + 1
         )}`;
       } else {
-        return metadataImport;
+        return configImport;
       }
     } else {
-      const metadataFactory = `__pages_metadata_${index}`;
+      const configFactory = `__pages_config_${index}`;
 
       if (this.parent) {
-        return `${metadataFactory}(${this.parent.serialize(
+        return `${configFactory}(${this.parent.serialize(
           context,
           false,
           index + 1
         )})`;
       } else {
-        return `${metadataFactory}()`;
+        return `${configFactory}()`;
       }
     }
   }
@@ -105,6 +105,7 @@ export class ConfigContext {
     path: string[]
   ): Promise<ConfigModule> {
     const sources = await this.context.registry.listConfig({ path });
+
     sources.sort((a, b) => a.path.length - b.path.length);
 
     let configModule: ConfigModule | undefined;

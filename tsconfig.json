@@ -6,6 +6,7 @@
     "outDir": "./lib",
     "rootDir": "./src",
     "noEmit": true,
+    "module": "esnext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -53,6 +54,9 @@
     },
     {
       "path": "packages/plugins/yaml"
+    },
+    {
+      "path": "packages/runtime/config"
     },
     {
       "path": "packages/runtime/handler"
@@ -113,6 +117,9 @@
     },
     {
       "path": "packages/webpack/resources-plugin"
+    },
+    {
+      "path": "packages/webpack/ssr-loader"
     },
     {
       "path": "packages/webpack/style-loader"

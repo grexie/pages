@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { basename, resolve } from 'path';
-import { cyan, gray } from 'chalk';
-import { getWorkspaces } from '../utils/workspaces';
+import chalk from 'chalk';
+import { getWorkspaces } from '../utils/workspaces.js';
 
 interface RunOptions {
   parallel?: boolean;
@@ -69,7 +69,7 @@ export default async (
   await Promise.all(
     packages.map(async ({ workspace, location }) => {
       const skipped = (reason: string) =>
-        console.error(gray(`${workspace} skipped due to ${reason}`));
+        console.error(chalk.gray(`${workspace} skipped due to ${reason}`));
 
       const packagePath = resolve(location, 'package.json');
 
@@ -95,7 +95,7 @@ export default async (
       }
 
       if (!silent) {
-        console.error(cyan(`[${logName}] yarn run ${command}`));
+        console.error(chalk.cyan(`[${logName}] yarn run ${command}`));
       }
 
       const child = spawn('yarn', ['run', command, ...args], {
@@ -111,7 +111,7 @@ export default async (
         }
         const lines = data.split(/\n|\r\n|\r/g) as string[];
         lines.forEach(line => {
-          process.stdout.write(cyan(`[${logName}] `));
+          process.stdout.write(chalk.cyan(`[${logName}] `));
           process.stdout.write(line);
           process.stdout.write('\n');
         });
@@ -123,7 +123,7 @@ export default async (
         }
         const lines = data.split(/\n|\r\n/g) as string[];
         lines.forEach(line => {
-          process.stderr.write(cyan(`[${logName}] `));
+          process.stderr.write(chalk.cyan(`[${logName}] `));
           process.stderr.write(line);
           process.stderr.write('\n');
         });

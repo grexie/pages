@@ -1,28 +1,38 @@
+import { Config } from './Config.js';
+
 export type ResourceMetadata = Record<string, any> & { type?: string };
 
 export interface ResourceSerializeOptions {
-  serializeMetadata: (source: string) => string;
+  serializeConfig: (source: string) => string;
   imports: boolean;
 }
 
-export interface ResourceOptions<M extends ResourceMetadata = any> {
+export interface ResourceOptions<
+  M extends ResourceMetadata = any,
+  C extends Config<M> = any
+> {
   path: string[];
-  metadata: M;
+  config: C;
 }
 
-export class Resource<M extends ResourceMetadata = any> {
+export class Resource<
+  M extends ResourceMetadata = any,
+  C extends Config<M> = any
+> {
   readonly path: string[];
   readonly slug: string;
+  readonly config: C;
   readonly metadata: M;
 
-  constructor({ path, metadata }: ResourceOptions<M>) {
+  constructor({ path, config }: ResourceOptions<M>) {
     this.path = path;
     this.slug = path.join('/');
-    this.metadata = metadata;
+    this.config = config;
+    this.metadata = config.metadata;
   }
 
   async serialize({
-    serializeMetadata,
+    serializeConfig,
     imports,
   }: ResourceSerializeOptions): Promise<{
     code: string;
@@ -35,14 +45,17 @@ export class Resource<M extends ResourceMetadata = any> {
         code: `export const resource = {
         path: ${JSON.stringify(this.path)},
         slug: ${JSON.stringify(this.slug)},
-        metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
+        config: ${serializeConfig(JSON.stringify(this.config, null, 2))},
+        get metadata() {
+          return this.config.metadata;
+        }
       }`,
       };
     }
   }
 
   toJSON() {
-    return { path: this.path, slug: this.slug, metadata: this.metadata };
+    return { path: this.path, slug: this.slug, config: this.config };
   }
 }
 

@@ -91,7 +91,7 @@ export class ModuleResource<X = any, M extends ResourceMetadata = any>
   }
 
   async serialize({
-    serializeMetadata,
+    serializeConfig,
     imports,
   }: ResourceSerializeOptions): Promise<{ code: string; map?: any }> {
     if (imports) {
@@ -110,7 +110,10 @@ export class ModuleResource<X = any, M extends ResourceMetadata = any>
       export const resource = {
         path: ${JSON.stringify(this.path)},
         slug: ${JSON.stringify(this.slug)},
-        metadata: ${serializeMetadata(JSON.stringify(this.metadata, null, 2))},
+        config: ${serializeConfig(JSON.stringify(this.config, null, 2))},
+        get metadata() {
+          return this.config.metadata;
+        },
         exports: __handler_exports,
       };
     `,

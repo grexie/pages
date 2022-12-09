@@ -58,7 +58,7 @@ export class SourceContext extends Source {
   create() {
     return new Resource({
       path: this.path,
-      metadata: this.metadata,
+      config: this.config,
     });
   }
 
@@ -66,7 +66,7 @@ export class SourceContext extends Source {
     return new ContentResource({
       path: this.path,
       content,
-      metadata: this.metadata,
+      config: this.config,
     });
   }
 
@@ -91,7 +91,7 @@ export class SourceContext extends Source {
 
     return new ModuleResource({
       path: this.path,
-      metadata: this.metadata,
+      config: this.config,
       source,
       map,
       exports,
@@ -99,19 +99,19 @@ export class SourceContext extends Source {
   }
 
   async serialize(resource: Resource): Promise<{ code: string; map?: any }> {
-    const serializeMetadata = (source: string) =>
+    const serializeConfig = (source: string) =>
       `__pages_object_proxy.create(${JSON.stringify(
-        ObjectProxy.get(resource.metadata as any),
+        ObjectProxy.get(resource.config),
         null,
         2
       )}, ${this.configModule.serialize(this.dirname, false)})`;
 
     const { code: imports } = await resource.serialize({
-      serializeMetadata,
+      serializeConfig,
       imports: true,
     });
     const { code, map } = await resource.serialize({
-      serializeMetadata,
+      serializeConfig,
       imports: false,
     });
 

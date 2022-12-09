@@ -1,6 +1,6 @@
 import { execSync, spawn, spawnSync } from 'child_process';
 import path from 'path';
-import { getWorkspaces } from '../utils/workspaces';
+import { getWorkspaces } from '../utils/workspaces.js';
 
 interface ServeOptions {
   port?: number;

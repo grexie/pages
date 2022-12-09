@@ -1,7 +1,6 @@
 import type { Provider } from './Provider.js';
 import { BuildContext } from './BuildContext.js';
 import _path from 'path';
-import type { SourceTree } from '@grexie/pages';
 import { Source } from './Source.js';
 import path from 'path';
 
@@ -108,33 +107,5 @@ export class Registry {
   async get(options: GetOptions): Promise<Source | undefined> {
     const resources = await this.list(options);
     return resources[0];
-  }
-
-  async tree(options: ListOptions): Promise<SourceTree> {
-    const resources = await this.list(options);
-    const tree: SourceTree = {};
-    for (const resource of resources) {
-      let current = tree;
-      let path = resource.path.slice();
-      let cont = false;
-      while (path.length > 1) {
-        let name = path.shift()!;
-        name = name[0].toUpperCase() + name.substring(1);
-
-        if (Array.isArray(current[name])) {
-          cont = true;
-          break;
-        }
-        current[name] = current[name] || {};
-        current = current[name] as SourceTree;
-      }
-      if (cont) {
-        continue;
-      }
-      let name = path.shift()!;
-      name = name[0].toUpperCase() + name.substring(1);
-      current[name] = resource.filename;
-    }
-    return tree;
   }
 }

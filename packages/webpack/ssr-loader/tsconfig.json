@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./lib/",
+    "rootDir": "./src/",
+    "module": "esnext",
+    "moduleResolution": "node16",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages-builder": ["../../pages-builder/src"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/babel.ts"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../../pages-builder"
+    }
+  ]
+}

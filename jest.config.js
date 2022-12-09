@@ -9,7 +9,8 @@ module.exports = {
   setupFiles: ['<rootDir>/tools/jest/setup.js'],
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/'],
-  testMatch: ['**/*.(spec|test).js'],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  testMatch: ['**/*.(spec|test).ts', '**/*.(spec|test).tsx'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '^.test/',

@@ -33,7 +33,7 @@ export default async function ImageLoader(
   this: LoaderContext<ImageLoaderOptions>
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-    console.info('image-loader', this.resourcePath);
+    console.debug('image-loader', this.resourcePath);
   }
 
   const { context } = this.getOptions();
@@ -95,7 +95,7 @@ export default async function ImageLoader(
     modules.evict(this.resourcePath);
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('image-loader:complete', this.resourcePath);
+      console.debug('image-loader:complete', this.resourcePath);
     }
   }
 }
