@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --loader ts-node/esm/transpile-only --no-warnings
 
 import path from 'path';
 import parseArgs from 'minimist';
