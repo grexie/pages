@@ -43,7 +43,6 @@
     "react": ">=18.2.0",
     "react-dom": ">=18.2.0",
     "stream-browserify": "^3.0.0",
-    "thread-loader": "^3.0.4",
     "timers-browserify": "^2.0.12",
     "tty-browserify": "^0.0.1",
     "webpack": "^5.75.0"
