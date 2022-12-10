@@ -77,6 +77,7 @@ export const hydrate = (
 
   if ((window as any).__PAGES_ROOT__) {
     (window as any).__PAGES_ROOT__.render(element);
+    return (window as any).__PAGES_ROOT__;
   } else {
     (window as any).__PAGES_ROOT__ = hydrateRoot(
       document.querySelector('#__pages_root')!,
@@ -88,6 +89,7 @@ export const hydrate = (
       }
     );
     (window as any).__PAGES_ROOT__.render(element);
+    return (window as any).__PAGES_ROOT__;
   }
 };
 

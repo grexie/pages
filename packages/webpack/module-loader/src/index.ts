@@ -164,7 +164,6 @@ export default async function ModuleLoader(
     `;
 
     const hmrFooter = `
-      __pages_refresh_runtime.update(import.meta.webpackHot);
       __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
       __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
     `;
@@ -254,7 +253,12 @@ export default async function ModuleLoader(
         }
         ${
           config.render
-            ? '__pages_hydrate(resource, __pages_handler, __pages_hooks);'
+            ? `const __pages_root = __pages_hydrate(resource, __pages_handler, __pages_hooks);`
+            : ''
+        }
+        ${
+          config.render && this.hot
+            ? `if (__pages_root) { __pages_refresh_runtime.update(import.meta.webpackHot); }`
             : ''
         }
 
@@ -341,11 +345,16 @@ export default async function ModuleLoader(
           ? "$RefreshReg$(__pages_handler, '%default%$__pages_handler');"
           : ''
       }
-      ${
-        config.render
-          ? '__pages_hydrate(resource, __pages_handler, __pages_hooks);'
-          : ''
-      }
+        ${
+          config.render
+            ? `const __pages_root = __pages_hydrate(resource, __pages_handler, __pages_hooks);`
+            : ''
+        }
+        ${
+          config.render && this.hot
+            ? `if (__pages_root) { __pages_refresh_runtime.update(import.meta.webpackHot); }`
+            : ''
+        }
 
       
 
