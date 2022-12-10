@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react';
 import { useStyles } from '@grexie/pages';
-import './declaration';
 
 export type Class = string | Record<string, any> | null | undefined;
 export type StyleUnuseFunction = () => void;

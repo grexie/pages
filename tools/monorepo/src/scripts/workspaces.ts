@@ -1,6 +1,6 @@
 import { spawnSync } from 'child_process';
-import { cyan } from 'chalk';
-import { getWorkspaces } from '../utils/workspaces';
+import chalk from 'chalk';
+import { getWorkspaces } from '../utils/workspaces.js';
 
 interface WorkspacesOptions {
   silent?: boolean;
@@ -32,7 +32,7 @@ export default async (
 
   packages.forEach(({ workspace, location }) => {
     if (!silent) {
-      console.error(cyan(`${workspace} ${command} ${args.join(' ')}...`));
+      console.error(chalk.cyan(`${workspace} ${command} ${args.join(' ')}...`));
     }
 
     const { error, stdout } = spawnSync(command, args, {

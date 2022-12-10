@@ -1,6 +1,6 @@
 #!/bin/sh
 SCRIPT_DIR=$(dirname $(realpath "$0"))
-export NODE_OPTIONS="--no-warnings --experimental-import-meta-resolve --experimental-vm-modules"
+export NODE_OPTIONS="--no-warnings --experimental-import-meta-resolve --experimental-vm-modules ${NODE_OPTIONS}"
 
 NODE_LOADER=$(node -e "try {console.info(require.resolve('@grexie/pages-builder/loader'))} catch(err) {}")
 

@@ -32,7 +32,7 @@ export default async function ModuleLoader(
   const { EventManager, EventPhase } = await import('@grexie/pages-builder');
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-    console.info('module-loader', this.resourcePath);
+    console.debug('module-loader', this.resourcePath);
   }
 
   let { context, ...options } = this.getOptions();
@@ -76,9 +76,7 @@ export default async function ModuleLoader(
     });
 
     const handler = handlerModule.exports as Handler;
-    const handlerConfig = { metadata: {} };
-
-    const configPromise = configModule.create(handlerConfig);
+    const configPromise = configModule.create({ metadata: {} });
 
     const config = await configPromise;
 
@@ -357,12 +355,13 @@ export default async function ModuleLoader(
       );
     }
   } catch (err) {
-    // this._compilation?.errors.push(err);
-    callback();
+    const werr = new webpack.WebpackError(err as any);
+    werr.stack = (err as Error).stack ?? werr.stack;
+    callback(werr);
     return;
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('module-loader:complete', this.resourcePath);
+      console.debug('module-loader:complete', this.resourcePath);
     }
   }
 }

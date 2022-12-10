@@ -1,6 +1,7 @@
 import { LoaderContext } from 'webpack';
 import type { BuildContext } from '@grexie/pages-builder';
 import path from 'path';
+import babel, { transformAsync, PluginObj, PluginPass } from '@babel/core';
 
 interface PagesLoaderOptions {
   context: BuildContext;
@@ -12,55 +13,70 @@ export default async function PagesLoader(
   inputSourceMap: any
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-    console.info('pages-loader', this.resourcePath);
+    console.debug('config-loader', this.resourcePath);
   }
-  const { context } = this.getOptions();
   const callback = this.async();
 
   this.cacheable(false);
 
   try {
-    const modules = context.getModuleContext(this._compilation!);
+    const compiled = await transformAsync(content.toString(), {
+      plugins: [configModulePlugin],
+      filename: this.resourcePath,
+      sourceFileName: this.resourcePath,
+      inputSourceMap: inputSourceMap,
+      sourceMaps: !!this.sourceMap,
+    });
 
-    const configModule = await modules.createModule(
-      path.dirname(this.resourcePath),
-      this.resourcePath,
-      content.toString()
-    );
-
-    let configExports;
-    if (typeof configModule.exports.default === 'function') {
-      configExports = configModule.exports.default();
-    } else if (typeof configModule.exports.default === 'object') {
-      configExports = configModule.exports.default;
-    } else if (typeof configModule.exports === 'function') {
-      configExports = configModule.exports();
-    } else {
-      configExports = configModule.exports;
-    }
-
-    const { metadata = {}, ...config } = configExports;
-
-    callback(
-      null,
-      `
-      import { ObjectProxy } from '@grexie/proxy';
-
-      const _metadata = ${JSON.stringify(metadata ?? {}, null, 2)};
-
-      export const config = (parent) => ObjectProxy.create({
-        metadata: ${JSON.stringify(metadata ?? {}, null, 2)},
-        ...${JSON.stringify(config ?? {}, null, 2)}
-      }, parent);
-      export const metadata = (parent) => ObjectProxy.create(_metadata, parent);
-    `,
-      inputSourceMap
-    );
+    callback(null, compiled!.code!, compiled!.map ?? inputSourceMap);
   } catch (err) {
+    console.error(err);
     callback(err as any);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('pages-loader:complete', this.resourcePath);
+      console.debug('config-loader:complete', this.resourcePath);
     }
   }
 }
+
+const configModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
+  types: t,
+}) => ({
+  visitor: {
+    ExportDefaultDeclaration: {
+      enter: path => {
+        path.insertBefore(
+          t.importDeclaration(
+            [
+              t.importSpecifier(
+                t.identifier('__pages_wrap_config'),
+                t.identifier('wrapConfig')
+              ),
+            ],
+            t.stringLiteral('@grexie/pages-runtime-config')
+          )
+        );
+        path.insertBefore(
+          t.variableDeclaration('const', [
+            t.variableDeclarator(
+              t.identifier('__pages_config'),
+              path.node.declaration as any
+            ),
+          ])
+        );
+        path.remove();
+      },
+    },
+    Program: {
+      exit(path) {
+        path.node.body.push(
+          t.exportDefaultDeclaration(
+            t.callExpression(t.identifier('__pages_wrap_config'), [
+              t.identifier('__pages_config'),
+            ])
+          )
+        );
+      },
+    },
+  },
+});

@@ -5,6 +5,7 @@
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../pages/src"],
@@ -17,7 +18,7 @@
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "exclude": [],
   "references": [
     {
       "path": "../pages"

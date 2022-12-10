@@ -1,21 +1,21 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --loader ts-node/esm/transpile-only --no-warnings
 
-const path = require('path');
-const parseArgs = require('minimist');
-const chalk = require('chalk');
+import path from 'path';
+import parseArgs from 'minimist';
+import chalk from 'chalk';
 
-require('ts-node').register({
-  transpileOnly: true,
-});
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const importScript = name => {
-  const module = require(path.resolve(
-    __dirname,
-    '..',
-    'src',
-    'scripts',
-    name.replace(/:/g, '/')
-  ));
+const importScript = async name => {
+  const module = await import(
+    path.resolve(
+      __dirname,
+      '..',
+      'src',
+      'scripts',
+      name.replace(/:/g, '/') + '.ts'
+    )
+  );
 
   return {
     script: module.default,
@@ -24,7 +24,7 @@ const importScript = name => {
 };
 
 const main = async (name, ...rawArgs) => {
-  const { script, argsDescriptor } = importScript(name);
+  const { script, argsDescriptor } = await importScript(name);
   const { _: args, ...options } = parseArgs(rawArgs, argsDescriptor);
   await script(options, ...args);
 };

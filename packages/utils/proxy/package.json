@@ -3,16 +3,11 @@
   "version": "0.0.35",
   "license": "MIT",
   "type": "module",
-  "module": "lib/index.mjs",
-  "main": "lib/index.cjs",
+  "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "run-p -s build:ts-mjs build:ts-cjs",
-    "build:ts-mjs": "NODE_ENV=esm babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --out-file-extension .mjs --ignore '**/*.d.ts','**/__snapshots__/*'",
-    "build:ts-cjs": "NODE_ENV=commonjs babel src/ --no-copy-ignored -D -d ./lib/ --out-file-extension .cjs -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
-    "watch": "run-p -s watch:ts-mjs watch:ts-cjs",
-    "watch:ts-mjs": "npm run -s build:ts-mjs -- -w",
-    "watch:ts-cjs": "npm run -s build:ts-cjs -- -w"
+    "build": "NODE_ENV=esm babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "watch": "npm run -s build -- -w"
   },
   "publishConfig": {
     "access": "public"
@@ -20,10 +15,19 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./lib/index.mjs",
-      "require": "./lib/index.cjs",
+      "import": "./lib/index.js",
       "types": "./lib/index.d.ts",
-      "default": "./lib/index.mjs"
+      "default": "./lib/index.js"
+    },
+    "./proxy": {
+      "import": "./lib/proxy/index.js",
+      "types": "./lib/proxy/index.d.ts",
+      "default": "./lib/proxy/index.js"
+    },
+    "./schema": {
+      "import": "./lib/schema/index.js",
+      "types": "./lib/schema/index.d.ts",
+      "default": "./lib/schema/index.js"
     }
   }
 }

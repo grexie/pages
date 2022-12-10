@@ -7,6 +7,10 @@ import path from 'path';
 import { Config } from '@grexie/pages/api';
 import YAML from 'yaml';
 import fs from 'fs';
+import { Plugin, PluginHandler } from './PluginContext.js';
+import { Events } from './EventManager.js';
+import webpack from 'webpack';
+import { Configuration } from './Builder.js';
 
 export class JSXSource {
   readonly builder: MockBuilder;
@@ -215,14 +219,34 @@ export class MockBuilder extends RootBuildContext {
     return out;
   }
 
-  async build() {
+  async build<T>(
+    hook?: (compilation: webpack.Compilation) => Promise<T>
+  ): Promise<{ stats: webpack.Stats; result: T | undefined }> {
+    let result: T | undefined;
+    if (hook) {
+      await this.addPlugin('MockBuilder', (context: Events<BuildContext>) => {
+        context.builder.after('config', (config: Configuration) => {
+          config.plugins?.push({
+            apply(compiler) {
+              compiler.hooks.finishMake.tapPromise(
+                'MockBuilder',
+                async compilation => {
+                  result = await hook(compilation);
+                }
+              );
+            },
+          });
+        });
+      });
+    }
+
     const stats = await this.builder.build();
 
     if (stats.hasErrors()) {
       throw stats.compilation.errors;
     }
 
-    return stats;
+    return { stats, result };
   }
 
   async watch() {

@@ -20,7 +20,7 @@ export default async function StyleLoader(
   this.cacheable(false);
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-    console.info('style-loader', this.resourcePath);
+    console.debug('style-loader', this.resourcePath);
   }
   const { context } = this.getOptions();
   const resolver = createResolver();
@@ -70,7 +70,7 @@ export default async function StyleLoader(
     resolver.reject(err);
   } finally {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('style-loader:complete', this.resourcePath);
+      console.debug('style-loader:complete', this.resourcePath);
     }
 
     resolver.resolve();

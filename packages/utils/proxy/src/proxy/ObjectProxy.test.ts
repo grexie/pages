@@ -1,4 +1,4 @@
-import { ObjectProxy } from './proxy.js';
+import { ObjectProxy } from './ObjectProxy.js';
 
 describe('ObjectProxy', () => {
   it('should toJSON on simple object', () => {
@@ -43,9 +43,12 @@ describe('ObjectProxy', () => {
   });
 
   it('should inherit values', () => {
-    const o1 = ObjectProxy.create({ k1: {} });
+    const o1 = ObjectProxy.create({
+      k1: { [Symbol.for('test2')]: false },
+      [Symbol.for('test')]: true,
+    });
     const o2 = ObjectProxy.create({ k1: { k2: ['test'] } }, o1);
-    const o3 = ObjectProxy.create({ k1: {} }, o2);
+    const o3 = ObjectProxy.create({ k1: { hello: 'world' } }, o2);
     const o4 = ObjectProxy.create({ k1: { k2: null } }, o3);
     const o5 = ObjectProxy.create({ k1: { k2: undefined } }, o4);
 

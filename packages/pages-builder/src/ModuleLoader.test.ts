@@ -1,11 +1,9 @@
 /**
- * @jest-testRunner  jest-light-runner
+ * @jest-runner jest-light-runner
  */
 
 import path from 'path';
 import { MockBuilder } from './MockBuilder.js';
-
-// jest.setTimeout(30000);
 
 describe('ModuleLoader', () => {
   let builder: MockBuilder;
@@ -17,7 +15,7 @@ describe('ModuleLoader', () => {
   it('should build a module', async () => {
     builder.addSource('test.jsx', 'null', {}).write();
     builder.addConfig('.pages.yml', { metadata: {} });
-    const stats = await builder.build();
+    const { stats } = await builder.build();
 
     expect(stats.hasErrors()).toBeFalsy();
 

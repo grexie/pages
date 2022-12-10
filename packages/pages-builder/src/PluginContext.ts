@@ -21,7 +21,7 @@ export type PluginHandler = (
 
 export interface Plugin {
   name: string;
-  path: string;
+  path?: string;
   handler: PluginHandler;
 }
 

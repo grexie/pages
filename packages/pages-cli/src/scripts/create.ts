@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
 export default async (...args: string[]) => {
-  console.info(chalk.cyan('pages create'));
-  console.info(args);
+  process.stderr.write(chalk.cyan('pages create'));
+  process.stderr.write(JSON.stringify(args, null, 2));
 };

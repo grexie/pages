@@ -53,7 +53,7 @@ class SourceCompiler {
 
   async render(compilation: Compilation, scripts: string[]) {
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('render', this.source.filename);
+      console.debug('render', this.source.filename);
     }
 
     const { modules } = this.context;
@@ -64,7 +64,7 @@ class SourceCompiler {
     );
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('render:rendering', this.source.filename);
+      console.debug('render:rendering', this.source.filename);
     }
 
     // const renderer = new Renderer(this.context.build);
@@ -77,7 +77,7 @@ class SourceCompiler {
     );
 
     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
-      console.info('render:rendered', this.source.filename);
+      console.debug('render:rendered', this.source.filename);
     }
 
     return buffer.toString();
@@ -297,6 +297,7 @@ export class ResourcesPlugin {
       }[] = [];
       const stack = sourceConfigs.slice();
       let el: { config: Config; source: Source } | undefined;
+
       while ((el = stack.shift())) {
         if (el.config.mappings.length) {
           for (const mapping of el.config.mappings) {
