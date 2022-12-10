@@ -17,7 +17,7 @@ export default async function StyleLoader(
   content: Buffer,
   inputSourceMap: any
 ) {
-  this.cacheable(false);
+  this.cacheable(true);
 
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.debug('style-loader', this.resourcePath);

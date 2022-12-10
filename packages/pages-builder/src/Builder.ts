@@ -21,6 +21,7 @@ import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import { EventManager, EventPhase } from './EventManager.js';
 import type { Configuration as WebpackConfiguration } from 'webpack';
 import chalk from 'chalk';
+import { Source } from './Source.js';
 
 export type Configuration = WebpackConfiguration & {
   devServer?: webpack.WebpackOptionsNormalized['devServer'];
@@ -181,7 +182,7 @@ export class Builder {
     } as any;
   }
 
-  async config(): Promise<Configuration> {
+  async config(sources?: Set<Source>): Promise<Configuration> {
     const require = createRequire(import.meta.url);
     const production = process.env.NODE_ENV === 'production';
     const hot = !production && process.env.WEBPACK_HOT === 'true';
@@ -207,6 +208,8 @@ export class Builder {
           path.resolve(this.context.rootDir, 'node_modules', '.cache'),
         ],
       },
+      profile: true,
+      parallelism: 100,
       module: {
         rules: [],
       },
@@ -233,7 +236,9 @@ export class Builder {
         },
         fullySpecified: false,
       },
-      cache: false,
+      cache: {
+        type: 'memory',
+      },
       resolveLoader: {
         extensions: ['.cjs', '.js', '.ts'],
         modules: [
@@ -288,7 +293,7 @@ export class Builder {
           clear: true,
           total: 0,
         }) as any,
-        new ResourcesPlugin({ context: this.context }),
+        new ResourcesPlugin({ context: this.context, sources }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),
       ],
     };
@@ -296,6 +301,7 @@ export class Builder {
     if (hot) {
       config.devServer = config.devServer ?? {};
       config.devServer.hot = true;
+      config.devServer.noInfo = true;
       Object.assign(config.entry!, {
         '__webpack/react-refresh': {
           import: '@grexie/pages-runtime-hmr',
@@ -327,9 +333,9 @@ export class Builder {
     return this.#builder.watch({ config });
   }
 
-  async createCompiler(): Promise<webpack.Compiler> {
+  async createCompiler(sources?: Set<Source>): Promise<webpack.Compiler> {
     await this.context.ready;
-    const config = await this.config();
+    const config = await this.config(sources);
     return this.#builder.compiler({ config });
   }
 }

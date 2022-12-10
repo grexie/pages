@@ -12,7 +12,7 @@ export default async function SSRLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
-  this.cacheable(false);
+  this.cacheable(true);
 
   const { context } = this.getOptions();
 

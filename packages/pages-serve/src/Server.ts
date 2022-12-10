@@ -5,12 +5,14 @@ import {
   BuildContextOptions,
   EventManager,
   EventPhase,
+  Source,
 } from '@grexie/pages-builder';
 import { ResolvablePromise, createResolver } from '@grexie/resolvable';
 import WebpackHotMiddleware from 'webpack-hot-middleware';
 import WebpackDevMiddleware from 'webpack-dev-middleware';
 import express from 'express';
 import path from 'path';
+import chalk from 'chalk';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;
@@ -58,21 +60,54 @@ export class Server {
       throw new Error('already started');
     }
 
-    const compiler = await this.context.builder.createCompiler();
+    await this.context.ready;
+    const initialSources = await this.context.registry.list({ slug: '' });
+    const sources = new Set<Source>(initialSources);
+    const compiler = await this.context.builder.createCompiler(sources);
 
     this.#server = createResolver<http.Server>();
     // const handler = new RequestHandler(this.context);
     const app = express();
 
     await this.#events.emit(EventPhase.before, 'routes', app);
-    app.use(
-      WebpackDevMiddleware(compiler, {
-        publicPath: compiler.options.output.publicPath,
-        writeToDisk: false,
-        serverSideRender: false,
-        stats: 'errors-warnings',
-      })
-    );
+
+    const devServer = WebpackDevMiddleware(compiler, {
+      publicPath: compiler.options.output.publicPath,
+      writeToDisk: false,
+      serverSideRender: false,
+      stats: 'errors-warnings',
+    });
+
+    app.use(async (req, res, next) => {
+      try {
+        const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
+        const source = await this.context.registry.get({
+          slug,
+        });
+        if (source && !sources.has(source)) {
+          process.stderr.write(
+            chalk.whiteBright('compiling ') +
+              chalk.cyan(source.filename) +
+              chalk.whiteBright('...\n')
+          );
+          sources.clear();
+          sources.add(source);
+
+          devServer.invalidate(() => {
+            setImmediate(() => {
+              devServer.waitUntilValid(() => next());
+            });
+          });
+        } else {
+          devServer.waitUntilValid(() => next());
+        }
+      } catch (err) {
+        next(err);
+      }
+    });
+
+    app.use(devServer);
+
     if (process.env.WEBPACK_HOT === 'true') {
       app.use(
         WebpackHotMiddleware(compiler, {

@@ -3,12 +3,8 @@ import type { BuildContext } from '@grexie/pages-builder';
 import path from 'path';
 import babel, { transformAsync, PluginObj, PluginPass } from '@babel/core';
 
-interface PagesLoaderOptions {
-  context: BuildContext;
-}
-
 export default async function PagesLoader(
-  this: LoaderContext<PagesLoaderOptions>,
+  this: LoaderContext<void>,
   content: Buffer,
   inputSourceMap: any
 ) {
@@ -17,7 +13,7 @@ export default async function PagesLoader(
   }
   const callback = this.async();
 
-  this.cacheable(false);
+  this.cacheable(true);
 
   try {
     const compiled = await transformAsync(content.toString(), {

@@ -1,12 +1,8 @@
 import { LoaderContext } from 'webpack';
 import type { BuildContext } from '@grexie/pages-builder';
 
-interface YamlLoaderOptions {
-  context: BuildContext;
-}
-
 export default async function YamlLoader(
-  this: LoaderContext<YamlLoaderOptions>,
+  this: LoaderContext<void>,
   content: Buffer,
   inputSourceMap: any
 ) {

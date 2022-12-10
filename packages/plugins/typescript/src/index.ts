@@ -14,7 +14,8 @@ export default (context: Events<BuildContext>) => {
         use: [
           context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-ssr-loader'),
-          context.builder.loader('@grexie/pages-config-loader'),
+          'thread-loader',
+          '@grexie/pages-config-loader',
           {
             loader: 'babel-loader',
             options: {

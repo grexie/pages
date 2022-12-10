@@ -72,7 +72,7 @@ export default async function CacheLoader(
 ) {
   const { context } = this.getOptions();
   const callback = this.async();
-  this.cacheable(false);
+  this.cacheable(true);
 
   const dependencyCache = DependencyCache.get(this._compiler!);
 
@@ -262,9 +262,9 @@ export async function pitch(this: LoaderContext<LoaderOptions>) {
       return callback();
     }
 
-    Object.keys(dependencies ?? {}).forEach(dependency =>
-      this.addDependency(dependency)
-    );
+    Object.keys(dependencies ?? {}).forEach(dependency => {
+      this.addDependency(dependency);
+    });
     this.addDependency(this.resourcePath);
     return callback(null, content, map, meta);
   } catch (err) {

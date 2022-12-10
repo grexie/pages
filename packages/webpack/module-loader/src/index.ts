@@ -27,7 +27,7 @@ export default async function ModuleLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
-  this.cacheable(false);
+  this.cacheable(true);
 
   const { EventManager, EventPhase } = await import('@grexie/pages-builder');
 

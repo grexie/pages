@@ -1,5 +1,5 @@
 import { Source, BuildContext, Provider } from '@grexie/pages-builder';
-import webpack from 'webpack';
+import webpack, { sources } from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { Renderer } from '@grexie/pages-builder';
@@ -11,6 +11,7 @@ const { RawSource } = webpack.sources;
 
 export interface ResourcesPluginOptions {
   context: BuildContext;
+  sources?: Set<Source>;
   mapping?: {
     source: Source;
     mapping: NormalizedMapping;
@@ -192,15 +193,18 @@ class SourceCompiler {
 
 export class ResourcesPlugin {
   readonly context: BuildContext;
+  readonly sources?: Set<Source>;
   readonly mapping?;
   readonly seen;
 
   constructor({
     context,
+    sources,
     mapping,
     seen = new Set<string>(),
   }: ResourcesPluginOptions) {
     this.context = context;
+    this.sources = sources;
     this.mapping = mapping;
     this.seen = seen;
   }
@@ -243,7 +247,7 @@ export class ResourcesPlugin {
           : this.context.rootDir,
       });
 
-      let sources = await thisContext.registry.list();
+      let sources = [...(this.sources ?? (await thisContext.registry.list()))];
 
       const context = new CompilationContext({
         build: thisContext,
@@ -318,6 +322,7 @@ export class ResourcesPlugin {
           [
             new ResourcesPlugin({
               context: thisContext,
+              sources: new Set(sources),
               mapping,
               seen: this.seen,
             }),

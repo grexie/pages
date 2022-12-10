@@ -12,6 +12,7 @@ export default (context: Events<BuildContext>) => {
         use: [
           context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-style-loader'),
+          'thread-loader',
           {
             loader: 'css-loader',
           },
@@ -24,6 +25,7 @@ export default (context: Events<BuildContext>) => {
         use: [
           context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-style-loader'),
+          'thread-loader',
           {
             loader: 'css-loader',
             options: {
