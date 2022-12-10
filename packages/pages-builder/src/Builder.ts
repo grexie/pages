@@ -300,7 +300,11 @@ export class Builder {
           total: 10000,
         }) as any,
         new ResourcesPlugin({ context: this.context, sources }),
-        new webpack.DefinePlugin({ 'process.env': `({})` }),
+        new webpack.DefinePlugin({
+          'process.env': `(${JSON.stringify({
+            NODE_ENV: process.env.NODE_ENV,
+          })})`,
+        }),
       ],
     };
 

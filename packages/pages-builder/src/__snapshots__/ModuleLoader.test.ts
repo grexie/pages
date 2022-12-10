@@ -29,7 +29,7 @@ const __pages_hooks = {
   afterDocument: [],
   afterRender: []
 };
-__pages_hydrate(resource, __pages_handler, __pages_hooks);
+const __pages_root = __pages_hydrate(resource, __pages_handler, __pages_hooks);
 export default __pages_handler;",
 }
 `;

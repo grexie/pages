@@ -100,7 +100,7 @@ export const useWatchStyles = () => {
 
 export const Styles: FC<{}> = () => {
   const styles = useWatchStyles();
-
+  console.info('rendering styles');
   return (
     <Head>
       {[...styles].map(({ hash, css }) => (

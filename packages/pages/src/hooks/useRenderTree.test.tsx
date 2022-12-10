@@ -46,6 +46,8 @@ describe('useRenderTree', () => {
               <TreeNode>
                 <TreeNode />
                 <TreeNode>
+                  <TreeNode />
+                  <TreeNode />
                   {mutate >= 2 && (
                     <TreeNode>
                       <TreeNode>
@@ -73,14 +75,22 @@ describe('useRenderTree', () => {
     expect(result.current).toBeInstanceOf(RenderTreeNode);
     expect(result.current.root).toBeInstanceOf(RenderTreeNode);
     expect(result.current.root).not.toEqual(result.current);
-    expect(result.current.root).toMatchSnapshot();
+    expect(result.current.root).toMatchSnapshot('mutate-0');
     act(() => {
       rerender({ mutate: 1 });
     });
-    expect(result.current.root).toMatchSnapshot();
+    expect(result.current.root).toMatchSnapshot('mutate-1');
     act(() => {
       rerender({ mutate: 2 });
     });
-    expect(result.current.root).toMatchSnapshot();
+    expect(result.current.root).toMatchSnapshot('mutate-2');
+    act(() => {
+      rerender({ mutate: 1 });
+    });
+    expect(result.current.root).toMatchSnapshot('mutate-1');
+    act(() => {
+      rerender({ mutate: 2 });
+    });
+    expect(result.current.root).toMatchSnapshot('mutate-2');
   });
 });

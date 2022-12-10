@@ -27,21 +27,25 @@ import {
 } from '../hooks/useRenderTree.js';
 import { setImmediate } from 'timers';
 import { hydrateRoot } from 'react-dom/client';
-// import { renderToStaticMarkup } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { createPortal, unmountComponentAtNode } from 'react-dom';
 
 const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
+  if (!element) {
+    return element;
+  }
+
   const {
-    children,
+    children = [],
     dangerouslySetInnerHTML: { __html: html = undefined } = {},
     ...props
-  } = element.props;
+  } = element?.props ?? {};
 
   const Component = () => (
     <SharedContextClone contexts={contexts}>{children}</SharedContextClone>
   );
 
-  const string = html; // ?? renderToStaticMarkup(<Component />);
+  const string = html ?? renderToStaticMarkup(<Component />);
 
   if (
     [
@@ -59,12 +63,12 @@ const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
       'source',
       'track',
       'wbr',
-    ].includes(element.type as any)
+    ].includes(element?.type as any)
   ) {
-    return createElement(element.type, {
+    return createElement(element?.type, {
       ...props,
     });
-  } else if (['title'].includes(element.type as any)) {
+  } else if (['title'].includes(element?.type as any)) {
     return createElement(
       element.type,
       {
@@ -73,7 +77,7 @@ const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
       string
     );
   } else {
-    return createElement(element.type, {
+    return createElement(element?.type, {
       ...props,
       dangerouslySetInnerHTML: { __html: string },
     });
@@ -105,6 +109,14 @@ class HeadContext extends EventEmitter {
 
   get children() {
     return this.#node.children.map(node => HeadContextNodeTable.get(node)!);
+  }
+
+  get next(): HeadContext | undefined {
+    const next = this.#node.next;
+
+    if (next) {
+      return HeadContextNodeTable.get(next);
+    }
   }
 
   get nodeOrder() {
@@ -150,10 +162,15 @@ class HeadContext extends EventEmitter {
   }
 
   #mutateCharacterData(mutation: MutationRecord) {
+    if (!this.fragment) {
+      return;
+    }
+
     const source = mutation.target.parentElement!;
+    const index = Array.from(this.fragment.childNodes).indexOf(source);
 
     const target = document.head.childNodes[
-      this.nodeOrder + Array.from(source.parentNode!.childNodes).indexOf(source)
+      this.nodeOrder + index
     ] as HTMLElement;
 
     target.innerHTML = source.innerHTML;
@@ -191,79 +208,108 @@ class HeadContext extends EventEmitter {
   #mutateChildList(mutation: MutationRecord) {
     const nodeOrder = this.nodeOrder;
 
-    const index = mutation.previousSibling
-      ? Array.from(mutation.target.childNodes).indexOf(
-          mutation.previousSibling as ChildNode
-        ) + 1
-      : 0;
+    if (mutation.target !== this.fragment) {
+      return;
+    }
+
+    const previousSiblingIndex = mutation.previousSibling
+      ? Array.from(document.head.childNodes).findIndex(node =>
+          node.isEqualNode(mutation.previousSibling)
+        )
+      : -1;
 
     for (let i = 0; i < mutation.removedNodes.length; i++) {
-      console.info('removing', nodeOrder + index + i);
-      document.head.childNodes[nodeOrder + index + i].remove();
+      document.head.childNodes[previousSiblingIndex + i + 1].remove();
     }
 
-    const fragment = document.createDocumentFragment();
+    const nextSibling = document.head.childNodes[previousSiblingIndex + 1];
     for (let i = 0; i < mutation.addedNodes.length; i++) {
-      fragment.appendChild(mutation.addedNodes.item(i)?.cloneNode(true)!);
-    }
-
-    if (
-      document.head.childNodes.length <
-      nodeOrder + index + mutation.addedNodes.length
-    ) {
-      document.head.appendChild(fragment);
-    } else {
-      const sibling = document.head.childNodes.item(
-        nodeOrder + index + mutation.addedNodes.length
+      document.head.insertBefore(
+        mutation.addedNodes.item(i)?.cloneNode(true)!,
+        nextSibling
       );
-      document.head.insertBefore(fragment, sibling);
     }
   }
 
-  mutate(mutation: MutationRecord) {
+  mutate(mutations: MutationRecord[]) {
     let source: HTMLElement;
 
-    switch (mutation.type) {
-      case 'attributes':
-        return this.#mutateAttributes(mutation);
-      case 'characterData':
-        return this.#mutateCharacterData(mutation);
-      case 'childList':
-        return this.#mutateChildList(mutation);
+    mutations.forEach(mutation => {
+      switch (mutation.type) {
+        case 'attributes':
+          return this.#mutateAttributes(mutation);
+        case 'characterData':
+          return this.#mutateCharacterData(mutation);
+        case 'childList':
+          return this.#mutateChildList(mutation);
+      }
+    });
+  }
+
+  initialize() {
+    if (!this.fragment) {
+      return;
+    }
+
+    const nodeOrder = this.nodeOrder;
+
+    for (
+      let i = nodeOrder;
+      i < nodeOrder + (this.fragment.childNodes.length ?? 0);
+      i++
+    ) {
+      if (
+        !document.head.childNodes[i].isEqualNode(
+          this.fragment.childNodes[i - nodeOrder]
+        )
+      ) {
+        document.head.replaceChild(
+          this.fragment.childNodes[i - nodeOrder].cloneNode(true),
+          document.head.childNodes[i]
+        );
+      }
     }
   }
 
   setProps(props: HeadProps, contexts: SharedContexts) {
     let children;
+    try {
+      const handleElement = (element: ReactElement, key?: number) => {
+        if (isElement(element)) {
+          return cloneElement(
+            flattenElement(element, contexts),
+            typeof key !== 'undefined' ? { key: `${key}` } : {}
+          );
+        } else {
+          return element;
+        }
+      };
 
-    const handleElement = (element: ReactElement, key?: number) => {
-      return cloneElement(
-        flattenElement(element, contexts),
-        typeof key !== 'undefined' ? { key: `${key}` } : {}
-      );
-    };
+      if (Array.isArray(props.children)) {
+        children = Children.map(props.children, (child, i) =>
+          handleElement(child, i)
+        );
+      } else if (isFragment(props.children)) {
+        children = (
+          <>
+            {Children.map(props.children.props.children, (child, i) =>
+              handleElement(child, i)
+            )}
+          </>
+        );
+      } else if (isElement(props.children)) {
+        children = handleElement(props.children);
+      } else {
+        children = props.children;
+      }
 
-    if (Array.isArray(props.children)) {
-      children = Children.map(props.children, (child, i) =>
-        handleElement(child, i)
-      );
-    } else if (isFragment(props.children)) {
-      children = (
-        <>
-          {Children.map(props.children.props.children, (child, i) =>
-            handleElement(child, i)
-          )}
-        </>
-      );
-    } else if (isElement(props.children)) {
-      children = handleElement(props.children);
-    } else {
-      children = props.children;
+      this.props = { ...props, children };
+
+      this.root.emit('update');
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
-
-    this.props = { ...props, children };
-
-    this.root.emit('update');
   }
 
   render(): ReactElement {
@@ -359,6 +405,9 @@ const useHeadPortal = (node: ReactNode) => {
 
   const fragment = useMemo(() => {
     const fragment = document.createDocumentFragment();
+    // for (let i = 0; i < length; i++) {
+    //   fragment.appendChild(nodes[i].cloneNode(true));
+    // }
     head.fragment = fragment;
     return fragment;
   }, []);
@@ -367,9 +416,10 @@ const useHeadPortal = (node: ReactNode) => {
     setShow(true);
 
     const observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => head.mutate(mutation));
+      head.mutate(mutations);
     });
     const immediate = setImmediate(() => {
+      head.initialize();
       observer.observe(fragment, {
         childList: true,
         subtree: true,
