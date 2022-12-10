@@ -21,6 +21,7 @@ export default async function SSRLoader(
   try {
     const compiled = await transformAsync(content.toString(), {
       plugins: [plugin],
+      compact: false,
       inputSourceMap: inputSourceMap,
       sourceMaps: !!this.sourceMap,
     });

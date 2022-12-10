@@ -54,19 +54,21 @@ exports.load = async (_url, context, next) => {
 
   if (['.ts', '.tsx'].find(extname => url.pathname.endsWith(extname))) {
     const compiled = await transformFileAsync(url.pathname, {
+      filename: url.pathname,
       presets: [
         '@babel/typescript',
         ['@babel/react', { runtime: 'automatic' }],
         [
           '@babel/env',
           {
-            targets: 'node 16',
+            targets: 'node 18',
             modules: false,
           },
         ],
       ],
       sourceMaps: 'inline',
       retainLines: true,
+      compact: false,
     });
 
     return {

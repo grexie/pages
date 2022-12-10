@@ -5,7 +5,7 @@ module.exports = {
   clearMocks: true,
   collectCoverage: true,
   runner: 'jest-light-runner',
-  maxWorkers: 10,
+  maxWorkers: 30,
   setupFiles: ['<rootDir>/tools/jest/setup.js'],
   coverageDirectory: 'coverage',
   coveragePathIgnorePatterns: ['/node_modules/'],

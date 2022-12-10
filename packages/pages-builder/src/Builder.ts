@@ -208,7 +208,7 @@ export class Builder {
           path.resolve(this.context.rootDir, 'node_modules', '.cache'),
         ],
       },
-      profile: true,
+      profile: false,
       parallelism: 100,
       module: {
         rules: [],
@@ -287,11 +287,17 @@ export class Builder {
           },
       plugins: [
         new ProgressBarPlugin({
-          format: `  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
+          format: `\u001b[2J\u001b[0;0H\n${chalk.whiteBright(
+            '  Building...'
+          )}\n\n  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
             ':percent'
-          )} ${chalk.whiteBright('(:elapseds) :msg')}`,
+          )} ${chalk.whiteBright('(:elapseds) :msg')} `,
+          complete: '=',
+          callback: () => {
+            process.stderr.write('\u001b[2J\u001b[0;0H');
+          },
           clear: true,
-          total: 0,
+          total: 10000,
         }) as any,
         new ResourcesPlugin({ context: this.context, sources }),
         new webpack.DefinePlugin({ 'process.env': `({})` }),
