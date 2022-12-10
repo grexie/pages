@@ -12,7 +12,6 @@ export default async function SSRLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
-  this.cacheable(true);
 
   const { context } = this.getOptions();
 

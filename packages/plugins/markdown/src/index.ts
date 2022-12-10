@@ -12,7 +12,7 @@ export default (context: Events<BuildContext>) => {
       test: /\.mdx?$/,
       exclude: /(node_modules|bower_components)/,
       use: [
-        context.builder.loader('@grexie/pages-cache-loader'),
+        // context.builder.loader('@grexie/pages-cache-loader'),
         context.builder.loader('@grexie/pages-module-loader', {
           handler: '@grexie/pages-plugin-markdown',
         }),

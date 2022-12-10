@@ -12,7 +12,7 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /(^\.?|\/\.?)pages.ya?ml$/,
         use: [
-          context.builder.loader('@grexie/pages-cache-loader'),
+          // context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-config-loader'),
           context.builder.loader('@grexie/pages-yaml-loader'),
         ],
@@ -21,7 +21,7 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.ya?ml$/,
         use: [
-          context.builder.loader('@grexie/pages-cache-loader'),
+          // context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-yaml-loader'),
         ],
         exclude: [/(^\.?|\/\.?|\.)pages.ya?ml$/],

@@ -84,7 +84,7 @@ export class Server {
         const source = await this.context.registry.get({
           slug,
         });
-        if (source && !sources.has(source)) {
+        if (source && (!sources.has(source) || compiler.watching.invalid)) {
           process.stderr.write(
             chalk.whiteBright('compiling ') +
               chalk.cyan(source.filename) +
@@ -99,7 +99,9 @@ export class Server {
             });
           });
         } else {
-          devServer.waitUntilValid(() => next());
+          setImmediate(() => {
+            devServer.waitUntilValid(() => next());
+          });
         }
       } catch (err) {
         next(err);

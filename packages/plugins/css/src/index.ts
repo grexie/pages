@@ -10,7 +10,7 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.css$/,
         use: [
-          context.builder.loader('@grexie/pages-cache-loader'),
+          // context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-style-loader'),
           {
             loader: 'css-loader',
@@ -22,7 +22,7 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.s[ac]ss$/,
         use: [
-          context.builder.loader('@grexie/pages-cache-loader'),
+          // context.builder.loader('@grexie/pages-cache-loader'),
           context.builder.loader('@grexie/pages-style-loader'),
           {
             loader: 'css-loader',

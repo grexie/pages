@@ -106,12 +106,14 @@ class SourceCompiler {
       )
     );
 
-    compilation.fileDependencies.addAll(entryModule.buildInfo.fileDependencies);
+    compilation.fileDependencies.addAll(
+      entryModule.buildInfo.fileDependencies ?? []
+    );
     compilation.buildDependencies.addAll(
-      entryModule.buildInfo.buildDependencies
+      entryModule.buildInfo.buildDependencies ?? []
     );
     compilation.contextDependencies.addAll(
-      entryModule.buildInfo.contextDependencies
+      entryModule.buildInfo.contextDependencies ?? []
     );
 
     compilation.hooks.processAssets.tapPromise(

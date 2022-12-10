@@ -10,7 +10,6 @@ export default async function YamlLoader(
 
   const { default: YAML } = await import('yaml');
   const { SourceNode } = await import('source-map');
-  this.cacheable(true);
 
   const documents = YAML.parseAllDocuments(content.toString());
   const document = documents[documents.length - 1];

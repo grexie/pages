@@ -9,7 +9,7 @@ export default (context: Events<BuildContext>) => {
       type: 'javascript/esm',
       test: /\.(png|jpe?g|gif|webp|svg)$/,
       use: [
-        context.builder.loader('@grexie/pages-cache-loader'),
+        // context.builder.loader('@grexie/pages-cache-loader'),
         context.builder.loader('@grexie/pages-image-loader'),
         'raw-loader',
       ],

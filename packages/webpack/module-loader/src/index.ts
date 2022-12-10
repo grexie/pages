@@ -27,7 +27,6 @@ export default async function ModuleLoader(
   inputSourceMap: any
 ) {
   const callback = this.async();
-  this.cacheable(true);
 
   const { EventManager, EventPhase } = await import('@grexie/pages-builder');
 
@@ -165,11 +164,7 @@ export default async function ModuleLoader(
     `;
 
     const hmrFooter = `
-      if (typeof module === 'undefined') {
-        __pages_refresh_runtime.update(import.meta.webpackHot);
-      } else {
-          __pages_refresh_runtime.update(module.hot);
-      }
+      __pages_refresh_runtime.update(import.meta.webpackHot);
       __pages_refresh_global.$RefreshReg$ = __pages_previous_refreshreg;
       __pages_refresh_global.$RefreshSig$ = __pages_previous_refreshsig;
     `;
@@ -252,8 +247,18 @@ export default async function ModuleLoader(
             .join(',\n')}
         );
         ${hooksFooter}
-        __pages_hydrate(resource, __pages_handler, __pages_hooks);
+        ${
+          this.hot
+            ? "$RefreshReg$(__pages_handler, '%default%$__pages_handler');"
+            : ''
+        }
+        ${
+          config.render
+            ? '__pages_hydrate(resource, __pages_handler, __pages_hooks);'
+            : ''
+        }
 
+        
         export default __pages_handler;
 
         ${this.hot ? hmrFooter : ''}
@@ -263,8 +268,8 @@ export default async function ModuleLoader(
       const compiled = await transformAsync(serializedResource.code, {
         presets: [[babelEnvPreset, { modules: false }]],
         plugins: [
-          extractImportsPlugin(requests),
           ...(this.hot ? [reactRefreshPlugin] : []),
+          extractImportsPlugin(requests),
         ],
         inputSourceMap: await serializedResource.map,
         sourceMaps: !!this.sourceMap,
@@ -296,9 +301,9 @@ export default async function ModuleLoader(
       const compiled = await transformAsync(content.toString(), {
         presets: [[babelEnvPreset, { modules: false }]],
         plugins: [
+          ...(this.hot ? [reactRefreshPlugin] : []),
           extractImportsPlugin(requests),
           handlerModulePlugin,
-          ...(this.hot ? [reactRefreshPlugin] : []),
         ],
         inputSourceMap: inputSourceMap || false,
         sourceMaps: !!this.sourceMap,
@@ -332,16 +337,25 @@ export default async function ModuleLoader(
       );
       ${hooksFooter}
       ${
+        this.hot
+          ? "$RefreshReg$(__pages_handler, '%default%$__pages_handler');"
+          : ''
+      }
+      ${
         config.render
           ? '__pages_hydrate(resource, __pages_handler, __pages_hooks);'
           : ''
       }
+
+      
 
       export default __pages_handler;`
           : ''
       }
       ${this.hot ? hmrFooter : ''}
     `;
+
+      // this._compilation?.warnings.push(header + compiled!.code! + footer);
 
       callback(
         null,

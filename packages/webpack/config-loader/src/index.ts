@@ -13,8 +13,6 @@ export default async function PagesLoader(
   }
   const callback = this.async();
 
-  this.cacheable(true);
-
   try {
     const compiled = await transformAsync(content.toString(), {
       plugins: [configModulePlugin],

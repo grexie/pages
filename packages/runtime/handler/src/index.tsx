@@ -91,6 +91,4 @@ export const hydrate = (
   }
 };
 
-if ((import.meta as any).webpackHot) {
-  update((import.meta as any).webpackHot);
-}
+update((import.meta as any).webpackHot);

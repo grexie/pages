@@ -25,6 +25,7 @@
     "@grexie/pages": "^*",
     "@grexie/pages-runtime-handler": "^*",
     "@grexie/source-maps": "^*",
+    "react-hot-loader": "^4.13.1",
     "react-refresh": "^0.14.0",
     "webpack": "^5.75.0"
   },

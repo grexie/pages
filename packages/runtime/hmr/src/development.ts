@@ -7,7 +7,9 @@ export const register = runtime.register;
 let timeout: NodeJS.Timer;
 export const update = (hot: any) => {
   if (hot) {
-    hot.accept();
+    hot.accept((...args: any[]) => {
+      console.info('accepted', args);
+    });
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       runtime.performReactRefresh();
