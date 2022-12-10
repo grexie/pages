@@ -210,7 +210,6 @@ export class Builder {
       module: {
         rules: [],
       },
-      profile: true,
       resolve: {
         alias: {
           glob: false,
