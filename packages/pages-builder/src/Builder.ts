@@ -20,6 +20,7 @@ import { createRequire } from 'module';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import { EventManager, EventPhase } from './EventManager.js';
 import type { Configuration as WebpackConfiguration } from 'webpack';
+import chalk from 'chalk';
 
 export type Configuration = WebpackConfiguration & {
   devServer?: webpack.WebpackOptionsNormalized['devServer'];
@@ -209,6 +210,7 @@ export class Builder {
       module: {
         rules: [],
       },
+      profile: true,
       resolve: {
         alias: {
           glob: false,
@@ -281,7 +283,9 @@ export class Builder {
           },
       plugins: [
         new ProgressBarPlugin({
-          format: '  build [:bar] :percent (:elapsed seconds) :msg',
+          format: `  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
+            ':percent'
+          )} ${chalk.whiteBright('(:elapseds) :msg')}`,
           clear: true,
           total: 0,
         }) as any,
