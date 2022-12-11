@@ -62,7 +62,7 @@ export default async function StyleLoader(
         (await offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length));
     }
 
-    callback(null, chunk, map as any);
+    callback(null, chunk, inputSourceMap);
   } catch (err) {
     callback(err as any);
     resolver.reject(err);

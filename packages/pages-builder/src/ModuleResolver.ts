@@ -95,7 +95,7 @@ export class ModuleResolver {
           {},
           (err, result, requestResult) => {
             if (err) {
-              this.context.sources
+              this.context.root.sources
                 .resolve({
                   context: path
                     .relative(this.context.rootDir, context)
@@ -246,13 +246,17 @@ export class ModuleResolver {
           await this.#stat(filename);
           return filename;
         } catch (err) {
-          const resolved = await this.#resolve(context, module);
-          if (!resolved.descriptionFileRoot) {
-            throw new Error(
-              `couldn't resolve description file for root ${module}`
-            );
+          try {
+            const resolved = await this.#resolve(context, module);
+            if (!resolved.descriptionFileRoot) {
+              throw new Error(
+                `couldn't resolve description file for root ${module}`
+              );
+            }
+            return resolved.descriptionFileRoot;
+          } catch (err) {
+            return filename;
           }
-          return resolved.descriptionFileRoot;
         }
       })
     );

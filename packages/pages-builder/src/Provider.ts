@@ -36,16 +36,20 @@ export class Provider {
     filename: string,
     rootDir: string
   ): Promise<Source | undefined> {
-    let path = this.context.builder.filenameToPath(filename, rootDir);
-    path = [...this.basePath, ...path];
+    let path = this.context.builder.filenameToPath(filename);
 
-    filename = `./${_path.relative(this.context.root.rootDir, filename)}`;
+    filename = _path.relative(this.context.root.rootDir, filename);
+    if (!filename.startsWith('../')) {
+      filename = `./${filename}`;
+    }
 
-    return new Source({
+    const source = new Source({
       context: this.context,
       filename,
       path,
     });
+
+    return source;
   }
 
   private async scan(): Promise<void> {
@@ -101,7 +105,10 @@ export class Provider {
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>
-          this.create(_path.resolve(this.rootDir, filename), this.rootDir)
+          this.create(
+            _path.resolve(this.rootDir, filename),
+            this.context.root.rootDir
+          )
         )
       );
 

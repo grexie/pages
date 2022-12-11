@@ -113,7 +113,7 @@ const BuildContextTable = new WeakMap<Compilation, BuildContext>();
 
 const SourceResolverTable = new WeakMap<BuildContext, SourceResolver>();
 
-class SourceResolver {
+export class SourceResolver {
   readonly context: BuildContext;
   readonly children = new Set<SourceResolver>();
   // readonly mappings: Record<string, SourceResolver> = {};
@@ -194,7 +194,6 @@ class SourceResolver {
     let out = [];
 
     while ((el = stack.shift())) {
-      out.push(...(await el.context.registry.list()));
       const result = await el.context.registry.get({ path });
       if (result) {
         return result;
@@ -204,14 +203,14 @@ class SourceResolver {
     throw new Error(`unable to resolve ${JSON.stringify(path.join('/'))}`);
   }
 
-  lookupMapping(context: string[]): SourceResolver | undefined {
-    const from = this.context.mapping?.from.split(/\//g).filter(x => !!x);
-    if (from) {
-      for (let i = 0; i < from.length ?? 0; i++) {
-        if (from[i] !== context[i]) {
+  lookupMapping(path: string[]): SourceResolver | undefined {
+    const to = this.context.mapping?.to;
+    if (to) {
+      for (let i = 0; i < to.length ?? 0; i++) {
+        if (to[i] !== path[i]) {
           break;
         } else {
-          if (i === from.length - 1) {
+          if (i === to.length - 1) {
             return this;
           }
         }
@@ -219,7 +218,22 @@ class SourceResolver {
     }
 
     for (const sources of this.children) {
-      const result = sources.lookupMapping(context);
+      const result = sources.lookupMapping(path);
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  lookupMappingFrom(filename: string): SourceResolver | undefined {
+    const from = this.context.rootDir;
+
+    if (from && filename.startsWith(from)) {
+      return this;
+    }
+
+    for (const sources of this.children) {
+      const result = sources.lookupMappingFrom(filename);
       if (result) {
         return result;
       }
@@ -228,10 +242,6 @@ class SourceResolver {
 
   async resolve({ context, request }: { context: string[]; request: string }) {
     let path: string[];
-
-    if (/Header/.test(request)) {
-      let i = 1;
-    }
 
     if (request.startsWith('/')) {
       const requestPath = request.substring(1).split(/\//g);
@@ -261,11 +271,14 @@ class SourceResolver {
       path = contextPath;
     }
 
-    let mapping = this.lookupMapping(context)?.context?.mapping?.to ?? [];
+    let mapping = this.lookupMapping(path);
+    if (mapping) {
+      const source = await mapping.getSource({ path });
+      return source;
+    }
 
-    path.unshift(...mapping);
-
-    return this.getSource({ path });
+    const source = await this.getSource({ path });
+    return source;
   }
 
   private constructor(context: BuildContext) {

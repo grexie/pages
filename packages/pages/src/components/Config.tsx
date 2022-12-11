@@ -1,21 +1,21 @@
 import type { ReactNode, FC } from 'react';
-import { useMetadata } from '../hooks/useResource.js';
+import { useConfig } from '../hooks/useResource.js';
 
-export interface MetadataProps {
+export interface RenderConfigProps {
   resource?: boolean;
   field?: string;
   render: (value: any) => ReactNode;
 }
 
-export const Metadata: FC<MetadataProps> = ({
+export const RenderConfig: FC<RenderConfigProps> = ({
   resource = false,
   field,
   render,
 }) => {
-  const metadata = useMetadata({ resource });
+  const config = useConfig({ resource });
 
   const path = field?.split(/(\.|\[)/g);
-  let value = metadata;
+  let value = config;
   for (let component of path ?? []) {
     if (component.endsWith(']')) {
       value =

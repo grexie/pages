@@ -52,7 +52,7 @@ export class Source extends EventEmitter {
     if (!(this.filename.startsWith('./') || this.filename.startsWith('../'))) {
       return this.filename;
     } else {
-      return path.resolve(this.context.rootDir, this.filename);
+      return path.resolve(this.context.root.rootDir, this.filename);
     }
   }
 

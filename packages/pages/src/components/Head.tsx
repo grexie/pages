@@ -258,7 +258,11 @@ class HeadContext extends EventEmitter {
       i < nodeOrder + (this.fragment.childNodes.length ?? 0);
       i++
     ) {
-      if (
+      if (!document.head.childNodes[i]) {
+        document.head.appendChild(
+          this.fragment.childNodes[i - nodeOrder].cloneNode(true)
+        );
+      } else if (
         !document.head.childNodes[i].isEqualNode(
           this.fragment.childNodes[i - nodeOrder]
         )

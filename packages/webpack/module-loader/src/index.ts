@@ -105,22 +105,32 @@ export default async function ModuleLoader(
     const hookCollector =
       (requires: ComposableRequire[]) =>
       async (specifier: string, exportName: string = 'default') => {
-        requires.push({ specifier, exportName });
-
         const module = await modules.resolver.resolve(
           _path.dirname(this.resourcePath),
           specifier
         );
 
+        let relpath = _path.relative(
+          _path.dirname(this.resourcePath),
+          module.filename
+        );
+        if (!relpath.startsWith('../')) {
+          relpath = './' + relpath;
+        }
+
+        requires.push({ specifier: relpath, exportName });
+
         this.addDependency(module.filename);
       };
 
-    let layouts: string | string[] = sourceContext.metadata.layout ?? [];
+    let layouts: string | string[] = sourceContext.config.layout ?? [];
     if (typeof layouts === 'string') {
       layouts = [layouts];
     }
 
-    layouts?.forEach(layout => hookCollector(composablesRequires)(layout));
+    await Promise.all(
+      layouts?.map(layout => hookCollector(composablesRequires)(layout))
+    );
 
     const beforeRender: ComposableRequire[] = [];
     const beforeDocument: ComposableRequire[] = [];
@@ -298,6 +308,7 @@ export default async function ModuleLoader(
             )) as any)
           : undefined
       );
+
       return;
     } else {
       const requests: string[] = [];

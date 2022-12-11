@@ -22,13 +22,11 @@ export class Resource<
   readonly path: string[];
   readonly slug: string;
   readonly config: C;
-  readonly metadata: M;
 
   constructor({ path, config }: ResourceOptions<M>) {
     this.path = path;
     this.slug = path.join('/');
     this.config = config;
-    this.metadata = config.metadata;
   }
 
   async serialize({
@@ -45,10 +43,7 @@ export class Resource<
         code: `export const resource = {
         path: ${JSON.stringify(this.path)},
         slug: ${JSON.stringify(this.slug)},
-        config: ${serializeConfig(JSON.stringify(this.config, null, 2))},
-        get metadata() {
-          return this.config.metadata;
-        }
+        config: ${serializeConfig(JSON.stringify(this.config, null, 2))}
       }`,
       };
     }

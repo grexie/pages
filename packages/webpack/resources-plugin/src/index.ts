@@ -162,16 +162,6 @@ class SourceCompiler {
 
           const buffer = await this.render(compilation, [...files]);
 
-          // const cache = this.context.build.cache.create('html');
-          // await cache.set(
-          //   path.resolve(
-          //     this.context.build.rootDir,
-          //     this.source.slug,
-          //     'index.html'
-          //   ),
-          //   buffer!
-          // );
-
           compilation.emitAsset(
             path.join(this.source.slug, 'index.html'),
             new RawSource(buffer!)
@@ -305,7 +295,7 @@ export class ResourcesPlugin {
       let el: { config: Config; source: Source } | undefined;
 
       while ((el = stack.shift())) {
-        if (el.config.mappings.length) {
+        if (el.config.mappings?.length) {
           for (const mapping of el.config.mappings) {
             mappings.push({ ...el, mapping: normalizeMapping(mapping) });
           }

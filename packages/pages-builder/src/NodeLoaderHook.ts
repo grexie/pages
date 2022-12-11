@@ -24,10 +24,12 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
   context,
   next
 ) => {
-  const { parentURL = baseUrl } = context;
   const loader = (global as any).PagesModuleLoader as ModuleLoader;
 
   if (loader) {
+    const rootDir = new URL('file://');
+    rootDir.pathname = loader.context.build.rootDir;
+    const { parentURL = rootDir.toString() } = context;
     const reference = await loader.resolver.resolve(
       new URL(parentURL).pathname,
       specifier
@@ -48,6 +50,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
   }
 
   try {
+    const { parentURL = baseUrl } = context;
     return await new Promise<{ url: string; shortCircuit?: boolean }>(
       (resolve, reject) =>
         resolver.resolve(

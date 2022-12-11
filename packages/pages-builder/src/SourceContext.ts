@@ -51,10 +51,6 @@ export class SourceContext extends Source {
     this.configModule = configModule;
   }
 
-  get metadata() {
-    return this.config.metadata;
-  }
-
   create() {
     return new Resource({
       path: this.path,

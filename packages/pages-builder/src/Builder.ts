@@ -119,17 +119,22 @@ export class Builder {
     return { cache };
   }
 
-  filenameToPath(
-    filename: string,
-    rootDir: string = this.context.rootDir
-  ): string[] {
+  filenameToPath(filename: string, rootDir?: string): string[] {
+    const sources = this.context.sources.lookupMappingFrom(filename);
     const path = _path
-      .relative(rootDir, filename)
+      .relative(
+        sources?.context.rootDir ?? rootDir ?? this.context.root.rootDir,
+        filename
+      )
       .split(/\//g)
       .map(p => p.substring(0, p.length - _path.extname(p).length));
 
     if (path[path.length - 1] === 'index') {
       path.pop();
+    }
+
+    if (sources) {
+      path.unshift(...(sources.context.mapping?.to ?? []));
     }
 
     return path;

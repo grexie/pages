@@ -1,10 +1,10 @@
-import type { BuildContext } from './BuildContext.js';
+import type { SourceResolver, BuildContext } from './BuildContext.js';
 import type { Config } from '@grexie/pages/api';
 import type { Source } from './Source.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
 import { ObjectProxy } from '@grexie/proxy';
 import path from 'path';
-import type { Compilation } from 'webpack';
+import { Compilation, sources } from 'webpack';
 import { Registry } from './Registry.js';
 
 export interface ConfigOptions {
@@ -104,7 +104,20 @@ export class ConfigContext {
     compilation: Compilation,
     path: string[]
   ): Promise<ConfigModule> {
-    const sources = await this.context.registry.listConfig({ path });
+    let stack = [this.context.sources];
+    let el: SourceResolver | undefined;
+    const sources = [];
+    const seen = new Set<string>();
+    while ((el = stack.shift())) {
+      const els = await el.context.registry.listConfig({ path });
+      for (const el2 of els) {
+        if (!seen.has(el2.abspath)) {
+          sources.push(el2);
+        }
+        seen.add(el2.abspath);
+      }
+      stack.push(...el.children);
+    }
 
     sources.sort((a, b) => a.path.length - b.path.length);
 

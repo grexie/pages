@@ -81,9 +81,9 @@ export const useResource = <
   }
 };
 
-export const useMetadata = <M extends ResourceMetadata = any>(
+export const useConfig = <M extends ResourceMetadata = any>(
   options?: ResourceQueryOptions
-) => useResource<M>(options).metadata;
+) => useResource<M>(options).config;
 export const useContent = <C = any,>(options?: ResourceQueryOptions) =>
   useResource<any, ContentResource<C>>(options).content;
 export const useModule = <X = any,>(options?: ResourceQueryOptions) =>

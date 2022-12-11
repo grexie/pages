@@ -8,12 +8,12 @@ export const resource = /*#__PURE__*/ async (
   const grayMatter = (await import('gray-matter')).default;
   const { SourceMapGenerator, SourceMapConsumer } = await import('source-map');
 
-  const { content, data: metadata } = grayMatter(context.content.toString());
-  Object.assign(context.metadata, metadata);
+  const { content, data: config } = grayMatter(context.content.toString());
+  Object.assign(context.config, config);
 
   let stylesheets = '';
-  if (typeof context.metadata.styles === 'object') {
-    const imports = (Object.values(context.metadata.styles) as string[])
+  if (typeof context.config.styles === 'object') {
+    const imports = (Object.values(context.config.styles) as string[])
       .map((stylesheet, i) => {
         return `import __pages_stylesheet_${i} from ${JSON.stringify(
           stylesheet
@@ -24,14 +24,14 @@ export const resource = /*#__PURE__*/ async (
       imports +
       '\n' +
       'export const styles = {\n' +
-      (Object.keys(context.metadata.styles ?? {}) as string[])
+      (Object.keys(context.config.styles ?? {}) as string[])
 
         .map((name, i) => `  ${JSON.stringify(name)}: __pages_stylesheet_${i}`)
         .join(',\n') +
       '};\n';
-  } else if (typeof context.metadata.styles === 'string') {
+  } else if (typeof context.config.styles === 'string') {
     stylesheets = `export { default as styles } from ${JSON.stringify(
-      context.metadata.styles
+      context.config.styles
     )};\n`;
   }
 
