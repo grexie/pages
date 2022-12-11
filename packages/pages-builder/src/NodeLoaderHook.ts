@@ -31,7 +31,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
     rootDir.pathname = loader.context.build.rootDir;
     const { parentURL = rootDir.toString() } = context;
     const reference = await loader.resolver.resolve(
-      new URL(parentURL).pathname,
+      path.dirname(new URL(parentURL).pathname),
       specifier
     );
 

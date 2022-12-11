@@ -17,10 +17,7 @@ export const resource = {
   slug: "test",
   config: __pages_object_proxy.create({
     "metadata": {}
-  }, __pages_config_1(__pages_config_2())),
-  get metadata() {
-    return this.config.metadata;
-  }
+  }, __pages_config_1(__pages_config_2()))
 };
 const __pages_handler = __pages_wrap_handler(resource, __pages_handler_component);
 const __pages_hooks = {

@@ -17,7 +17,7 @@ export class JSXSource {
   readonly filename: string;
   readonly jsx: string;
   readonly imports: { importName: string; name: string; path: string }[] = [];
-  readonly metadata: ResourceMetadata;
+  readonly config: any;
   readonly _code: string[] = [];
   readonly decorators: string[] = [];
 
@@ -25,12 +25,12 @@ export class JSXSource {
     builder: MockBuilder,
     filename: string,
     jsx: string,
-    metadata: ResourceMetadata
+    config: any
   ) {
     this.builder = builder;
     this.filename = filename;
     this.jsx = jsx;
-    this.metadata = metadata;
+    this.config = config;
   }
 
   code(code: string) {
@@ -88,7 +88,7 @@ export default ${decorate(`({ children }) => {
 }`)};
 
 export const resource = async (context) => {
-  Object.assign(context.metadata, ${JSON.stringify(this.metadata)});
+  Object.assign(context.config, ${JSON.stringify(this.config)});
   return context.create();
 }
 `;

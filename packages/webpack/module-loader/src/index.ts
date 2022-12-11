@@ -46,10 +46,7 @@ export default async function ModuleLoader(
     const createHandler = async () => {
       let handlerModule: InstantiatedModule;
       if (typeof options.handler === 'string') {
-        handlerModule = await modules.requireModule(
-          _path.dirname(options.handler),
-          options.handler
-        );
+        handlerModule = await modules.requireModule(__dirname, options.handler);
       } else {
         handlerModule = await modules.createModule(
           _path.dirname(this.resourcePath),

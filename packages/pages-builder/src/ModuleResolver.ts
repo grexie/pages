@@ -3,7 +3,7 @@ import { promisify } from '@grexie/promisify';
 import { BuildContext } from './BuildContext.js';
 import { ModuleLoaderType } from './ModuleLoader.js';
 import type { Compiler } from 'webpack';
-import { createRequire } from 'module';
+import { createRequire, builtinModules } from 'module';
 import path from 'path';
 
 export interface ModuleReference {
@@ -95,12 +95,14 @@ export class ModuleResolver {
           {},
           (err, result, requestResult) => {
             if (err) {
+              const sourceContext = path
+                .relative(this.context.rootDir, context)
+                .split(/\//g)
+                .filter(x => !!x);
+
               this.context.root.sources
                 .resolve({
-                  context: path
-                    .relative(this.context.rootDir, context)
-                    .split(/\//g)
-                    .filter(x => !!x),
+                  context: sourceContext,
                   request,
                 })
                 .then(({ abspath }) => {
@@ -168,6 +170,10 @@ export class ModuleResolver {
   }
 
   async resolve(context: string, request: string): Promise<ModuleReference> {
+    if (builtinModules.includes(request)) {
+      return this.#buildImport(request, { builtin: true });
+    }
+
     if (/\!/.test(request)) {
       const requests = request.split(/\!/g);
       const result = (
@@ -200,6 +206,7 @@ export class ModuleResolver {
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
+      console.info(err);
       return this.#buildImport(request, { builtin: true });
     }
 

@@ -14,15 +14,15 @@ describe('ModuleLoader', () => {
 
   it('should build a module', async () => {
     builder.addSource('test.jsx', 'null', {}).write();
-    builder.addConfig('.pages.yml', { metadata: {} });
-    const { stats } = await builder.build();
+    builder.addConfig('.pages.yml', {});
+    const { stats, result } = await builder.build(async compilation => {
+      const modules = builder.getModuleContext(compilation);
+      return await modules.requireModule('/', '/test');
+    });
 
     expect(stats.hasErrors()).toBeFalsy();
 
-    const loader = builder.getModuleContext(stats.compilation).loaders['esm'];
-    const { context, filename, source } = (await loader.modules[
-      path.resolve(builder.rootDir, 'test.jsx')
-    ])!;
+    const { context, filename, source } = result!;
     expect({
       context: path.relative(builder.rootDir, context),
       filename: path.relative(builder.rootDir, filename),

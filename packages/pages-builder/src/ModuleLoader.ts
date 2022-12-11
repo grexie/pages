@@ -142,10 +142,6 @@ export abstract class ModuleLoader {
    * @param filename
    */
   async load(context: string, request: string): Promise<InstantiatedModule> {
-    if (request === '/layouts/main') {
-      debugger;
-    }
-
     const reference = await this.resolver.resolve(context, request);
 
     const module = this.lookup(reference.filename);
@@ -213,13 +209,7 @@ export abstract class ModuleLoader {
 
     try {
       (global as any).PagesModuleLoader = this;
-      const parentURL = new URL('file://');
-      parentURL.pathname = `${context}/index.js`;
-      const resolved = await import.meta.resolve!(
-        reference.filename,
-        parentURL
-      );
-      const exports = await import(resolved);
+      const exports = await import(reference.filename);
 
       let usedExports: string[];
 

@@ -291,19 +291,19 @@ export class Builder {
             },
           },
       plugins: [
-        new ProgressBarPlugin({
-          format: `\u001b[2J\u001b[0;0H\n${chalk.whiteBright(
-            '  Building...'
-          )}\n\n  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
-            ':percent'
-          )} ${chalk.whiteBright('(:elapseds) :msg')} `,
-          complete: '=',
-          callback: () => {
-            process.stderr.write('\u001b[2J\u001b[0;0H');
-          },
-          clear: true,
-          total: 10000,
-        }) as any,
+        // new ProgressBarPlugin({
+        //   format: `\u001b[2J\u001b[0;0H\n${chalk.whiteBright(
+        //     '  Building...'
+        //   )}\n\n  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
+        //     ':percent'
+        //   )} ${chalk.whiteBright('(:elapseds) :msg')} `,
+        //   complete: '=',
+        //   callback: () => {
+        //     process.stderr.write('\u001b[2J\u001b[0;0H');
+        //   },
+        //   clear: true,
+        //   total: 10000,
+        // }) as any,
         new ResourcesPlugin({ context: this.context, sources }),
         new webpack.DefinePlugin({
           'process.env': `(${JSON.stringify({
