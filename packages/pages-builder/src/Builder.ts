@@ -324,7 +324,7 @@ export class Builder {
         },
         '__webpack/hot': {
           import:
-            'webpack-hot-middleware/client?reload=true&overlay=true&overlayWarnings=true&path=__webpack/hmr',
+            'webpack-hot-middleware/client?reload=true&overlay=true&overlayWarnings=true&path=/__webpack/hmr',
           filename: '__webpack/hot.js',
         },
       });

@@ -61,12 +61,11 @@ export class Server {
     }
 
     await this.context.ready;
-    // const initialSource = await this.context.sources.getSource({ path: [] });
     const sources = new Set<Source>([]);
     const compiler = await this.context.builder.createCompiler(sources);
 
     this.#server = createResolver<http.Server>();
-    // const handler = new RequestHandler(this.context);
+
     const app = express();
 
     await this.#events.emit(EventPhase.before, 'routes', app);
@@ -84,42 +83,50 @@ export class Server {
         return;
       }
 
-      try {
-        const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
-        let source: Source | undefined;
+      devServer.waitUntilValid(async () => {
         try {
-          source = await this.context.sources.getSource({
-            path: slug.split(/\//g),
-          });
-        } catch (err) {
-          req.url = '/404/';
-          source = await this.context.sources.getSource({
-            path: ['404'],
-          });
-        }
+          const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
+          let source: Source | undefined;
+          try {
+            source = await this.context.sources.getSource({
+              path: slug.split(/\//g),
+            });
+          } catch (err) {
+            req.url = '/404/';
+            source = await this.context.sources.getSource({
+              path: ['404'],
+            });
+          }
 
-        if (source && (!sources.has(source) || compiler.watching.invalid)) {
-          process.stderr.write(
-            chalk.whiteBright('compiling ') +
-              chalk.cyan(source.filename) +
-              chalk.whiteBright('...\n')
-          );
-          sources.clear();
-          sources.add(source);
+          if (
+            source &&
+            (![...sources]
+              .map(({ abspath }) => abspath)
+              .includes(source.abspath) ||
+              compiler.watching.invalid)
+          ) {
+            process.stderr.write(
+              chalk.whiteBright('compiling ') +
+                chalk.cyan(source.abspath) +
+                chalk.whiteBright('...\n')
+            );
+            sources.clear();
+            sources.add(source);
 
-          devServer.invalidate(() => {
+            devServer.invalidate(() => {
+              setImmediate(() => {
+                devServer.waitUntilValid(() => next());
+              });
+            });
+          } else {
             setImmediate(() => {
               devServer.waitUntilValid(() => next());
             });
-          });
-        } else {
-          setImmediate(() => {
-            devServer.waitUntilValid(() => next());
-          });
+          }
+        } catch (err) {
+          next();
         }
-      } catch (err) {
-        next();
-      }
+      });
     });
 
     app.use(devServer);
@@ -129,9 +136,31 @@ export class Server {
         path: '/__webpack/hmr',
       });
 
-      compiler.hooks.done.tap('PagesServe', () => {
-        console.info('reload');
-        hot.publish({ action: 'reload' });
+      compiler.hooks.compilation.tap('PagesServe', compilation => {
+        compilation.hooks.afterProcessAssets.tap('PagesServe', async assets => {
+          for (let { path, slug } of sources) {
+            path = [...path, 'index.html'];
+
+            const asset = assets[path.join('/')];
+
+            if (asset) {
+              let newSource: Source | undefined;
+              try {
+                newSource = await this.context.sources.getSource({
+                  path: slug.split(/\//g),
+                });
+              } catch (err) {
+                newSource = await this.context.sources.getSource({
+                  path: ['404'],
+                });
+              }
+
+              if (newSource.slug !== slug) {
+                hot.publish({ action: 'reload', slug });
+              }
+            }
+          }
+        });
       });
 
       app.use(hot);

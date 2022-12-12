@@ -9,14 +9,41 @@ export const register = runtime.register;
 let timeout: NodeJS.Timer;
 
 if (typeof window !== 'undefined') {
-  import('webpack-hot-middleware/client.js').then(client => {
-    client.subscribe(action => {
-      console.info('action', action);
-    });
-  });
+  const processMessage = (
+    eventSource: EventSource,
+    { action, ...options }: any
+  ) => {
+    switch (action) {
+      case 'reload': {
+        console.info(options);
+        if (options.slug === (window as any).__PAGES_DATA__.slug) {
+          setTimeout(() => {
+            console.info('reloading...');
+            window.location.reload();
+          }, 100);
+        }
+      }
+    }
+  };
+
+  const interval = setInterval(() => {
+    const eventSource = (window as any).__whmEventSourceWrapper?.[
+      '/__webpack/hmr'
+    ];
+
+    if (eventSource) {
+      clearInterval(interval);
+      eventSource.addMessageListener((event: any) => {
+        try {
+          const message = JSON.parse(event.data);
+          processMessage(event.target, message);
+        } catch (err) {}
+      });
+    }
+  }, 50);
 }
 
-export const update = (hot: any, rootElement: ComponentType) => {
+export const update = (hot: any) => {
   if (hot) {
     hot.accept();
     clearTimeout(timeout);
