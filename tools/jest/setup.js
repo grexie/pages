@@ -1,2 +1,4 @@
-require('source-map-support').install();
-require('global-jsdom/register');
+import sourceMap from 'source-map-support';
+import 'global-jsdom/register';
+
+sourceMap.install();

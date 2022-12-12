@@ -32,7 +32,6 @@ const Scripts: FC<ScriptsProps> = ({ data = {} }) => {
   data = {
     ...data,
     slug,
-    styles: [...styles].map(({ hash, css }) => ({ hash, css })),
   };
 
   return (

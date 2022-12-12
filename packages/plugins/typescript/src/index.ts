@@ -12,8 +12,6 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.pages\.ts$/,
         use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-ssr-loader'),
           '@grexie/pages-config-loader',
           {
             loader: 'babel-loader',
@@ -31,8 +29,6 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.tsx?$/,
         use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-ssr-loader'),
           context.builder.loader('@grexie/pages-module-loader'),
           {
             loader: 'babel-loader',

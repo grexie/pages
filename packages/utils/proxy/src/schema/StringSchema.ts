@@ -6,13 +6,14 @@ export class StringSchema extends Schema<string> {
     super(merger);
   }
 
-  merge(current: string, next: any) {
+  merge(context: any, current: string, next: any) {
     return this.merger({
       merge: (current, next) => {
         return next;
       },
       current,
       next,
+      context,
     });
   }
 }

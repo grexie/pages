@@ -1,13 +1,17 @@
 import type { SourceResolver, BuildContext } from './BuildContext.js';
-import type { Config } from '@grexie/pages/api';
+import type {
+  Config,
+  ConfigContext as RuntimeConfigContext,
+  Context,
+} from '@grexie/pages/api';
 import type { Source } from './Source.js';
 import type { InstantiatedModule } from './ModuleLoader.js';
-import { ObjectProxy } from '@grexie/proxy';
+import { ObjectProxy, SchemaSymbol } from '@grexie/proxy';
 import path from 'path';
-import { Compilation, sources } from 'webpack';
-import { Registry } from './Registry.js';
+import { Compilation } from 'webpack';
 
 export interface ConfigOptions {
+  context: Context;
   parent?: ConfigModule;
   source: Source;
   module: InstantiatedModule;
@@ -18,11 +22,13 @@ export interface ConfigResolverOptions {
 }
 
 export class ConfigModule {
+  readonly context: Context;
   readonly parent?: ConfigModule;
   readonly source: Source;
   readonly module: InstantiatedModule;
 
-  constructor({ parent, source, module }: ConfigOptions) {
+  constructor({ parent, source, module, context }: ConfigOptions) {
+    this.context = context;
     this.parent = parent;
     this.source = source;
     this.module = module;
@@ -37,15 +43,26 @@ export class ConfigModule {
     return out;
   }
 
-  async create(extra?: Partial<Config>): Promise<Config> {
+  async create(
+    extra?: Partial<Config>,
+    extraContext?: RuntimeConfigContext
+  ): Promise<Config> {
     const parent = await this.parent?.create();
     const { exports } = this.module;
     if (!exports.default) {
       throw new Error(`${this.module.filename} has no config export`);
     }
     const { default: configFactory } = exports;
-    let config = configFactory(parent);
+    let config = configFactory(
+      {
+        context: this.context,
+        filename: this.module.filename,
+        dirname: path.dirname(this.module.filename),
+      },
+      parent
+    );
     if (extra) {
+      config[SchemaSymbol].setContext(extra, extraContext);
       config = ObjectProxy.create<Config>(extra, config);
     }
     return config;
@@ -70,13 +87,13 @@ export class ConfigModule {
       const configFactory = `__pages_config_${index}`;
 
       if (this.parent) {
-        return `${configFactory}(${this.parent.serialize(
+        return `${configFactory}(context, ${this.parent.serialize(
           context,
           false,
           index + 1
         )})`;
       } else {
-        return `${configFactory}()`;
+        return `${configFactory}(context)`;
       }
     }
   }
@@ -97,14 +114,19 @@ export class ConfigContext {
     const _module = await this.context
       .getModuleContext(compilation)
       .requireModule(source.dirname, source.abspath);
-    return new ConfigModule({ parent, source, module: _module });
+    return new ConfigModule({
+      parent,
+      source,
+      module: _module,
+      context: this.context,
+    });
   }
 
   async create(
     compilation: Compilation,
     path: string[]
   ): Promise<ConfigModule> {
-    let stack = [this.context.sources];
+    let stack = [this.context.root.sources];
     let el: SourceResolver | undefined;
     const sources = [];
     const seen = new Set<string>();

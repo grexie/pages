@@ -36,7 +36,7 @@ export const resource = /*#__PURE__*/ async (
   }
 
   const source = await compile(
-    { path: context.filename, value: content },
+    { path: context.abspath, value: content },
     {
       outputFormat: 'program',
       format: 'mdx',

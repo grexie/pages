@@ -15,15 +15,12 @@ describe('ConfigContext', () => {
   test('should modify config from child configs', async () => {
     builder.addConfig('.pages.yml', {
       render: true,
-      metadata: {
-        layout: ['/layouts/main'],
-      },
+      mappings: ['.:/'],
+      layout: ['/layouts/main'],
     });
     builder.addConfig('layouts/.pages.yml', {
       render: false,
-      metadata: {
-        layout: [],
-      },
+      layout: [],
     });
     builder
       .addSource('test.jsx', 'null', {
@@ -44,9 +41,9 @@ describe('ConfigContext', () => {
       return module.create();
     });
 
-    expect(config?.metadata.layout).toEqual([]);
-    Object.assign(config!.metadata, { layout: ['./Home'] });
-    expect(config?.metadata.layout).toEqual(['./Home']);
-    expect(config?.render).toEqual(false);
+    expect(config!.layout).toEqual([]);
+    Object.assign(config!, { layout: ['./Home'] });
+    expect(config!.layout).toEqual(['./Home']);
+    expect(config!.render).toEqual(false);
   });
 });

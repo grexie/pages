@@ -1,0 +1,41 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  font-size: 16px;
+  height: 100%;
+  background: #f5f6f8;
+  color: #34383a;
+}
+
+:global(#__pages_root) {
+  height: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+}
+
+.container {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+}
+
+.code {
+  font-size: 3em;
+  font-weight: bold;
+  padding-right: 0.25em;
+  margin-right: 0.25em;
+  border-right: 1px solid #c5c6c8;
+  font-family: sans-serif;
+}
+
+.message {
+  font-size: 1.25em;
+  font-family: sans-serif;
+  font-weight: 100;
+  color: #646768;
+}

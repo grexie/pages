@@ -1,6 +1,24 @@
 declare module '@grexie/pages-resources-plugin';
 declare module 'webpack/lib/dependencies/EntryDependency.js';
 
+declare module '*.scss' {
+  import type { StyleFunction } from '@grexie/pages-plugin-sass';
+  const styles: StyleFunction;
+  export default styles;
+}
+
+declare module '*.css' {
+  import type { StyleFunction } from '@grexie/pages-plugin-css';
+  const styles: StyleFunction;
+  export default styles;
+}
+
+declare module '*.svg' {
+  import type { Image } from '@grexie/pages-plugin-image';
+  const Component: Image;
+  export default Component;
+}
+
 declare namespace NodeJS {
   namespace LoaderHooks {
     enum ModuleFormat {

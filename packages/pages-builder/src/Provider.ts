@@ -13,6 +13,7 @@ export class Provider {
   readonly rootDir: string;
   readonly parentRootDir: string;
   readonly basePath: string[];
+  priority: number;
   #scanning: boolean = false;
   #sources: ResolvablePromise<Record<string, Source>>;
   #configs: ResolvablePromise<Record<string, Source>>;
@@ -22,11 +23,13 @@ export class Provider {
     rootDir = context.rootDir,
     parentRootDir = context.rootDir,
     basePath = [],
+    priority = 0,
   }: ProviderOptions) {
     this.context = context;
     this.parentRootDir = parentRootDir;
     this.rootDir = rootDir;
     this.basePath = basePath;
+    this.priority = priority;
 
     this.#sources = createResolver();
     this.#configs = createResolver();
@@ -36,9 +39,16 @@ export class Provider {
     filename: string,
     rootDir: string
   ): Promise<Source | undefined> {
-    let path = this.context.builder.filenameToPath(filename);
+    let path = this.context.builder.filenameToPath(
+      _path.resolve(rootDir, filename),
+      rootDir
+    );
+    path.unshift(...this.basePath);
 
-    filename = _path.relative(this.context.root.rootDir, filename);
+    filename = _path.relative(
+      this.context.root.rootDir,
+      _path.resolve(this.rootDir, filename)
+    );
     if (!filename.startsWith('../')) {
       filename = `./${filename}`;
     }
@@ -47,6 +57,7 @@ export class Provider {
       context: this.context,
       filename,
       path,
+      priority: this.priority,
     });
 
     return source;
@@ -105,10 +116,7 @@ export class Provider {
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>
-          this.create(
-            _path.resolve(this.rootDir, filename),
-            this.context.root.rootDir
-          )
+          this.create(filename, this.context.root.rootDir)
         )
       );
 
@@ -143,7 +151,7 @@ export class Provider {
   }
 
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    this.scan();
+    await this.scan();
 
     let sourcesMap = await this.#sources;
     let sources = Object.values(sourcesMap);
@@ -178,7 +186,7 @@ export class Provider {
   }
 
   async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    this.scan();
+    await this.scan();
 
     let sourcesMap = await this.#configs;
     let sources = Object.values(sourcesMap);

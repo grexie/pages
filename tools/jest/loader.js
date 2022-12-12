@@ -1,20 +1,16 @@
-const { transformFileAsync } = require('@babel/core');
-const fs = require('fs');
-const { promisify } = require('util');
+import { transformFileAsync } from '@babel/core';
+import fs from 'fs';
+import { promisify } from 'util';
 const exists = promisify(fs.exists);
 
-exports.resolve = async (specifier, context, _next) => {
-  const next = async function () {
-    const result = await _next(...arguments);
+export const resolve = async (specifier, context, next) => {
+  // const next = async function () {
+  //   const result = await _next(...arguments);
 
-    const url = new URL(result.url);
+  //   const url = new URL(result.url);
 
-    if (url.protocol === 'file:' && !result.format) {
-      result.format = 'module';
-    }
-
-    return result;
-  };
+  //   return result;
+  // };
 
   const { pathname } = new URL(specifier, context.parentURL);
 
@@ -49,7 +45,7 @@ exports.resolve = async (specifier, context, _next) => {
   return next(specifier, context);
 };
 
-exports.load = async (_url, context, next) => {
+export const load = async (_url, context, next) => {
   const url = new URL(_url);
 
   if (['.ts', '.tsx'].find(extname => url.pathname.endsWith(extname))) {

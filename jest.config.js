@@ -1,6 +1,6 @@
 /** @type {import('jest').Config} */
 
-module.exports = {
+export default {
   verbose: true,
   clearMocks: true,
   collectCoverage: true,

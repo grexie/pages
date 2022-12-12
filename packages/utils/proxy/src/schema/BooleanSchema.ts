@@ -8,7 +8,7 @@ export class BooleanSchema extends Schema<boolean> {
     super(merger);
   }
 
-  merge(current: boolean, next: any) {
+  merge(context: any, current: boolean, next: any) {
     return this.merger({
       merge: (current, next) => {
         if (typeof next === 'undefined') {
@@ -19,6 +19,7 @@ export class BooleanSchema extends Schema<boolean> {
       },
       current,
       next,
+      context,
     });
   }
 }

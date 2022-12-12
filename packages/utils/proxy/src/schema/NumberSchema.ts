@@ -6,13 +6,14 @@ export class NumberSchema extends Schema<number> {
     super(merger);
   }
 
-  merge(current: number, next: any) {
+  merge(context: any, current: number, next: any) {
     return this.merger({
       merge: (current, next) => {
         return next;
       },
       current,
       next,
+      context,
     });
   }
 }

@@ -61,8 +61,8 @@ export class Server {
     }
 
     await this.context.ready;
-    const initialSources = await this.context.registry.list({ slug: '' });
-    const sources = new Set<Source>(initialSources);
+    // const initialSource = await this.context.sources.getSource({ path: [] });
+    const sources = new Set<Source>([]);
     const compiler = await this.context.builder.createCompiler(sources);
 
     this.#server = createResolver<http.Server>();
@@ -79,11 +79,25 @@ export class Server {
     });
 
     app.use(async (req, res, next) => {
+      if (!req.headers.accept?.split(/,/g).includes('text/html')) {
+        next();
+        return;
+      }
+
       try {
         const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
-        const source = await this.context.registry.get({
-          slug,
-        });
+        let source: Source | undefined;
+        try {
+          source = await this.context.sources.getSource({
+            path: slug.split(/\//g),
+          });
+        } catch (err) {
+          req.url = '/404/';
+          source = await this.context.sources.getSource({
+            path: ['404'],
+          });
+        }
+
         if (source && (!sources.has(source) || compiler.watching.invalid)) {
           process.stderr.write(
             chalk.whiteBright('compiling ') +
@@ -104,19 +118,25 @@ export class Server {
           });
         }
       } catch (err) {
-        next(err);
+        next();
       }
     });
 
     app.use(devServer);
 
     if (process.env.WEBPACK_HOT === 'true') {
-      app.use(
-        WebpackHotMiddleware(compiler, {
-          path: '/__webpack/hmr',
-        })
-      );
+      const hot = WebpackHotMiddleware(compiler, {
+        path: '/__webpack/hmr',
+      });
+
+      compiler.hooks.done.tap('PagesServe', () => {
+        console.info('reload');
+        hot.publish({ action: 'reload' });
+      });
+
+      app.use(hot);
     }
+
     await this.#events.emit(EventPhase.after, 'routes', app, express);
 
     const server = http.createServer(app);

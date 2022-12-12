@@ -6,11 +6,6 @@ export default async () => {
   process.env.NODE_ENV = process.env.NODE_ENV ?? 'production';
 
   const context = new RootBuildContext({
-    providers: [
-      {
-        provider: Provider,
-      },
-    ],
     fs,
     cacheKey: 'build',
   });

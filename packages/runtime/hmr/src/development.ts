@@ -1,18 +1,27 @@
+import type { ComponentType } from 'react';
 import runtime from 'react-refresh/runtime';
 import { setTimeout, clearTimeout } from 'timers';
+
 export const createSignatureFunctionForTransform =
   runtime.createSignatureFunctionForTransform;
 export const register = runtime.register;
 
 let timeout: NodeJS.Timer;
-export const update = (hot: any) => {
-  if (hot) {
-    hot.accept((...args: any[]) => {
-      console.info('accepted', args);
+
+if (typeof window !== 'undefined') {
+  import('webpack-hot-middleware/client.js').then(client => {
+    client.subscribe(action => {
+      console.info('action', action);
     });
+  });
+}
+
+export const update = (hot: any, rootElement: ComponentType) => {
+  if (hot) {
+    hot.accept();
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-      runtime.performReactRefresh();
+      const updates = runtime.performReactRefresh();
       // (window as any).__PAGES_ROOT__?.rerender();
     }, 300);
   }

@@ -107,15 +107,12 @@ export class ModuleResource<X = any, M extends ResourceMetadata = any>
 
       ${compiled!.code}
 
-      export const resource = {
+      export const resource = (context) => ({
         path: ${JSON.stringify(this.path)},
         slug: ${JSON.stringify(this.slug)},
         config: ${serializeConfig(JSON.stringify(this.config, null, 2))},
-        get metadata() {
-          return this.config.metadata;
-        },
         exports: __handler_exports,
-      };
+      });
     `,
         map: this.#map,
       };

@@ -8,7 +8,8 @@ import type {
 } from '../api/Resource.js';
 import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
 import { useDocument } from './useDocument.js';
-import { hash } from '@grexie/hash-object';
+import type { Context } from '../api/Context.js';
+import { useContext } from './useContext.js';
 
 export interface ResourceContextProviderProps {
   resourceContext: ResourceContext;
@@ -32,7 +33,7 @@ export const useRootResourceContext = () => {
 };
 
 export interface ResourceProviderProps {
-  resource: Resource;
+  resource: (context: Context) => Resource;
 }
 
 const {
@@ -42,7 +43,8 @@ const {
 } = createContextWithProps<Resource, ResourceProviderProps>(
   'Pages.Resource',
   Provider =>
-    ({ resource, children }) => {
+    ({ resource: resourceFactory, children }) => {
+      const context = useContext();
       const parentResourceContext = useResourceContext();
 
       const resourceContext = useMemo(() => {
@@ -50,13 +52,17 @@ const {
         if (resourceContext.resource) {
           resourceContext = new ResourceContext(resourceContext);
         }
+        const resource = resourceContext.root.createResource(
+          resourceFactory,
+          context
+        );
         resourceContext[ResourceContextSet](resource);
         return resourceContext;
-      }, [parentResourceContext, hash(resource)]);
+      }, [parentResourceContext, resourceFactory]);
 
       return (
         <ResourceContextProvider resourceContext={resourceContext}>
-          <Provider value={resource}>{children}</Provider>
+          <Provider value={resourceContext.resource}>{children}</Provider>
         </ResourceContextProvider>
       );
     }

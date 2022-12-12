@@ -16,7 +16,7 @@ export class ArraySchema<T extends Array> extends Schema<
     super(merger);
   }
 
-  merge(current: T, next: any) {
+  merge(context: any, current: T, next: any) {
     return this.merger({
       merge: (current, next) => {
         if (typeof next === 'undefined') {
@@ -31,6 +31,7 @@ export class ArraySchema<T extends Array> extends Schema<
       },
       current,
       next,
+      context,
     });
   }
 }

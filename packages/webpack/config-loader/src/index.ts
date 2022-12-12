@@ -22,7 +22,7 @@ export default async function PagesLoader(
       sourceMaps: !!this.sourceMap,
     });
 
-    callback(null, compiled!.code!, compiled!.map ?? inputSourceMap);
+    callback(null, compiled!.code!, compiled!.map!);
   } catch (err) {
     console.error(err);
     callback(err as any);

@@ -5,6 +5,7 @@ import { BooleanSchema } from './BooleanSchema.js';
 import { NumberSchema } from './NumberSchema.js';
 import { StringSchema } from './StringSchema.js';
 import { ArraySchema, ArrayMerger } from './ArraySchema.js';
+import { ObjectProxy } from '../index.js';
 
 export interface ObjectMergerOptions<T> extends MergerOptions<T> {}
 
@@ -15,6 +16,7 @@ export class ObjectSchema<
   K extends keyof T = keyof T
 > extends Schema<T, ObjectMergerOptions<T>> {
   readonly members: Partial<Record<K, Schema>> = {};
+  readonly #contextTable = new WeakMap();
 
   constructor(merger?: ObjectMerger<T>) {
     if (!merger) {
@@ -97,9 +99,16 @@ export class ObjectSchema<
     };
   }
 
-  create(initial?: T): WithSchema<T> {
+  setContext(object: any, context: any) {
+    this.#contextTable.set(object, context);
+    return object;
+  }
+
+  create(context: any, initial?: T): WithSchema<T> {
     const object = {} as WithSchema<T>;
+    this.setContext(object, context);
     const members = Object.entries(this.members) as [K, Schema][];
+    const self = this;
 
     members.forEach(([member, schema]) => {
       const previousValueTable = new WeakMap<any, any>();
@@ -117,9 +126,14 @@ export class ObjectSchema<
               this === object
                 ? valueTable.get(this)
                 : Reflect.get(this, member);
-            const merged = schema.merge(previousValueTable.get(this), value);
+            const context = self.#contextTable.get(this);
+            const merged = schema.merge(
+              context,
+              previousValueTable.get(this),
+              value
+            );
             mergedTable.set(this, merged);
-            previousValueTable.set(this, valueTable.get(this));
+            previousValueTable.set(this, value);
             valueTable.delete(this);
           }
 
@@ -147,8 +161,9 @@ export class ObjectSchema<
     return object;
   }
 
-  merge(current: T, next: any) {
+  merge(context: any, current: T, next: any) {
     return this.create(
+      context,
       this.merger({
         merge: (current, next) => {
           if (typeof next === 'undefined') {
@@ -163,6 +178,7 @@ export class ObjectSchema<
         },
         current,
         next,
+        context,
       })
     );
   }
