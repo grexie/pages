@@ -392,9 +392,6 @@ export default async function ModuleLoader(
       ${this.hot ? hmrFooter : ''}
     `;
 
-      // this._compilation?.warnings.push(header + compiled!.code! + footer);
-
-      console.info(header + compiled!.code! + footer);
       callback(
         null,
         header + compiled!.code! + footer,

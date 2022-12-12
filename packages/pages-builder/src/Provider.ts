@@ -15,8 +15,8 @@ export class Provider {
   readonly basePath: string[];
   priority: number;
   #scanning: boolean = false;
-  #sources: ResolvablePromise<Record<string, Source>>;
-  #configs: ResolvablePromise<Record<string, Source>>;
+  #sources: ResolvablePromise<Record<string, Source[]>>;
+  #configs: ResolvablePromise<Record<string, Source[]>>;
 
   constructor({
     context,
@@ -53,10 +53,20 @@ export class Provider {
       filename = `./${filename}`;
     }
 
+    const isPagesConfig = this.context.providerConfig.configExtensions?.reduce(
+      (a, b) => a || filename.endsWith(b),
+      false
+    );
+
+    if (isPagesConfig) {
+      console.info(filename, path);
+    }
+
     const source = new Source({
       context: this.context,
       filename,
       path,
+      isPagesConfig,
       priority: this.priority,
     });
 

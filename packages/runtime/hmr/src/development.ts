@@ -15,13 +15,20 @@ if (typeof window !== 'undefined') {
   ) => {
     switch (action) {
       case 'reload': {
-        console.info(options);
-        if (options.slug === (window as any).__PAGES_DATA__.slug) {
-          setTimeout(() => {
-            console.info('reloading...');
-            window.location.reload();
-          }, 100);
-        }
+        options.pathnames.forEach((thisPathname: string) => {
+          let pathname = window.location.pathname;
+
+          if (!pathname.endsWith('/')) {
+            pathname += '/';
+          }
+
+          if (thisPathname === pathname) {
+            setTimeout(() => {
+              window.location.reload();
+            }, 0);
+          }
+        });
+        break;
       }
     }
   };

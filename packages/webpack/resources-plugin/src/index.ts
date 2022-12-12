@@ -330,7 +330,7 @@ export class ResourcesPlugin {
         if (this.mappingsSeen.has(serialized)) {
           continue;
         }
-        console.info(serialized);
+
         this.mappingsSeen.add(serialized);
         mappings.push(mapping);
       }
@@ -375,15 +375,6 @@ export class ResourcesPlugin {
       });
       this.compilations.clear();
       this.mappingsSeen.clear();
-      console.info(
-        'root context has',
-        this.context.sources.descendants.length,
-        'descendants'
-      );
-
-      // compilation.hooks.afterDone.tap('ResourcesPlugin', () => {
-      //   sourceConfigs.forEach(({ context }) => context.build.dispose());
-      // });
     });
 
     compiler.hooks.afterDone.tap('ResourcesPlugin', async () => {});
@@ -398,12 +389,6 @@ export class ResourcesPlugin {
         'ResourcesPlugin',
         compiler,
         compilation
-      );
-
-      console.info(
-        'root context has',
-        this.context.sources.descendants.length,
-        'descendants'
       );
 
       const seen = new Set<string>();

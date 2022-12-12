@@ -133,6 +133,54 @@ export class ObjectProxy<
     return out;
   }
 
+  descriptor(p: string | symbol | number) {
+    let proxy: ObjectProxy<T> | undefined = this;
+    let target: any;
+    do {
+      target = proxy.root;
+      for (const c of proxy.path) {
+        target = target[c];
+        if (
+          typeof target !== 'object' ||
+          Array.isArray(target) ||
+          target === null
+        ) {
+          break;
+        }
+      }
+      if (
+        typeof target !== 'object' ||
+        Array.isArray(target) ||
+        target === null
+      ) {
+        continue;
+      }
+      if (p in target) {
+        if (Reflect.getOwnPropertyDescriptor(target, p)?.get) {
+          break;
+        }
+      }
+    } while ((proxy = proxy.parentProxy));
+
+    if (p in target) {
+      const descriptor = Reflect.getOwnPropertyDescriptor(target, p);
+      if (descriptor) {
+        return descriptor;
+      }
+    }
+
+    return {
+      configurable: true,
+      enumerable: true,
+      get(this: any) {
+        return Reflect.get(this, p);
+      },
+      set(value: any) {
+        Reflect.set(this, p, value);
+      },
+    };
+  }
+
   get(_: T, p: string | symbol | number) {
     if (p === 'toJSON') {
       return this.toJSON.bind(this);
@@ -151,18 +199,9 @@ export class ObjectProxy<
     }
 
     if (complete) {
-      if (
-        typeof this.parent === 'object' &&
-        !Array.isArray(this.parent) &&
-        this.parent !== null &&
-        Reflect.has(this.parent, p)
-      ) {
-        const getter = Reflect.getOwnPropertyDescriptor(this.parent, p)?.get;
-        if (typeof getter === 'function') {
-          o = getter.call(o);
-        } else {
-          o = o[p];
-        }
+      const getter = this.descriptor(p)?.get;
+      if (typeof getter === 'function') {
+        o = getter.call(o);
       } else {
         o = o[p];
       }
@@ -196,7 +235,7 @@ export class ObjectProxy<
 
     for (const c of this.path) {
       if (
-        typeof tel[c] !== 'object' || 
+        typeof tel[c] !== 'object' ||
         Array.isArray(tel[c]) ||
         tel[c] === null
       ) {
@@ -212,8 +251,9 @@ export class ObjectProxy<
       }
     }
 
-    if (this.parent && Reflect.has(this.parent, p)) {
-      Reflect.getOwnPropertyDescriptor(this.parent, p)?.set?.call(tel, value);
+    const setter = this.descriptor(p)?.set;
+    if (setter) {
+      setter.call(tel, value);
     } else {
       tel[p] = value;
     }
@@ -329,20 +369,7 @@ export class ObjectProxy<
 
   getOwnPropertyDescriptor(target: T, p: string | symbol | number) {
     if (this.hasKey(target, p)) {
-      const descriptor = Reflect.getOwnPropertyDescriptor(target, p);
-      if (descriptor?.get) {
-        return descriptor;
-      }
-      return {
-        configurable: true,
-        enumerable: true,
-        get(this: any) {
-          return Reflect.get(this, p);
-        },
-        set(value: any) {
-          Reflect.set(this, p, value);
-        },
-      };
+      return this.descriptor(p);
     }
   }
 }

@@ -62,6 +62,7 @@ export class Server {
 
     await this.context.ready;
     const sources = new Set<Source>([]);
+    let cachedSources: Record<string, Source> = {};
     const compiler = await this.context.builder.createCompiler(sources);
 
     this.#server = createResolver<http.Server>();
@@ -85,6 +86,7 @@ export class Server {
 
       devServer.waitUntilValid(async () => {
         try {
+          let pathname = req.path;
           const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
           let source: Source | undefined;
           try {
@@ -100,17 +102,18 @@ export class Server {
 
           if (
             source &&
-            (![...sources]
-              .map(({ abspath }) => abspath)
-              .includes(source.abspath) ||
-              compiler.watching.invalid)
+            ![...sources].map(({ abspath }) => abspath).includes(source.abspath)
           ) {
+            if (!pathname.endsWith('/')) {
+              pathname += '/';
+            }
+
+            cachedSources[pathname] = source;
             process.stderr.write(
               chalk.whiteBright('compiling ') +
                 chalk.cyan(source.abspath) +
                 chalk.whiteBright('...\n')
             );
-            sources.clear();
             sources.add(source);
 
             devServer.invalidate(() => {
@@ -138,27 +141,37 @@ export class Server {
 
       compiler.hooks.compilation.tap('PagesServe', compilation => {
         compilation.hooks.afterProcessAssets.tap('PagesServe', async assets => {
-          for (let { path, slug } of sources) {
-            path = [...path, 'index.html'];
+          const pathnames: string[] = [];
 
-            const asset = assets[path.join('/')];
+          for (const pathname in cachedSources) {
+            let source = cachedSources[pathname];
 
-            if (asset) {
-              let newSource: Source | undefined;
-              try {
-                newSource = await this.context.sources.getSource({
-                  path: slug.split(/\//g),
-                });
-              } catch (err) {
-                newSource = await this.context.sources.getSource({
-                  path: ['404'],
-                });
-              }
-
-              if (newSource.slug !== slug) {
-                hot.publish({ action: 'reload', slug });
-              }
+            let newSource: Source | undefined;
+            try {
+              newSource = await this.context.sources.getSource({
+                path: pathname.split(/\//g).filter(x => !!x),
+              });
+            } catch (err) {
+              newSource = await this.context.sources.getSource({
+                path: ['404'],
+              });
             }
+
+            if (source.abspath !== newSource.abspath) {
+              sources.delete(cachedSources[pathname]);
+              sources.add(newSource);
+              delete cachedSources[pathname];
+              cachedSources[pathname] = newSource;
+              pathnames.push(pathname);
+            }
+          }
+
+          if (pathnames.length) {
+            devServer.invalidate(() => {
+              devServer.waitUntilValid(() => {
+                hot.publish({ action: 'reload', pathnames });
+              });
+            });
           }
         });
       });

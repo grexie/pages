@@ -39,7 +39,11 @@ export default (context: ConfigContext): any => {
 
     return next;
   });
-  ConfigSchema.set('string', 'title');
+  ConfigSchema.set('string', 'title', ({ next }) => {
+    console.info('here');
+    next = next?.replace('Grexie', 'Dad5');
+    return next;
+  });
   ConfigSchema.set<string[]>('array', 'layout');
   ConfigSchema.set('object', 'styles');
 
@@ -54,6 +58,8 @@ export default (context: ConfigContext): any => {
         to: '/',
       },
     ],
+
+    title: '',
   });
   if (typeof window !== 'undefined') {
     (window as any).defaultConfig = config;

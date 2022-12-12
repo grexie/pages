@@ -7,7 +7,7 @@ describe('ObjectSchema', () => {
     const k1 = schema.set('object', 'k1');
     k1.set<string[]>('array', 'k2');
 
-    const o1 = ObjectProxy.create(schema.create());
+    const o1 = ObjectProxy.create(schema.create({}));
     const o2 = ObjectProxy.create({ k1: { k2: ['test'] } }, o1);
     const o3 = ObjectProxy.create({}, o2);
     const o4 = ObjectProxy.create({ k1: { k2: null } }, o3);
@@ -41,7 +41,7 @@ describe('ObjectSchema', () => {
       return next;
     });
 
-    const o1 = ObjectProxy.create(schema.create({ k1: {} }));
+    const o1 = ObjectProxy.create(schema.create({}, { k1: {} }));
     const o2 = ObjectProxy.create({ k1: { k2: ['test'] } }, o1);
     const o3 = ObjectProxy.create({}, o2);
     const o4 = ObjectProxy.create({ k1: { k2: ['test4', 'test5'] } }, o3);
