@@ -28,6 +28,7 @@ export default (context: Events<BuildContext>) => {
       {
         type: 'javascript/esm',
         test: /\.tsx?$/,
+        exclude: [/(^\.?|\/\.?|\.)pages.ts$/],
         use: [
           context.builder.loader('@grexie/pages-module-loader'),
           {

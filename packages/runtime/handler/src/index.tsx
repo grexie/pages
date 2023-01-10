@@ -93,5 +93,3 @@ export const hydrate = (
     return (window as any).__PAGES_ROOT__;
   }
 };
-
-update((import.meta as any).webpackHot);

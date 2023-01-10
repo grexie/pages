@@ -16,8 +16,8 @@ export class ArraySchema<T extends Array> extends Schema<
     super(merger);
   }
 
-  merge(context: any, current: T, next: any) {
-    return this.merger({
+  merge(self: any, context: any, current: T, next: any) {
+    return this.merger.call(self, {
       merge: (current, next) => {
         if (typeof next === 'undefined') {
           return;

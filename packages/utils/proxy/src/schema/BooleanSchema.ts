@@ -8,8 +8,8 @@ export class BooleanSchema extends Schema<boolean> {
     super(merger);
   }
 
-  merge(context: any, current: boolean, next: any) {
-    return this.merger({
+  merge(self: any, context: any, current: boolean, next: any) {
+    return this.merger.call(self, {
       merge: (current, next) => {
         if (typeof next === 'undefined') {
           return next;

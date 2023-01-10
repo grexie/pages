@@ -36,13 +36,13 @@ export class StyleSheet {
       return styles.add(this.hash, this.css);
     }, []);
 
-    if (typeof window !== 'undefined') {
-      useEffect(() => {
-        return () => {
-          result();
-        };
-      }, []);
-    }
+    // if (typeof window !== 'undefined') {
+    //   useEffect(() => {
+    //     return () => {
+    //       result();
+    //     };
+    //   }, []);
+    // }
 
     return result;
   }
@@ -86,7 +86,7 @@ export const wrapStyles = (
   variables: Record<string, string> = {}
 ) => {
   const styles = new StyleSheet(hash, css, locals, variables);
-
+  debugger;
   const out = styles.classes.bind(styles) as StyleFunction;
   out.use = styles.use.bind(styles);
   out.resolve = styles.resolve.bind(styles);

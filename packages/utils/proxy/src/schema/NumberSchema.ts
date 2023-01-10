@@ -6,8 +6,8 @@ export class NumberSchema extends Schema<number> {
     super(merger);
   }
 
-  merge(context: any, current: number, next: any) {
-    return this.merger({
+  merge(self: any, context: any, current: number, next: any) {
+    return this.merger.call(self, {
       merge: (current, next) => {
         return next;
       },

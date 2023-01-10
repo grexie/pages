@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import runtime from 'react-refresh/runtime';
 import { setTimeout, clearTimeout } from 'timers';
 

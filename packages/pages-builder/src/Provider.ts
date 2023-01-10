@@ -58,10 +58,6 @@ export class Provider {
       false
     );
 
-    if (isPagesConfig) {
-      console.info(filename, path);
-    }
-
     const source = new Source({
       context: this.context,
       filename,
@@ -135,25 +131,25 @@ export class Provider {
           sources.filter(
             source => !!source && !source.isPagesConfig
           ) as Source[]
-        ).reduce(
-          (resources, resource) => ({
+        ).reduce((resources: Record<string, Source[]>, resource) => {
+          const slug = resource.path.join('/');
+          return {
             ...resources,
-            [resource.path.join('/')]: resource,
-          }),
-          {}
-        )
+            [slug]: [...(resources[slug] ?? []), resource],
+          };
+        }, {})
       );
 
       this.#configs.resolve(
         (
           sources.filter(source => !!source && source.isPagesConfig) as Source[]
-        ).reduce(
-          (resources, resource) => ({
+        ).reduce((resources: Record<string, Source[]>, resource) => {
+          const slug = resource.path.join('/');
+          return {
             ...resources,
-            [resource.path.join('/')]: resource,
-          }),
-          {}
-        )
+            [slug]: [...(resources[slug] ?? []), resource],
+          };
+        }, {})
       );
     } catch (err) {
       console.error(err);
@@ -164,7 +160,7 @@ export class Provider {
     await this.scan();
 
     let sourcesMap = await this.#sources;
-    let sources = Object.values(sourcesMap);
+    let sources = Object.values(sourcesMap).reduce((a, b) => [...a, ...b], []);
 
     if (typeof path !== 'undefined') {
       if (typeof path[0] === 'string') {
@@ -181,8 +177,7 @@ export class Provider {
       }
 
       if (slug.length === 1) {
-        const resource = sourcesMap[slug[0]];
-        sources = resource ? [resource] : [];
+        sources = sourcesMap[slug[0]] ?? [];
       } else {
         const slugMap: Record<string, boolean> = slug.reduce(
           (a, b) => ({ ...a, [b]: true }),
@@ -199,7 +194,7 @@ export class Provider {
     await this.scan();
 
     let sourcesMap = await this.#configs;
-    let sources = Object.values(sourcesMap);
+    let sources = Object.values(sourcesMap).reduce((a, b) => [...a, ...b], []);
 
     if (typeof slug !== 'undefined') {
       if (typeof slug === 'string') {

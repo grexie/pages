@@ -25,7 +25,8 @@ export default (context: Events<BuildContext>) => {
       },
       {
         type: 'javascript/esm',
-        test: /\.jsx?$/,
+        test: /\.m?jsx?$/,
+        exclude: [/(^\.?|\/\.?|\.)pages.js$/],
         include: [(filename: string) => context.sources.isRootDir(filename)],
         use: [
           context.builder.loader('@grexie/pages-module-loader'),

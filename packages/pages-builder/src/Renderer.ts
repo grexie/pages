@@ -1,5 +1,5 @@
 import { ComponentType, createElement, PropsWithChildren } from 'react';
-import { renderToPipeableStream } from 'react-dom/server';
+import { renderToPipeableStream, renderToStaticMarkup } from 'react-dom/server';
 import { Composable, compose, createComposable } from '@grexie/compose';
 import { withDocumentComponent } from '@grexie/pages';
 import { withDocument, withContext, withResourceContext } from '@grexie/pages';

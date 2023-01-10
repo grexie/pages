@@ -19,5 +19,5 @@ export abstract class Schema<
     return {};
   }
 
-  abstract merge(context: C, current: T | undefined, next: any): T | undefined;
+  abstract merge(self: any, context: C, current: T | undefined, next: any): T | undefined;
 }

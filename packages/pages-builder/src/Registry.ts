@@ -103,12 +103,13 @@ export class Registry {
   }
 
   async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    return this.merge(
+    const sources = await this.merge(
       this.defaultConfig,
       ...this.providers.map(async provider =>
         provider.listConfig({ path, slug })
       )
     );
+    return sources;
   }
 
   async get(options: GetOptions): Promise<Source | undefined> {

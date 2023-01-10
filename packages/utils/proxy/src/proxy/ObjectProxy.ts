@@ -2,6 +2,7 @@ import { SchemaSymbol } from '../schema/Schema.js';
 
 const Private = {};
 const ProxyTable = new WeakMap<any, ObjectProxy>();
+const ProxyTargetTable = new WeakMap<any, ProxiedObject<any>>();
 
 export type ProxiedObject<
   T extends Record<string | symbol | number, any> = Record<
@@ -53,6 +54,7 @@ export class ObjectProxy<
   ): ProxiedObject<T> {
     const proxy = new ObjectProxy(root, parent, path, Private);
     const instance = new Proxy(target, proxy);
+    ProxyTargetTable.set(target, instance);
     proxy.#instance = instance;
     ProxyTable.set(instance, proxy);
     return instance as ProxiedObject<T>;
@@ -84,6 +86,12 @@ export class ObjectProxy<
     instance: ProxiedObject<T>
   ): ObjectProxy<T> | undefined {
     return ProxyTable.get(instance);
+  }
+
+  static getFromTarget<T extends Record<string, any> = any>(
+    target: T
+  ): ProxiedObject<T> {
+    return ProxyTargetTable.get(target);
   }
 
   toJSON() {
@@ -212,7 +220,7 @@ export class ObjectProxy<
     }
 
     if (
-      p !== SchemaSymbol &&
+      [SchemaSymbol].includes(p as any) &&
       typeof o === 'object' &&
       !Array.isArray(o) &&
       o !== null

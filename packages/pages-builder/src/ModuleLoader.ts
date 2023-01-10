@@ -11,7 +11,7 @@ import type { BuildContext } from './BuildContext.js';
 
 const vmGlobal = { process, URL, URLSearchParams } as any;
 vmGlobal.global = vmGlobal;
-attachHotReload(vmGlobal);
+attachHotReload?.(vmGlobal);
 const vmContext = vm.createContext(vmGlobal);
 
 export enum ModuleLoaderType {
