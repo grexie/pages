@@ -119,9 +119,6 @@
       "path": "packages/webpack/resources-plugin"
     },
     {
-      "path": "packages/webpack/ssr-loader"
-    },
-    {
       "path": "packages/webpack/style-loader"
     },
     {

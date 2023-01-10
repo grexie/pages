@@ -1,17 +1,12 @@
 import { Source, BuildContext, Provider } from '@grexie/pages-builder';
-import webpack, { sources, web } from 'webpack';
+import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { Renderer } from '@grexie/pages-builder';
 import { WritableBuffer } from '@grexie/stream';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 import { Config, Mapping, NormalizedMapping } from '@grexie/pages';
-import { ObjectProxy } from '@grexie/proxy';
-import { compilation } from 'webpack';
 import { SSRBabelPlugin } from './babel.js';
 import { transformAsync } from '@babel/core';
-import { compiler } from 'webpack';
-import { hash } from '@grexie/hash-object';
 
 const { RawSource } = webpack.sources;
 
