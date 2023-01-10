@@ -30,6 +30,10 @@ import { PluginContext, Plugin, PluginHandler } from './PluginContext.js';
 import { ICache } from './Cache.js';
 import webpack from 'webpack';
 import { Renderer } from './Renderer.js';
+import { Provider } from './Provider.js';
+
+const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
 
 export interface ChildBuildOptions {
   providers: ProviderConfig[];
@@ -134,14 +138,6 @@ export class SourceResolver {
     });
   }
 
-  addMapping(mapping: NormalizedMapping, sources: SourceResolver) {
-    // this.mappings[mapping.to] = sources;
-  }
-
-  removeMapping(mapping: NormalizedMapping) {
-    // delete this.mappings[mapping.to];
-  }
-
   isRootDir(value: string): boolean {
     let { rootDir } = this.context;
     if (rootDir[rootDir.length - 1] !== '/') {
@@ -194,13 +190,26 @@ export class SourceResolver {
     let out = [];
 
     while ((el = stack.shift())) {
-      const result = await el.context.registry.get({ path });
-      if (result) {
-        return result;
-      }
+      out.push(...(await el.context.registry.list({ path })));
     }
 
-    throw new Error(`unable to resolve ${JSON.stringify(path.join('/'))}`);
+    if (!out.length) {
+      throw new Error(`unable to resolve ${JSON.stringify(path.join('/'))}`);
+    }
+
+    out.sort((a, b) => {
+      if (a.priority > b.priority) {
+        return -1;
+      }
+
+      if (a.priority < b.priority) {
+        return 1;
+      }
+
+      return 0;
+    });
+
+    return out[0];
   }
 
   lookupMapping(path: string[]): SourceResolver | undefined {
@@ -226,22 +235,26 @@ export class SourceResolver {
   }
 
   lookupMappingFrom(filename: string): SourceResolver | undefined {
-    const from = this.context.rootDir;
-
-    if (from && filename.startsWith(from)) {
-      return this;
-    }
-
     for (const sources of this.children) {
       const result = sources.lookupMappingFrom(filename);
       if (result) {
         return result;
       }
     }
+
+    const from = this.context.rootDir;
+
+    if (from && filename.startsWith(from)) {
+      return this;
+    }
   }
 
   async resolve({ context, request }: { context: string[]; request: string }) {
     let path: string[];
+
+    // if (/layouts\/main/.test(request)) {
+    //   debugger;
+    // }
 
     if (request.startsWith('/')) {
       const requestPath = request.substring(1).split(/\//g);
@@ -418,6 +431,20 @@ export class RootBuildContext extends Context implements BuildContext {
     );
 
     (global as any).PagesBuildContext = this;
+
+    this.sources.createChild(undefined as any, {
+      providers: [
+        {
+          provider: Provider,
+          rootDir: path.resolve(__dirname, 'defaults'),
+          priority: -Infinity,
+        },
+      ],
+      rootDir: path.resolve(__dirname, 'defaults'),
+    });
+    this.resolverConfig.forceCompileRoots.push(
+      path.resolve(__dirname, 'defaults')
+    );
   }
 
   get defaultFiles() {
@@ -624,10 +651,9 @@ class ChildBuildContext extends Context implements BuildContext {
     this.parent.sources.children.add(this.sources);
     if (mapping) {
       this.mapping = mapping;
-      this.parent.sources.addMapping(mapping, this.sources);
     }
     this.compilation = compilation;
-    (compilation as any).pagesContext = this;
+    // (compilation as any)?.pagesContext = this;
     this.rootDir = rootDir;
     this.registry = new Registry(this);
     for (const { provider, ...config } of providers ?? []) {
@@ -646,8 +672,5 @@ class ChildBuildContext extends Context implements BuildContext {
 
   dispose(): void {
     this.parent.sources.children.delete(this.sources);
-    if (this.mapping) {
-      this.parent.sources.removeMapping(this.mapping);
-    }
   }
 }

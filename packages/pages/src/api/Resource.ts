@@ -1,4 +1,5 @@
 import { Config } from './Config.js';
+import { Context } from './Context.js';
 
 export type ResourceMetadata = Record<string, any> & { type?: string };
 
@@ -40,11 +41,11 @@ export class Resource<
       return { code: '' };
     } else {
       return {
-        code: `export const resource = {
+        code: `export const resource = (context) => ({
         path: ${JSON.stringify(this.path)},
         slug: ${JSON.stringify(this.slug)},
         config: ${serializeConfig(JSON.stringify(this.config, null, 2))}
-      }`,
+      })`,
       };
     }
   }
@@ -72,12 +73,30 @@ export class ResourceContext {
   readonly parent?: ResourceContext;
   readonly #children: ResourceContext[] = [];
   #resource?: Resource;
+  #resources = new WeakMap<
+    (context: any) => Resource,
+    WeakMap<any, Resource>
+  >();
 
   constructor(parent?: ResourceContext) {
     this.parent = parent;
     if (parent) {
       parent.#children.push(this);
     }
+  }
+
+  createResource<T extends object = Context>(
+    resourceFactory: (context: T) => Resource,
+    context: T
+  ) {
+    if (!this.#resources.has(resourceFactory)) {
+      this.#resources.set(resourceFactory, new WeakMap<T, Resource>());
+    }
+    const table = this.#resources.get(resourceFactory)!;
+    if (!table.has(context)) {
+      table.set(context, resourceFactory(context));
+    }
+    return table.get(context)!;
   }
 
   get root() {

@@ -22,6 +22,7 @@ export interface ProviderOptions {
   exclude?: string[];
   extensions?: string[];
   configExtensions?: string[];
+  priority?: number;
 }
 
 export type ProviderConstructor<O extends ProviderOptions> = new (
@@ -71,37 +72,44 @@ export class Registry {
     this.defaultConfig = new Source({
       context,
       filename: '@grexie/pages/defaults.pages',
-      path: [],
+      path: ['.pages'],
+      priority: -Infinity,
+      isPagesConfig: true,
     });
   }
 
+  async merge(
+    ...list: (Promise<Source[]> | Promise<Source> | Source[] | Source)[]
+  ): Promise<Source[]> {
+    const resolved: Source[] = [];
+    for (let item of list) {
+      item = await item;
+      if (!Array.isArray(item)) {
+        item = [item];
+      }
+
+      for (const source of item) {
+        resolved.push(source);
+      }
+    }
+    resolved.sort((a, b) => a.priority - b.priority);
+    return resolved;
+  }
+
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    return Array.from(
-      new Set(
-        (
-          await Promise.all(
-            this.providers.map(async provider => provider.list({ path, slug }))
-          )
-        ).reduce((a, b) => [...a, ...b], [])
-      )
+    return this.merge(
+      ...this.providers.map(async provider => provider.list({ path, slug }))
     );
   }
 
   async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    return [
+    const sources = await this.merge(
       this.defaultConfig,
-      ...Array.from(
-        new Set(
-          (
-            await Promise.all(
-              this.providers.map(async provider =>
-                provider.listConfig({ path, slug })
-              )
-            )
-          ).reduce((a, b) => [...a, ...b], [])
-        )
-      ),
-    ];
+      ...this.providers.map(async provider =>
+        provider.listConfig({ path, slug })
+      )
+    );
+    return sources;
   }
 
   async get(options: GetOptions): Promise<Source | undefined> {

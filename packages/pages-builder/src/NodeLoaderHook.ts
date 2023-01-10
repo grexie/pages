@@ -1,4 +1,4 @@
-import type { RootBuildContext } from './BuildContext.js';
+import { builtinModules } from 'module';
 import type { ModuleLoader } from './ModuleLoader.js';
 import enhancedResolve from 'enhanced-resolve';
 import path from 'path';
@@ -13,7 +13,7 @@ const NODE_PATH = process.env.NODE_PATH?.split(/[:;]/g) ?? [
 
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
-  mainFields: ['module', 'main'],
+  mainFields: ['main', 'module'],
   conditionNames: ['node', 'import', 'default'],
   modules: NODE_PATH,
   fullySpecified: false,
@@ -25,6 +25,10 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
   next
 ) => {
   const loader = (global as any).PagesModuleLoader as ModuleLoader;
+
+  if (specifier.startsWith('node:') || builtinModules.includes(specifier)) {
+    return next(specifier, context);
+  }
 
   if (loader) {
     const rootDir = new URL('file://');
@@ -51,25 +55,27 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
 
   try {
     const { parentURL = baseUrl } = context;
-    return await new Promise<{ url: string; shortCircuit?: boolean }>(
-      (resolve, reject) =>
-        resolver.resolve(
-          {},
-          path.dirname(new URL(parentURL).pathname),
-          specifier,
-          {},
-          (err, result) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-
-            resolve({
-              url: `file://${result}`,
-              shortCircuit: true,
-            });
+    return await new Promise<{
+      url: string;
+      shortCircuit?: boolean;
+    }>((resolve, reject) =>
+      resolver.resolve(
+        {},
+        path.dirname(new URL(parentURL).pathname),
+        specifier.startsWith('file:') ? new URL(specifier).pathname : specifier,
+        {},
+        (err, result, request) => {
+          if (err) {
+            reject(err);
+            return;
           }
-        )
+
+          resolve({
+            url: `file://${result}`,
+            shortCircuit: true,
+          });
+        }
+      )
     );
   } catch (err) {
     return await next(specifier, context);

@@ -1,3 +1,4 @@
+import { Context } from './Context.js';
 import type { Resource, ResourceMetadata } from './Resource.js';
 
 export type NormalizedMapping = {
@@ -13,4 +14,10 @@ export type Mapping =
 export interface Config<M extends ResourceMetadata = any>
   extends Record<string, any> {
   metadata: M;
+}
+
+export interface ConfigContext {
+  pages: Context;
+  filename: string;
+  dirname: string;
 }

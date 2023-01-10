@@ -11,6 +11,7 @@ import reactRefreshPlugin from 'react-refresh/babel';
 import { offsetLines } from '@grexie/source-maps';
 import { createComposable } from '@grexie/compose';
 import webpack from 'webpack';
+
 interface ModuleLoaderOptions {
   context: BuildContext;
   handler?: string;
@@ -42,11 +43,16 @@ export default async function ModuleLoader(
 
   try {
     let path = context.builder.filenameToPath(this.resourcePath);
+    const source = await context.sources.getSource({ path });
+    context = source.context;
 
     const createHandler = async () => {
       let handlerModule: InstantiatedModule;
       if (typeof options.handler === 'string') {
-        handlerModule = await modules.requireModule(__dirname, options.handler);
+        handlerModule = await modules.requireModule(
+          _path.dirname(this.resourcePath),
+          options.handler
+        );
       } else {
         handlerModule = await modules.createModule(
           _path.dirname(this.resourcePath),
@@ -72,18 +78,31 @@ export default async function ModuleLoader(
     });
 
     const handler = handlerModule.exports as Handler;
-    const configPromise = configModule.create({ metadata: {} });
+
+    const configPromise = configModule.create(
+      { metadata: {} },
+      {
+        context,
+        filename: this.resourcePath,
+        dirname: _path.dirname(this.resourcePath),
+      }
+    );
 
     const config = await configPromise;
 
     let resource: Resource | undefined = undefined;
+
+    let filename = _path.relative(context.root.rootDir, this.resourcePath);
+    if (!filename.startsWith('../')) {
+      filename = `./${filename}`;
+    }
 
     const sourceContext = context.createSourceContext({
       compilation: this._compilation!,
       context,
       module: handlerModule,
       content,
-      filename: this.resourcePath,
+      filename,
       path,
       configModule,
       config,
@@ -111,6 +130,7 @@ export default async function ModuleLoader(
           _path.dirname(this.resourcePath),
           module.filename
         );
+
         if (!relpath.startsWith('../')) {
           relpath = './' + relpath;
         }
@@ -288,7 +308,7 @@ export default async function ModuleLoader(
 
       const references = await Promise.all(
         requests.map(async request =>
-          modules.resolver.resolve(this.context, request)
+          modules.resolver.resolve(_path.dirname(this.resourcePath), request)
         )
       );
       references
@@ -323,7 +343,7 @@ export default async function ModuleLoader(
 
       const references = await Promise.all(
         requests.map(async request =>
-          modules.resolver.resolve(this.context, request)
+          modules.resolver.resolve(_path.dirname(this.resourcePath), request)
         )
       );
       references
@@ -371,8 +391,6 @@ export default async function ModuleLoader(
       }
       ${this.hot ? hmrFooter : ''}
     `;
-
-      // this._compilation?.warnings.push(header + compiled!.code! + footer);
 
       callback(
         null,

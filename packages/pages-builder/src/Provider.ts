@@ -13,20 +13,23 @@ export class Provider {
   readonly rootDir: string;
   readonly parentRootDir: string;
   readonly basePath: string[];
+  priority: number;
   #scanning: boolean = false;
-  #sources: ResolvablePromise<Record<string, Source>>;
-  #configs: ResolvablePromise<Record<string, Source>>;
+  #sources: ResolvablePromise<Record<string, Source[]>>;
+  #configs: ResolvablePromise<Record<string, Source[]>>;
 
   constructor({
     context,
     rootDir = context.rootDir,
     parentRootDir = context.rootDir,
     basePath = [],
+    priority = 0,
   }: ProviderOptions) {
     this.context = context;
     this.parentRootDir = parentRootDir;
     this.rootDir = rootDir;
     this.basePath = basePath;
+    this.priority = priority;
 
     this.#sources = createResolver();
     this.#configs = createResolver();
@@ -36,17 +39,31 @@ export class Provider {
     filename: string,
     rootDir: string
   ): Promise<Source | undefined> {
-    let path = this.context.builder.filenameToPath(filename);
+    let path = this.context.builder.filenameToPath(
+      _path.resolve(rootDir, filename),
+      rootDir
+    );
+    path.unshift(...this.basePath);
 
-    filename = _path.relative(this.context.root.rootDir, filename);
+    filename = _path.relative(
+      this.context.root.rootDir,
+      _path.resolve(this.rootDir, filename)
+    );
     if (!filename.startsWith('../')) {
       filename = `./${filename}`;
     }
+
+    const isPagesConfig = this.context.providerConfig.configExtensions?.reduce(
+      (a, b) => a || filename.endsWith(b),
+      false
+    );
 
     const source = new Source({
       context: this.context,
       filename,
       path,
+      isPagesConfig,
+      priority: this.priority,
     });
 
     return source;
@@ -105,10 +122,7 @@ export class Provider {
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>
-          this.create(
-            _path.resolve(this.rootDir, filename),
-            this.context.root.rootDir
-          )
+          this.create(filename, this.context.root.rootDir)
         )
       );
 
@@ -117,25 +131,25 @@ export class Provider {
           sources.filter(
             source => !!source && !source.isPagesConfig
           ) as Source[]
-        ).reduce(
-          (resources, resource) => ({
+        ).reduce((resources: Record<string, Source[]>, resource) => {
+          const slug = resource.path.join('/');
+          return {
             ...resources,
-            [resource.path.join('/')]: resource,
-          }),
-          {}
-        )
+            [slug]: [...(resources[slug] ?? []), resource],
+          };
+        }, {})
       );
 
       this.#configs.resolve(
         (
           sources.filter(source => !!source && source.isPagesConfig) as Source[]
-        ).reduce(
-          (resources, resource) => ({
+        ).reduce((resources: Record<string, Source[]>, resource) => {
+          const slug = resource.path.join('/');
+          return {
             ...resources,
-            [resource.path.join('/')]: resource,
-          }),
-          {}
-        )
+            [slug]: [...(resources[slug] ?? []), resource],
+          };
+        }, {})
       );
     } catch (err) {
       console.error(err);
@@ -143,10 +157,10 @@ export class Provider {
   }
 
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    this.scan();
+    await this.scan();
 
     let sourcesMap = await this.#sources;
-    let sources = Object.values(sourcesMap);
+    let sources = Object.values(sourcesMap).reduce((a, b) => [...a, ...b], []);
 
     if (typeof path !== 'undefined') {
       if (typeof path[0] === 'string') {
@@ -163,8 +177,7 @@ export class Provider {
       }
 
       if (slug.length === 1) {
-        const resource = sourcesMap[slug[0]];
-        sources = resource ? [resource] : [];
+        sources = sourcesMap[slug[0]] ?? [];
       } else {
         const slugMap: Record<string, boolean> = slug.reduce(
           (a, b) => ({ ...a, [b]: true }),
@@ -178,10 +191,10 @@ export class Provider {
   }
 
   async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    this.scan();
+    await this.scan();
 
     let sourcesMap = await this.#configs;
-    let sources = Object.values(sourcesMap);
+    let sources = Object.values(sourcesMap).reduce((a, b) => [...a, ...b], []);
 
     if (typeof slug !== 'undefined') {
       if (typeof slug === 'string') {

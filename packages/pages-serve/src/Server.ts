@@ -61,12 +61,12 @@ export class Server {
     }
 
     await this.context.ready;
-    const initialSources = await this.context.registry.list({ slug: '' });
-    const sources = new Set<Source>(initialSources);
+    const sources = new Set<Source>([]);
+    let cachedSources: Record<string, Source> = {};
     const compiler = await this.context.builder.createCompiler(sources);
 
     this.#server = createResolver<http.Server>();
-    // const handler = new RequestHandler(this.context);
+
     const app = express();
 
     await this.#events.emit(EventPhase.before, 'routes', app);
@@ -79,44 +79,106 @@ export class Server {
     });
 
     app.use(async (req, res, next) => {
-      try {
-        const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
-        const source = await this.context.registry.get({
-          slug,
-        });
-        if (source && (!sources.has(source) || compiler.watching.invalid)) {
-          process.stderr.write(
-            chalk.whiteBright('compiling ') +
-              chalk.cyan(source.filename) +
-              chalk.whiteBright('...\n')
-          );
-          sources.clear();
-          sources.add(source);
+      if (!req.headers.accept?.split(/,/g).includes('text/html')) {
+        next();
+        return;
+      }
 
-          devServer.invalidate(() => {
+      devServer.waitUntilValid(async () => {
+        try {
+          let pathname = req.path;
+          const slug = req.path.replace(/^\/|\/$/g, '').replace(/\/+/g, '/');
+          let source: Source | undefined;
+          try {
+            source = await this.context.sources.getSource({
+              path: slug.split(/\//g),
+            });
+          } catch (err) {
+            req.url = '/404/';
+            source = await this.context.sources.getSource({
+              path: ['404'],
+            });
+          }
+
+          if (
+            source &&
+            ![...sources].map(({ abspath }) => abspath).includes(source.abspath)
+          ) {
+            if (!pathname.endsWith('/')) {
+              pathname += '/';
+            }
+
+            cachedSources[pathname] = source;
+            process.stderr.write(
+              chalk.whiteBright('compiling ') +
+                chalk.cyan(source.abspath) +
+                chalk.whiteBright('...\n')
+            );
+            sources.add(source);
+
+            devServer.invalidate(() => {
+              setImmediate(() => {
+                devServer.waitUntilValid(() => next());
+              });
+            });
+          } else {
             setImmediate(() => {
               devServer.waitUntilValid(() => next());
             });
-          });
-        } else {
-          setImmediate(() => {
-            devServer.waitUntilValid(() => next());
-          });
+          }
+        } catch (err) {
+          next();
         }
-      } catch (err) {
-        next(err);
-      }
+      });
     });
 
     app.use(devServer);
 
     if (process.env.WEBPACK_HOT === 'true') {
-      app.use(
-        WebpackHotMiddleware(compiler, {
-          path: '/__webpack/hmr',
-        })
-      );
+      const hot = WebpackHotMiddleware(compiler, {
+        path: '/__webpack/hmr',
+      });
+
+      compiler.hooks.compilation.tap('PagesServe', compilation => {
+        compilation.hooks.afterProcessAssets.tap('PagesServe', async assets => {
+          const pathnames: string[] = [];
+
+          for (const pathname in cachedSources) {
+            let source = cachedSources[pathname];
+
+            let newSource: Source | undefined;
+            try {
+              newSource = await this.context.sources.getSource({
+                path: pathname.split(/\//g).filter(x => !!x),
+              });
+            } catch (err) {
+              newSource = await this.context.sources.getSource({
+                path: ['404'],
+              });
+            }
+
+            if (source.abspath !== newSource.abspath) {
+              sources.delete(cachedSources[pathname]);
+              sources.add(newSource);
+              delete cachedSources[pathname];
+              cachedSources[pathname] = newSource;
+              pathnames.push(pathname);
+            }
+          }
+
+          if (pathnames.length) {
+            devServer.invalidate(() => {
+              devServer.waitUntilValid(() => {
+                hot.publish({ action: 'reload', pathnames });
+              });
+            });
+          }
+        });
+      });
+
+      app.use(hot);
     }
+
     await this.#events.emit(EventPhase.after, 'routes', app, express);
 
     const server = http.createServer(app);

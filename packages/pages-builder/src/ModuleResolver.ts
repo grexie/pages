@@ -106,7 +106,7 @@ export class ModuleResolver {
                   request,
                 })
                 .then(({ abspath }) => {
-                  return this.#resolve(context, abspath, true);
+                  return this.#resolve(path.dirname(abspath), abspath, true);
                 })
                 .then(resolve, reject);
 
@@ -206,7 +206,6 @@ export class ModuleResolver {
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
-      console.info(err);
       return this.#buildImport(request, { builtin: true });
     }
 

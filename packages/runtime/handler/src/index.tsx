@@ -18,13 +18,12 @@ import type { Handler } from '@grexie/pages-builder';
 import { update } from '@grexie/pages-runtime-hmr';
 
 export const wrapHandler = (
-  resource: Resource,
+  resource: (context: Context) => Resource,
   handler: Handler,
   ...composables: any[]
 ) => {
   return compose(...composables, withResource({ resource }), handler as any);
 };
-
 export interface RenderHooks {
   beforeRender: Composable[];
   beforeDocument: Composable[];
@@ -33,7 +32,7 @@ export interface RenderHooks {
 }
 
 export const hydrate = (
-  resource: Resource,
+  resourceFactory: (context: Context) => Resource,
   handler: any,
   hooks: RenderHooks
 ) => {
@@ -46,13 +45,15 @@ export const hydrate = (
     return;
   }
 
+  const context = new Context({});
+  const resourceContext = new ResourceContext();
+  const resource = resourceContext.createResource(resourceFactory, context);
+
   if (data.slug !== resource.slug) {
     return;
   }
 
   const styles = new StylesContext();
-  const context = new Context({});
-  const resourceContext = new ResourceContext();
 
   const Component = compose(
     ...hooks.beforeRender,
@@ -92,5 +93,3 @@ export const hydrate = (
     return (window as any).__PAGES_ROOT__;
   }
 };
-
-update((import.meta as any).webpackHot);

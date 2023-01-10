@@ -6,7 +6,8 @@ export type WithSchema<T extends Object> = T & { [SchemaSymbol]: Schema };
 
 export abstract class Schema<
   T = any,
-  O extends MergerOptions<T> = MergerOptions<T>
+  C = any,
+  O extends MergerOptions<T, C> = MergerOptions<T, C>
 > {
   protected readonly merger;
 
@@ -18,5 +19,5 @@ export abstract class Schema<
     return {};
   }
 
-  abstract merge(current: T | undefined, next: any): T | undefined;
+  abstract merge(self: any, context: C, current: T | undefined, next: any): T | undefined;
 }

@@ -6,12 +6,6 @@ import 'source-map-support/register.js';
 
 const server = new Server({
   port: Number(process.env.PORT ?? 3000),
-  providers: [
-    {
-      provider: Provider,
-      exclude: ['assets/**'],
-    },
-  ],
   fs,
   cacheKey: 'serve',
 });

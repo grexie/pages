@@ -11,7 +11,7 @@ import type { BuildContext } from './BuildContext.js';
 
 const vmGlobal = { process, URL, URLSearchParams } as any;
 vmGlobal.global = vmGlobal;
-attachHotReload(vmGlobal);
+attachHotReload?.(vmGlobal);
 const vmContext = vm.createContext(vmGlobal);
 
 export enum ModuleLoaderType {
@@ -154,6 +154,9 @@ export abstract class ModuleLoader {
     this.modules[reference.filename] = resolver;
 
     try {
+      if (!context) {
+        throw new Error('invalid context');
+      }
       const dependency = new webpack.dependencies.ModuleDependency(request);
 
       const webpackModule = await new Promise<webpack.Module>(
@@ -210,6 +213,7 @@ export abstract class ModuleLoader {
     try {
       (global as any).PagesModuleLoader = this;
       const exports = await import(reference.filename);
+      // delete (global as any).PagesModuleLoader;
 
       let usedExports: string[];
 
@@ -248,7 +252,7 @@ export abstract class ModuleLoader {
       await vmModule.evaluate();
 
       resolver.resolve({
-        context,
+        context: path.dirname(reference.filename),
         filename: reference.filename,
         source: '',
         vmModule,

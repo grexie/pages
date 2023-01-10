@@ -12,8 +12,6 @@ export default (context: Events<BuildContext>) => {
         type: 'javascript/esm',
         test: /\.pages\.([mc]?js)$/,
         use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-ssr-loader'),
           '@grexie/pages-config-loader',
           {
             loader: 'babel-loader',
@@ -27,11 +25,10 @@ export default (context: Events<BuildContext>) => {
       },
       {
         type: 'javascript/esm',
-        test: /\.jsx?$/,
+        test: /\.m?jsx?$/,
+        exclude: [/(^\.?|\/\.?|\.)pages.js$/],
         include: [(filename: string) => context.sources.isRootDir(filename)],
         use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-ssr-loader'),
           context.builder.loader('@grexie/pages-module-loader'),
           {
             loader: 'babel-loader',
@@ -52,12 +49,6 @@ export default (context: Events<BuildContext>) => {
             },
           },
         ],
-      },
-      {
-        type: 'javascript/auto',
-        test: /\.(js|jsx|mjs|cjs)$/,
-        exclude: [(filename: string) => context.sources.isRootDir(filename)],
-        use: ['@grexie/pages-ssr-loader'],
       }
     );
   });

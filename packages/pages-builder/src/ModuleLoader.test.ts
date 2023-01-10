@@ -17,7 +17,7 @@ describe('ModuleLoader', () => {
     builder.addConfig('.pages.yml', {});
     const { stats, result } = await builder.build(async compilation => {
       const modules = builder.getModuleContext(compilation);
-      return await modules.requireModule('/', '/test');
+      return await modules.requireModule('/pages', '/test');
     });
 
     expect(stats.hasErrors()).toBeFalsy();

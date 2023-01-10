@@ -7,22 +7,37 @@ export interface SourceOptions {
   context: BuildContext;
   filename: string;
   path: string[];
+  priority?: number;
+  isPagesConfig?: boolean;
 }
 
 export class Source extends EventEmitter {
   readonly context: BuildContext;
   readonly filename: string;
   readonly #path: string[];
+  readonly priority: number;
+  readonly #isPagesConfig?: boolean;
 
-  constructor({ context, filename, path }: SourceOptions) {
+  constructor({
+    context,
+    filename,
+    path,
+    priority = 0,
+    isPagesConfig,
+  }: SourceOptions) {
     super();
     this.context = context;
     this.filename = filename;
+    this.priority = priority;
     this.#path = path;
+    this.#isPagesConfig = isPagesConfig;
   }
 
   get isPagesConfig() {
-    const lastPath = this.#path[this.#path.length - 1];
+    if (typeof this.#isPagesConfig !== 'undefined') {
+      return this.#isPagesConfig;
+    }
+
     return (
       this.context.providerConfig.configExtensions?.reduce(
         (a, b) => a || this.filename.endsWith(b),
@@ -69,6 +84,10 @@ export class Source extends EventEmitter {
   }
 
   get dirname() {
-    return path.dirname(this.abspath);
+    if (!(this.filename.startsWith('./') || this.filename.startsWith('../'))) {
+      return this.context.rootDir;
+    } else {
+      return path.dirname(this.abspath);
+    }
   }
 }

@@ -1,13 +1,15 @@
-import { Config } from '@grexie/pages';
-import { ObjectProxy } from '@grexie/proxy';
+import { Config, ConfigContext } from '@grexie/pages';
+import { ObjectProxy, SchemaSymbol } from '@grexie/proxy';
 
 export const wrapConfig = (config: (() => any) | any) => {
-  if (typeof config === 'function') {
-    config = config();
-  }
+  return (context?: ConfigContext, parent?: Config) => {
+    let _config = config;
+    if (typeof _config === 'function') {
+      _config = _config(context);
+    }
 
-  return (parent?: Config) => {
-    const proxy = ObjectProxy.create<Config>(config, parent);
+    (parent as any)?.[SchemaSymbol].setContext(_config, context);
+    const proxy = ObjectProxy.create<Config>(_config, parent);
     return proxy;
   };
 };

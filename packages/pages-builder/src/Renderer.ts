@@ -1,9 +1,9 @@
 import { ComponentType, createElement, PropsWithChildren } from 'react';
-import { renderToPipeableStream } from 'react-dom/server';
+import { renderToPipeableStream, renderToStaticMarkup } from 'react-dom/server';
 import { Composable, compose, createComposable } from '@grexie/compose';
 import { withDocumentComponent } from '@grexie/pages';
 import { withDocument, withContext, withResourceContext } from '@grexie/pages';
-import { Resource, ResourceContext } from '@grexie/pages/api';
+import { Context, Resource, ResourceContext } from '@grexie/pages/api';
 import type { BuildContext } from './BuildContext.js';
 import { withStyles, StylesContext } from '@grexie/pages';
 import { withScripts } from '@grexie/pages';
@@ -21,7 +21,7 @@ export class Renderer {
 
   async render<T extends WritableStream<Buffer>>(
     writable: T,
-    resource: Resource,
+    resource: (context: Context) => Resource,
     scripts: string[],
     ...composables: [...Composable[], ComponentType]
   ): Promise<T> {
@@ -57,7 +57,10 @@ export class Renderer {
       withContext({ context: this.context }),
       withResourceContext({ resourceContext }),
       withStyles({ styles }),
-      withDocument({ resourceContext, resource }),
+      withDocument({
+        resourceContext,
+        resource: resourceContext.createResource(resource, this.context)!,
+      }),
       withScripts({ scripts }),
       ...beforeDocument,
       withDocumentComponent,

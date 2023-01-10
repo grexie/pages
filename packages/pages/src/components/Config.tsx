@@ -29,7 +29,9 @@ export const RenderConfig: FC<RenderConfigProps> = ({
     }
   }
 
-  value = render?.(value);
+  if (render) {
+    value = render(value);
+  }
 
   return <>{value}</>;
 };

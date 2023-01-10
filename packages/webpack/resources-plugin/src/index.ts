@@ -1,11 +1,17 @@
 import { Source, BuildContext, Provider } from '@grexie/pages-builder';
-import webpack, { sources } from 'webpack';
+import webpack, { sources, web } from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
 import { Renderer } from '@grexie/pages-builder';
 import { WritableBuffer } from '@grexie/stream';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 import { Config, Mapping, NormalizedMapping } from '@grexie/pages';
+import { ObjectProxy } from '@grexie/proxy';
+import { compilation } from 'webpack';
+import { SSRBabelPlugin } from './babel.js';
+import { transformAsync } from '@babel/core';
+import { compiler } from 'webpack';
+import { hash } from '@grexie/hash-object';
 
 const { RawSource } = webpack.sources;
 
@@ -81,7 +87,7 @@ class SourceCompiler {
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
-        this.context.build.rootDir,
+        this.context.build.root.rootDir,
         new EntryDependency(this.source.filename),
         {
           name: this.source.slug,
@@ -101,17 +107,20 @@ class SourceCompiler {
     );
 
     compilation.fileDependencies.addAll(
-      entryModule.buildInfo.fileDependencies ?? []
+      entryModule?.buildInfo.fileDependencies ?? []
     );
     compilation.buildDependencies.addAll(
-      entryModule.buildInfo.buildDependencies ?? []
+      entryModule?.buildInfo.buildDependencies ?? []
     );
     compilation.contextDependencies.addAll(
-      entryModule.buildInfo.contextDependencies ?? []
+      entryModule?.buildInfo.contextDependencies ?? []
     );
 
     compilation.hooks.processAssets.tapPromise(
-      { name: 'SourceCompiler', stage: Infinity },
+      {
+        name: 'SourceCompiler',
+        stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+      },
       async () => {
         try {
           const files = new Set<string>();
@@ -180,7 +189,8 @@ class SourceCompiler {
 export class ResourcesPlugin {
   readonly context: BuildContext;
   readonly sources?: Set<Source>;
-
+  readonly compilations = new Set<CompilationContext>();
+  readonly mappingsSeen = new Set<string>();
   constructor({ context, sources }: ResourcesPluginOptions) {
     this.context = context;
     this.sources = sources;
@@ -197,11 +207,7 @@ export class ResourcesPlugin {
     compiler: Compiler,
     compilation: Compilation,
     parentContext: BuildContext = this.context,
-    mapping?: {
-      source: Source;
-      mapping: NormalizedMapping;
-      config: Config;
-    },
+    mapping?: NormalizedMapping,
     seen: Set<string> = new Set<string>()
   ): Promise<
     {
@@ -216,46 +222,44 @@ export class ResourcesPlugin {
           provider: Provider,
           ...(mapping
             ? {
-                rootDir: path.resolve(
-                  mapping.source.dirname,
-                  mapping.mapping.from
-                ),
-                basePath: mapping.mapping.to,
+                rootDir: mapping.from,
+                basePath: mapping.to,
               }
             : {}),
         },
       ],
-      mapping: mapping?.mapping,
-      rootDir: mapping
-        ? path.resolve(mapping.source.dirname, mapping.mapping.from)
-        : this.context.rootDir,
+      mapping: mapping,
+      rootDir: mapping ? mapping.from : this.context.rootDir,
     });
 
     let sources = [...(this.sources ?? (await thisContext.registry.list()))];
+    let configs = await thisContext.registry.listConfig();
 
     const context = new CompilationContext({
       build: thisContext,
       compilation,
     });
 
+    this.compilations.add(context);
+
     context.modules.reset();
 
     const sourceConfigs = (
       await Promise.all(
         sources.map(async source => {
-          const config = await (
-            await context.build.config.create(compilation, source.path)
-          ).create();
-
           if (seen.has(source.slug)) {
             return;
           }
 
+          seen.add(source.slug);
+
+          const config = await (
+            await context.build.config.create(compilation, source.path)
+          ).create();
+
           if (!config.render) {
             return;
           }
-
-          seen.add(source.slug);
 
           return { context, source, config };
         })
@@ -266,7 +270,33 @@ export class ResourcesPlugin {
       config: Config;
     }[];
 
-    const normalizeMapping = (mapping: Mapping): NormalizedMapping => {
+    sourceConfigs.push(
+      ...((
+        await Promise.all(
+          configs.map(async configSource => {
+            if (seen.has(`config:${configSource.abspath}`)) {
+              return;
+            }
+            seen.add(`config:${configSource.abspath}`);
+
+            const config = await (
+              await context.build.config.create(compilation, configSource.path)
+            ).create();
+
+            return { context, source: configSource, config };
+          })
+        )
+      ).filter(x => !!x) as {
+        context: CompilationContext;
+        source: Source;
+        config: Config;
+      }[])
+    );
+
+    const normalizeMapping = (
+      source: Source,
+      mapping: Mapping
+    ): NormalizedMapping => {
       if (typeof mapping === 'string') {
         const [from, to] = mapping.split(/:/g);
         mapping = { from, to };
@@ -279,22 +309,30 @@ export class ResourcesPlugin {
         mapping.to = mapping.to.filter(x => !!x);
       }
 
+      mapping.from = path.resolve(source.dirname, mapping.from);
+
       return mapping as NormalizedMapping;
     };
 
-    const mappings: {
-      source: Source;
-      config: Config;
-      mapping: NormalizedMapping;
-    }[] = [];
+    const mappings: NormalizedMapping[] = [];
     const stack = sourceConfigs.slice();
     let el: { config: Config; source: Source } | undefined;
 
+    let seenConfig = new Set<string>();
     while ((el = stack.shift())) {
-      if (el.config.mappings?.length) {
-        for (const mapping of el.config.mappings) {
-          mappings.push({ ...el, mapping: normalizeMapping(mapping) });
+      if (seenConfig.has(el.source.slug)) {
+        continue;
+      }
+      seenConfig.add(el.source.slug);
+
+      for (const mapping of el.config.mappings ?? []) {
+        const serialized = `${mapping.from}:${mapping.to}`;
+        if (this.mappingsSeen.has(serialized)) {
+          continue;
         }
+
+        this.mappingsSeen.add(serialized);
+        mappings.push(mapping);
       }
     }
 
@@ -306,9 +344,7 @@ export class ResourcesPlugin {
       }[]
     >[] = [];
     for (const mapping of mappings) {
-      thisContext.addCompilationRoot(
-        path.resolve(mapping.source.dirname, mapping.mapping.from)
-      );
+      thisContext.addCompilationRoot(mapping.from);
 
       promises.push(
         this.makeHook(
@@ -322,17 +358,27 @@ export class ResourcesPlugin {
       );
     }
 
-    compiler.hooks.afterDone.tap('ResourcesPlugin', () => {
-      thisContext.dispose();
-    });
-
     return (await Promise.all(promises)).reduce(
-      (a, b) => [...a, ...b, ...sourceConfigs],
+      (a, b) => [
+        ...a,
+        ...b,
+        ...sourceConfigs.filter(({ source }) => !source.isPagesConfig),
+      ],
       []
     );
   }
 
   apply(compiler: Compiler) {
+    compiler.hooks.watchRun.tapPromise('ResourcesPlugin', async compilation => {
+      this.compilations.forEach(({ build }) => {
+        build.dispose();
+      });
+      this.compilations.clear();
+      this.mappingsSeen.clear();
+    });
+
+    compiler.hooks.afterDone.tap('ResourcesPlugin', async () => {});
+
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(
         EntryDependency,
@@ -345,8 +391,14 @@ export class ResourcesPlugin {
         compilation
       );
 
+      const seen = new Set<string>();
       await Promise.all(
         sourceConfigs.map(async ({ context, source, config }) => {
+          if (seen.has(source.slug)) {
+            return;
+          }
+          seen.add(source.slug);
+
           const sourceCompiler = new SourceCompiler(context, source, config);
           await sourceCompiler.makeHook(
             'ResourcesPlugin',
@@ -354,6 +406,58 @@ export class ResourcesPlugin {
             compilation
           );
         })
+      );
+    });
+
+    compiler.hooks.compilation.tap('ResourcesPlugin:SSR', compilation => {
+      const hooks =
+        compiler.webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
+          compilation
+        );
+
+      hooks.chunkHash.tap('ResourcesPlugin:SSR', (chunk, hash) => {
+        hash.update('ResourcesPlugin:SSR');
+      });
+
+      compilation.hooks.processAssets.tapPromise(
+        {
+          name: 'ResourcesPlugin:SSR',
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS,
+          additionalAssets: true,
+        },
+        async assets => {
+          await Promise.all(
+            Object.keys(assets).map(async name => {
+              const asset = compilation.getAsset(name);
+
+              if (!asset || !name.endsWith('.js')) {
+                return;
+              }
+
+              const { source, map } = asset.source.sourceAndMap();
+
+              const compiled = await transformAsync(source.toString(), {
+                plugins: [SSRBabelPlugin({ context: this.context })],
+                compact: true,
+                inputSourceMap: (map as any) || false,
+                sourceMaps: !!compiler.options.devtool,
+              });
+
+              let output: webpack.sources.Source;
+              if (compiled?.map) {
+                output = new webpack.sources.SourceMapSource(
+                  compiled!.code!,
+                  asset.name,
+                  compiled!.map
+                );
+              } else {
+                output = new webpack.sources.RawSource(compiled!.code!);
+              }
+
+              compilation.updateAsset(name, output, asset.info);
+            })
+          );
+        }
       );
     });
   }

@@ -42,11 +42,7 @@ export default async function StyleLoader(
     const variables = parseVariables(css, this.resourcePath);
 
     const { locals } = styles;
-    const hash = createHash('md5')
-      .update(this.resourcePath)
-      .digest('hex')
-      .substring(0, 8);
-
+    const hash = createHash('md5').update(this.resourcePath).digest('hex');
     const chunk = `
     import { wrapStyles } from '@grexie/pages-runtime-styles';
     export default wrapStyles(${JSON.stringify(hash)}, ${JSON.stringify(
