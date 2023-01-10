@@ -85,7 +85,7 @@ export class ResourceContext {
     }
   }
 
-  createResource<T extends object = Context>(
+  createResource<T extends Context = Context>(
     resourceFactory: (context: T) => Resource,
     context: T
   ) {

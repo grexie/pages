@@ -150,6 +150,15 @@ export class SourceResolver {
       return true;
     }
 
+    if (
+      this.context.resolverConfig.forceCompileRoots.reduce(
+        (a, b) => a || value.startsWith(b),
+        false
+      )
+    ) {
+      return true;
+    }
+
     for (const resolver of this.children) {
       if (resolver.isRootDir(value)) {
         return true;
@@ -452,6 +461,7 @@ export class RootBuildContext extends Context implements BuildContext {
         new Set([...(resolver.forceCompileRoots ?? [this.rootDir])])
       ),
     };
+    this.addCompilationRoot(path.resolve(__dirname, 'defaults'));
 
     this.#readyResolver.resolve(
       PluginContext.create({
