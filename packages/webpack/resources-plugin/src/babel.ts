@@ -1,4 +1,5 @@
 import babel, { PluginObj, PluginPass } from '@babel/core';
+import type { BuildContext } from '@grexie/pages-builder';
 
 interface SSRBabelPluginOptions {
   context: BuildContext;

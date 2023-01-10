@@ -22,6 +22,7 @@ import { EventManager, EventPhase } from './EventManager.js';
 import type { Configuration as WebpackConfiguration } from 'webpack';
 import chalk from 'chalk';
 import { Source } from './Source.js';
+import { isatty } from 'tty';
 
 export type Configuration = WebpackConfiguration & {
   devServer?: webpack.WebpackOptionsNormalized['devServer'];
@@ -291,19 +292,6 @@ export class Builder {
             },
           },
       plugins: [
-        // new ProgressBarPlugin({
-        //   format: `\u001b[2J\u001b[0;0H\n${chalk.whiteBright(
-        //     '  Building...'
-        //   )}\n\n  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
-        //     ':percent'
-        //   )} ${chalk.whiteBright('(:elapseds) :msg')} `,
-        //   complete: '=',
-        //   callback: () => {
-        //     process.stderr.write('\u001b[2J\u001b[0;0H');
-        //   },
-        //   clear: true,
-        //   total: 10000,
-        // }) as any,
         new ResourcesPlugin({ context: this.context, sources }),
         new webpack.DefinePlugin({
           'process.env': `(${JSON.stringify({
@@ -312,6 +300,24 @@ export class Builder {
         }),
       ],
     };
+
+    if (process.env.PAGES_PROGRESS !== 'false' && isatty(process.stderr.fd)) {
+      config.plugins!.push(
+        new ProgressBarPlugin({
+          format: `\u001b[2J\u001b[0;0H\n${chalk.whiteBright(
+            '  Building...'
+          )}\n\n  ${chalk.bold.cyan('[:bar]')} ${chalk.bold.green(
+            ':percent'
+          )} ${chalk.whiteBright('(:elapseds) :msg')} `,
+          complete: '=',
+          callback: () => {
+            process.stderr.write('\u001b[2J\u001b[0;0H');
+          },
+          clear: true,
+          total: 10000,
+        }) as any
+      );
+    }
 
     if (hot) {
       config.devServer = config.devServer ?? {};
@@ -336,15 +342,15 @@ export class Builder {
     return config;
   }
 
-  async build(): Promise<WebpackStats> {
+  async build(sources?: Set<Source>): Promise<WebpackStats> {
     await this.context.ready;
-    const config = await this.config();
+    const config = await this.config(sources);
     return this.#builder.build({ config });
   }
 
-  async watch(): Promise<Watcher> {
+  async watch(sources?: Set<Source>): Promise<Watcher> {
     await this.context.ready;
-    const config = await this.config();
+    const config = await this.config(sources);
     return this.#builder.watch({ config });
   }
 

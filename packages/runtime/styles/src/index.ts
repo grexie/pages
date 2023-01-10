@@ -86,7 +86,7 @@ export const wrapStyles = (
   variables: Record<string, string> = {}
 ) => {
   const styles = new StyleSheet(hash, css, locals, variables);
-  debugger;
+
   const out = styles.classes.bind(styles) as StyleFunction;
   out.use = styles.use.bind(styles);
   out.resolve = styles.resolve.bind(styles);

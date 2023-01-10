@@ -82,7 +82,7 @@ export default async function ModuleLoader(
     const configPromise = configModule.create(
       { metadata: {} },
       {
-        context,
+        pages: context,
         filename: this.resourcePath,
         dirname: _path.dirname(this.resourcePath),
       }

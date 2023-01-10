@@ -1,17 +1,12 @@
 import { Source, BuildContext, Provider } from '@grexie/pages-builder';
-import webpack, { sources, web } from 'webpack';
+import webpack from 'webpack';
 import type { Compiler, Compilation } from 'webpack';
 import path from 'path';
-import { Renderer } from '@grexie/pages-builder';
 import { WritableBuffer } from '@grexie/stream';
 import EntryDependency from 'webpack/lib/dependencies/EntryDependency.js';
 import { Config, Mapping, NormalizedMapping } from '@grexie/pages';
-import { ObjectProxy } from '@grexie/proxy';
-import { compilation } from 'webpack';
 import { SSRBabelPlugin } from './babel.js';
 import { transformAsync } from '@babel/core';
-import { compiler } from 'webpack';
-import { hash } from '@grexie/hash-object';
 
 const { RawSource } = webpack.sources;
 
@@ -85,15 +80,15 @@ class SourceCompiler {
   }
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
+    const slug = await this.context.build.sources.getOutputSlug(this.source);
+
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.root.rootDir,
         new EntryDependency(this.source.filename),
         {
-          name: this.source.slug,
-          filename: this.source.slug
-            ? `${this.source.slug}/index.js`
-            : 'index.js',
+          name: slug,
+          filename: slug ? `${slug}/index.js` : 'index.js',
         },
         (err, result) => {
           if (err) {
@@ -166,7 +161,7 @@ class SourceCompiler {
           const buffer = await this.render(compilation, [...files]);
 
           compilation.emitAsset(
-            path.join(this.source.slug, 'index.html'),
+            path.join(slug, 'index.html'),
             new RawSource(buffer!)
           );
         } catch (err) {
@@ -293,27 +288,6 @@ export class ResourcesPlugin {
       }[])
     );
 
-    const normalizeMapping = (
-      source: Source,
-      mapping: Mapping
-    ): NormalizedMapping => {
-      if (typeof mapping === 'string') {
-        const [from, to] = mapping.split(/:/g);
-        mapping = { from, to };
-      } else {
-        mapping = { ...mapping };
-      }
-
-      if (typeof mapping.to === 'string') {
-        mapping.to = mapping.to.split(/\//g);
-        mapping.to = mapping.to.filter(x => !!x);
-      }
-
-      mapping.from = path.resolve(source.dirname, mapping.from);
-
-      return mapping as NormalizedMapping;
-    };
-
     const mappings: NormalizedMapping[] = [];
     const stack = sourceConfigs.slice();
     let el: { config: Config; source: Source } | undefined;
@@ -376,8 +350,6 @@ export class ResourcesPlugin {
       this.compilations.clear();
       this.mappingsSeen.clear();
     });
-
-    compiler.hooks.afterDone.tap('ResourcesPlugin', async () => {});
 
     compiler.hooks.make.tapPromise('ResourcesPlugin', async compilation => {
       compilation.dependencyFactories.set(

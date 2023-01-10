@@ -13,6 +13,7 @@ import WebpackDevMiddleware from 'webpack-dev-middleware';
 import express from 'express';
 import path from 'path';
 import chalk from 'chalk';
+import webpack from 'webpack';
 
 export interface ServerOptions extends BuildContextOptions {
   port?: number;
@@ -73,7 +74,7 @@ export class Server {
 
     const devServer = WebpackDevMiddleware(compiler, {
       publicPath: compiler.options.output.publicPath,
-      writeToDisk: false,
+      writeToDisk: true,
       serverSideRender: false,
       stats: 'errors-warnings',
     });
@@ -83,6 +84,20 @@ export class Server {
         next();
         return;
       }
+
+      const handleStats = (
+        stats: webpack.Stats | webpack.MultiStats | void
+      ) => {
+        if ((stats as webpack.MultiStats).hasErrors()) {
+          devServer.invalidate(() => {
+            setImmediate(() => {
+              devServer.waitUntilValid(() => next());
+            });
+          });
+        } else {
+          next();
+        }
+      };
 
       devServer.waitUntilValid(async () => {
         try {
@@ -118,16 +133,16 @@ export class Server {
 
             devServer.invalidate(() => {
               setImmediate(() => {
-                devServer.waitUntilValid(() => next());
+                devServer.waitUntilValid(handleStats);
               });
             });
           } else {
             setImmediate(() => {
-              devServer.waitUntilValid(() => next());
+              devServer.waitUntilValid(handleStats);
             });
           }
         } catch (err) {
-          next();
+          next(err);
         }
       });
     });
@@ -138,6 +153,18 @@ export class Server {
       const hot = WebpackHotMiddleware(compiler, {
         path: '/__webpack/hmr',
       });
+
+      // compiler.hooks.afterCompile.tap('PagesServe', compilation => {
+      //   if (compilation.errors.length) {
+      //     setTimeout(() => {
+      //       console.info('blocked', compiler.watching.blocked);
+      //       console.info('closed', compiler.watching.closed);
+      //       console.info('suspended', compiler.watching.suspended);
+      //       console.info('files', compiler.watching.watcher?.)
+      //       console.info(compiler.watching.resume());
+      //     }, 4000);
+      //   }
+      // });
 
       compiler.hooks.compilation.tap('PagesServe', compilation => {
         compilation.hooks.afterProcessAssets.tap('PagesServe', async assets => {

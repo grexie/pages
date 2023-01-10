@@ -179,6 +179,46 @@ export class SourceResolver {
     return out;
   }
 
+  async getOutputSlug(source: Source): Promise<string> {
+    // const sources = this.lookupMapping(source.path);
+    // const { mapping }: { mapping?: NormalizedMapping } = sources?.context ?? {};
+    // if (!sources || !mapping) {
+    //   throw new Error('unable to find mapping for source');
+    // }
+    // const relativePath = path.resolve(
+    //   ...mapping.to,
+    //   path.relative(mapping.from, source.filename)
+    // );
+    // console.info(relativePath);
+    return source.slug;
+  }
+
+  async getAllSources(): Promise<Source[]> {
+    let stack: SourceResolver[] = [
+      ...this.ancestors,
+      this,
+      ...this.descendants,
+    ];
+    let el: SourceResolver | undefined;
+
+    let out: Source[] = [];
+
+    while ((el = stack.shift())) {
+      for (const source of await el.context.registry.list()) {
+        const existingSource = out.find(({ slug }) => slug === source.slug);
+        if (existingSource) {
+          if (existingSource.priority < source.priority) {
+            out.splice(out.indexOf(existingSource), 1, source);
+          }
+        } else {
+          out.push(source);
+        }
+      }
+    }
+
+    return out;
+  }
+
   async getSource({ path }: { path: string[] }): Promise<Source> {
     let stack: SourceResolver[] = [
       ...this.ancestors,
@@ -251,10 +291,6 @@ export class SourceResolver {
 
   async resolve({ context, request }: { context: string[]; request: string }) {
     let path: string[];
-
-    // if (/layouts\/main/.test(request)) {
-    //   debugger;
-    // }
 
     if (request.startsWith('/')) {
       const requestPath = request.substring(1).split(/\//g);

@@ -97,9 +97,16 @@ export class Registry {
   }
 
   async list({ path, slug }: ListOptions = {}): Promise<Source[]> {
-    return this.merge(
+    const list = await this.merge(
       ...this.providers.map(async provider => provider.list({ path, slug }))
     );
+
+    return list.filter(source => {
+      return (
+        this.context.root.sources.lookupMappingFrom(source.abspath) ===
+        this.context.sources
+      );
+    });
   }
 
   async listConfig({ path, slug }: ListOptions = {}): Promise<Source[]> {
