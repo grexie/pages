@@ -50,7 +50,7 @@ export default (context: ConfigContext): any => {
     /** @server */
     mappings: [
       {
-        from: (context as any).rootDir,
+        from: (context.pages as any).rootDir,
         to: '/',
       },
     ],

@@ -55,7 +55,7 @@ export class ConfigModule {
     const { default: configFactory } = exports;
     let config = configFactory(
       {
-        context: this.context,
+        pages: this.context,
         filename: this.module.filename,
         dirname: path.dirname(this.module.filename),
       },
@@ -87,13 +87,13 @@ export class ConfigModule {
       const configFactory = `__pages_config_${index}`;
 
       if (this.parent) {
-        return `${configFactory}(context, ${this.parent.serialize(
+        return `${configFactory}({ pages: context }, ${this.parent.serialize(
           context,
           false,
           index + 1
         )})`;
       } else {
-        return `${configFactory}(context)`;
+        return `${configFactory}({ pages: context })`;
       }
     }
   }

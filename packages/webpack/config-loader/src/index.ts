@@ -3,7 +3,7 @@ import type { BuildContext } from '@grexie/pages-builder';
 import path from 'path';
 import babel, { transformAsync, PluginObj, PluginPass } from '@babel/core';
 
-export default async function PagesLoader(
+export default async function ConfigLoader(
   this: LoaderContext<void>,
   content: Buffer,
   inputSourceMap: any

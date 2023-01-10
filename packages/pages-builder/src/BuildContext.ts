@@ -409,6 +409,7 @@ export class RootBuildContext extends Context implements BuildContext {
       builder,
       ...opts
     } = Object.assign(defaultOptions(options), options);
+    
     super({ isBuild: true, ...opts });
 
     const require = createRequire(import.meta.url);
