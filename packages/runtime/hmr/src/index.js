@@ -1,3 +1,3 @@
 if (process.env.NODE_ENV !== 'production') {
-  module.exports = require('./development');
+  module.exports = require('./development.js');
 }
