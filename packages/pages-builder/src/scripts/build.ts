@@ -17,7 +17,7 @@ export default async () => {
   for (const source of await context.sources.getAllSources()) {
     sources.add(source);
   }
-  console.info([...sources].map(source => source.slug));
+
   const stats = await context.builder.build(sources);
   process.stdout.write(stats.toString({ modulesSpace: 9999, colors: true }));
 };
