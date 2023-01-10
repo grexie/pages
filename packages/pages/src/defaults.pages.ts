@@ -32,7 +32,7 @@ export default (context: ConfigContext): any => {
         const [from, to] = mapping.split(/:/g);
         return parseMapping(from, to);
       } else {
-        const [from, to] = mapping;
+        const { from, to } = mapping;
         return parseMapping(from, to);
       }
     });
