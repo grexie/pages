@@ -51,7 +51,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
         url: url.href,
         format:
           reference.loader === 'esm'
-            ? NodeJS.LoaderHooks.ModuleFormat.module
+            ? ('module' as NodeJS.LoaderHooks.ModuleFormat)
             : undefined,
       };
     }
