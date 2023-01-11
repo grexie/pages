@@ -80,7 +80,7 @@ export class PluginContext {
     } catch (err) {}
 
     return resolve.ResolverFactory.createResolver({
-      modules: moduleDirs,
+      // modules: moduleDirs,
       fileSystem: this.#fs as any,
       conditionNames: ['@grexie/pages'],
       resolveToContext,
