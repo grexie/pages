@@ -13,9 +13,9 @@ const NODE_PATH = process.env.NODE_PATH?.split(/[:;]/g) ?? [
 
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
-  mainFields: ['main', 'module'],
-  conditionNames: ['node', 'import', 'default'],
-  // modules: NODE_PATH,
+  conditionNames: ['node', 'import', 'default', 'require'],
+  mainFields: ['module', 'main'],
+  // modules: context.modulesDirs,
   fullySpecified: false,
 });
 
@@ -49,6 +49,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
       return {
         shortCircuit: true,
         url: url.href,
+        format: reference.loader === 'esm' ? 'module' : undefined,
       };
     }
   }
