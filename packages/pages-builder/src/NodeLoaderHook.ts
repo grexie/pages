@@ -49,7 +49,10 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
       return {
         shortCircuit: true,
         url: url.href,
-        format: reference.loader === 'esm' ? 'module' : undefined,
+        format:
+          reference.loader === 'esm'
+            ? NodeJS.LoaderHooks.ModuleFormat.module
+            : undefined,
       };
     }
   }
