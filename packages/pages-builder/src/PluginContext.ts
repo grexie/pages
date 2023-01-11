@@ -55,7 +55,16 @@ export class PluginContext {
   }
 
   protected createPluginResolver(resolveToContext: boolean) {
-    const moduleDirs: string[] = [path.resolve(this.rootDir, 'node_modules')];
+    const moduleDirs: string[] = [];
+    let dirname = path.resolve(this.rootDir);
+    while (dirname) {
+      moduleDirs.push(path.resolve(dirname, 'node_modules'));
+      if (path.dirname(dirname) === dirname) {
+        break;
+      }
+      dirname = path.dirname(dirname);
+    }
+
     const monorepoRoot = path.resolve(
       new URL(import.meta.url).pathname,
       '..',
