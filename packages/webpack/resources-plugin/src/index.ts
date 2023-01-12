@@ -81,13 +81,13 @@ class SourceCompiler {
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
     const slug = await this.context.build.sources.getOutputSlug(this.source);
-
+    const entryName = slug ? `${slug}/index` : 'index';
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.root.rootDir,
         new EntryDependency(this.source.filename),
         {
-          name: slug ? `${slug}/index` : 'index',
+          name,
         },
         (err, result) => {
           if (err) {
@@ -124,7 +124,7 @@ class SourceCompiler {
             publicPath = '/';
           }
 
-          let entrypoints: string[] = [this.source.slug];
+          let entrypoints: string[] = [entryName];
 
           if (compilation.options.devServer?.hot) {
             entrypoints = [
