@@ -81,7 +81,14 @@ class SourceCompiler {
 
   async makeHook(name: string, compiler: Compiler, compilation: Compilation) {
     const slug = await this.context.build.sources.getOutputSlug(this.source);
-    const entryName = slug ? `${slug}/index` : 'index';
+    let entryName = slug ? `${slug}/index` : 'index';
+    let htmlName = path.join(slug, 'index.html');
+
+    if (slug === '404' || slug === '500') {
+      entryName = slug;
+      htmlName = `${slug}.html`;
+    }
+
     const entryModule = await new Promise<webpack.Module>((resolve, reject) =>
       compilation.addEntry(
         this.context.build.root.rootDir,
@@ -159,10 +166,7 @@ class SourceCompiler {
 
           const buffer = await this.render(compilation, [...files]);
 
-          compilation.emitAsset(
-            path.join(slug, 'index.html'),
-            new RawSource(buffer!)
-          );
+          compilation.emitAsset(htmlName, new RawSource(buffer!));
         } catch (err) {
           const stringifiedErr = (err as any).toString();
 
