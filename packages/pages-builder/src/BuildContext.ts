@@ -409,7 +409,7 @@ export class RootBuildContext extends Context implements BuildContext {
       builder,
       ...opts
     } = Object.assign(defaultOptions(options), options);
-    
+
     super({ isBuild: true, ...opts });
 
     const require = createRequire(import.meta.url);
@@ -418,19 +418,24 @@ export class RootBuildContext extends Context implements BuildContext {
     this.cacheDir = cacheDir;
 
     this.pagesDir = path.dirname(require.resolve('@grexie/pages/package.json'));
-    const pagesModules: string[] = [];
-    let dirname = this.pagesDir;
+    this.modulesDirs = [];
+    let dirname: string;
+    dirname = this.pagesDir;
     while (dirname) {
-      pagesModules.push(path.resolve(dirname, 'node_modules'));
+      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
       if (path.dirname(dirname) === dirname) {
         break;
       }
       dirname = path.dirname(dirname);
     }
-    this.modulesDirs = [
-      path.resolve(this.rootDir, 'node_modules'),
-      ...pagesModules,
-    ];
+    dirname = this.rootDir;
+    while (dirname) {
+      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
+      if (path.dirname(dirname) === dirname) {
+        break;
+      }
+      dirname = path.dirname(dirname);
+    }
 
     this.outputDir = path.resolve(this.rootDir, 'build');
 

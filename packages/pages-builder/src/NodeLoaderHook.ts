@@ -4,6 +4,9 @@ import enhancedResolve from 'enhanced-resolve';
 import path from 'path';
 import fs from 'fs';
 
+const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
+
 const baseUrl = new URL('file://');
 baseUrl.pathname = `${process.cwd()}/`;
 
@@ -11,11 +14,30 @@ const NODE_PATH = process.env.NODE_PATH?.split(/[:;]/g) ?? [
   path.resolve(process.cwd(), 'node_modules'),
 ];
 
+let modulesDirs: string[] = [];
+let dirname: string;
+dirname = __dirname;
+while (dirname) {
+  modulesDirs.push(path.resolve(dirname, 'node_modules'));
+  if (path.dirname(dirname) === dirname) {
+    break;
+  }
+  dirname = path.dirname(dirname);
+}
+dirname = path.resolve(process.cwd(), process.env.PAGES_ROOT ?? '.');
+while (dirname) {
+  modulesDirs.push(path.resolve(dirname, 'node_modules'));
+  if (path.dirname(dirname) === dirname) {
+    break;
+  }
+  dirname = path.dirname(dirname);
+}
+
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
   conditionNames: ['node', 'import', 'default', 'require'],
-  mainFields: ['main', 'module'],
-  // modules: context.modulesDirs,
+  // mainFields: ['main', 'module'],
+  modules: modulesDirs,
   fullySpecified: false,
 });
 

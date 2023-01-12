@@ -75,8 +75,9 @@ export class ModuleResolver {
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
       conditionNames: ['import', 'default', 'require'],
-      mainFields: ['main', 'module'],
+      // mainFields: ['main', 'module'],
       extensions: extensions,
+      modules: this.context.modulesDirs,
       fullySpecified: false,
     });
 
