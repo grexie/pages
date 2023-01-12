@@ -226,7 +226,7 @@ export class Builder {
           'create-hash': require.resolve('create-hash/browser'),
         },
         conditionNames: ['deno', 'default', 'require', 'import'],
-        mainFields: ['main', 'module'],
+        // mainFields: ['main', 'module'],
         extensions: this.context.resolverConfig.extensions,
         modules: this.context.modulesDirs,
         fallback: {
