@@ -14,7 +14,7 @@ const NODE_PATH = process.env.NODE_PATH?.split(/[:;]/g) ?? [
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
   conditionNames: ['node', 'import', 'default', 'require'],
-  mainFields: ['module', 'main'],
+  mainFields: ['main', 'module'],
   // modules: context.modulesDirs,
   fullySpecified: false,
 });
