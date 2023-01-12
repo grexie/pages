@@ -70,7 +70,7 @@ export class Server {
 
     const app = express();
 
-    await this.#events.emit(EventPhase.before, 'routes', app);
+    await this.#events.emit(EventPhase.before, 'routes', app, express);
 
     const devServer = WebpackDevMiddleware(compiler, {
       publicPath: compiler.options.output.publicPath,
