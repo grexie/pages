@@ -33,9 +33,12 @@ export default (context: Events<BuildContext>) => {
           {
             loader: 'css-loader',
             options: {
-              modules: {
-                localIdentName: '[path][name]__[local]--[hash:base64:5]',
-              },
+              modules:
+                process.env.NODE_ENV === 'production'
+                  ? true
+                  : {
+                      localIdentName: '[path][name]__[local]--[hash:base64:5]',
+                    },
             },
           },
           {
