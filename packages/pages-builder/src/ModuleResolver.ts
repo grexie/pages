@@ -77,7 +77,6 @@ export class ModuleResolver {
       conditionNames: ['import', 'default', 'require'],
       mainFields: ['main', 'module'],
       extensions: extensions,
-      // modules: context.modulesDirs,
       fullySpecified: false,
     });
 
@@ -151,7 +150,6 @@ export class ModuleResolver {
     if (builtin) {
       loader = ModuleLoaderType.node;
     } else if (loader !== ModuleLoaderType.esm && descriptionFileData) {
-      console.info(descriptionFileData.type || descriptionFileData);
       if (descriptionFileData.type === 'module') {
         loader = ModuleLoaderType.esm;
       }
