@@ -203,7 +203,7 @@ export class Builder {
       devtool: 'source-map',
       output: {
         path: this.context.outputDir,
-        filename: `assets/js/[name].js`,
+        filename: `[name]-[chunkhash].js`,
         clean: !!production,
       },
       target: 'web',

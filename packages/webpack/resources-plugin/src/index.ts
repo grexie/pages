@@ -87,8 +87,7 @@ class SourceCompiler {
         this.context.build.root.rootDir,
         new EntryDependency(this.source.filename),
         {
-          name: slug,
-          filename: slug ? `${slug}/index.js` : 'index.js',
+          name: slug ? `${slug}/index` : 'index',
         },
         (err, result) => {
           if (err) {
