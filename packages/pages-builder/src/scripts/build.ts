@@ -19,5 +19,5 @@ export default async () => {
   }
 
   const stats = await context.builder.build(sources);
-  process.stdout.write(stats.toString({ modulesSpace: 9999, colors: true }));
+  process.stdout.write(stats.toString({ modulesSpace: 0, colors: true }));
 };
