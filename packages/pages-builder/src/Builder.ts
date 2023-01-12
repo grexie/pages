@@ -247,7 +247,7 @@ export class Builder {
       },
       resolveLoader: {
         extensions: ['.cjs', '.js', '.ts'],
-        modules: this.context.modulesDirs,
+        // modules: this.context.modulesDirs,
         // modules: [
         //   path.resolve(__dirname, 'loaders'),
         //   ...this.context.modulesDirs,
