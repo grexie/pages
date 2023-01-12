@@ -40,6 +40,15 @@ export class PluginContext {
   private constructor({ rootDir, fs, descriptionFile }: PluginContextOptions) {
     this.rootDir = rootDir;
     this.#fs = fs;
+
+    const descriptionFileData = JSON.parse(
+      fs.readFileSync(descriptionFile).toString()
+    );
+
+    this.createPlugin(
+      path.dirname(descriptionFile),
+      descriptionFileData?.['exports']?.['.']?.['@grexie/pages']
+    );
     this.createPlugins(descriptionFile);
   }
 
