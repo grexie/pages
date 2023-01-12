@@ -77,7 +77,9 @@ export class ModuleResolver {
       conditionNames: ['import', 'default', 'require'],
       // mainFields: ['main', 'module'],
       extensions: extensions,
-      // modules: this.context.modulesDirs,
+      ...(this.context.modulesDirs.length
+        ? { modules: this.context.modulesDirs }
+        : {}),
       fullySpecified: false,
     });
 

@@ -227,7 +227,11 @@ export class Builder {
         },
         conditionNames: ['deno', 'default', 'require', 'import'],
         // mainFields: ['main', 'module'],
+        ...(this.context.modulesDirs.length
+          ? { modules: this.context.modulesDirs }
+          : {}),
         extensions: this.context.resolverConfig.extensions,
+
         // modules: this.context.modulesDirs,
         fallback: {
           fs: false,
@@ -247,6 +251,9 @@ export class Builder {
       },
       resolveLoader: {
         extensions: ['.cjs', '.js', '.ts'],
+        ...(this.context.modulesDirs.length
+          ? { modules: this.context.modulesDirs }
+          : {}),
         // modules: this.context.modulesDirs,
         // modules: [
         //   path.resolve(__dirname, 'loaders'),
@@ -289,7 +296,7 @@ export class Builder {
               },
             },
             runtimeChunk: {
-              name: 'runtime',
+              name: 'assets/js/runtime',
             },
           },
       plugins: [

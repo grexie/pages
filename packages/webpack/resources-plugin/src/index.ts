@@ -87,7 +87,7 @@ class SourceCompiler {
         this.context.build.root.rootDir,
         new EntryDependency(this.source.filename),
         {
-          name,
+          name: entryName,
         },
         (err, result) => {
           if (err) {

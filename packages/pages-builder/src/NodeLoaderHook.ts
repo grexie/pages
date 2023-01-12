@@ -16,29 +16,31 @@ const NODE_PATH = process.env.NODE_PATH?.split(/[:;]/g) ?? [
 
 let modulesDirs: string[] = [];
 let dirname: string;
-dirname = __dirname;
-while (dirname) {
-  modulesDirs.push(path.resolve(dirname, 'node_modules'));
-  if (path.dirname(dirname) === dirname) {
-    break;
+if (process.env.PAGES_DEV_LINK === 'true') {
+  dirname = path.resolve(process.cwd(), process.env.PAGES_ROOT ?? '.');
+  while (dirname) {
+    modulesDirs.push(path.resolve(dirname, 'node_modules'));
+    if (path.dirname(dirname) === dirname) {
+      break;
+    }
+    dirname = path.dirname(dirname);
   }
-  dirname = path.dirname(dirname);
-}
-dirname = path.resolve(process.cwd(), process.env.PAGES_ROOT ?? '.');
-while (dirname) {
-  modulesDirs.push(path.resolve(dirname, 'node_modules'));
-  if (path.dirname(dirname) === dirname) {
-    break;
+  dirname = __dirname;
+  while (dirname) {
+    modulesDirs.push(path.resolve(dirname, 'node_modules'));
+    if (path.dirname(dirname) === dirname) {
+      break;
+    }
+    dirname = path.dirname(dirname);
   }
-  dirname = path.dirname(dirname);
 }
 
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
   conditionNames: ['node', 'import', 'default', 'require'],
   // mainFields: ['main', 'module'],
-  // modules: modulesDirs,
   fullySpecified: false,
+  ...(modulesDirs.length ? { modules: modulesDirs } : {}),
 });
 
 export const resolve: NodeJS.LoaderHooks.Resolve = async (

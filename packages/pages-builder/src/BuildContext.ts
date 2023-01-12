@@ -417,26 +417,31 @@ export class RootBuildContext extends Context implements BuildContext {
     this.rootDir = rootDir;
     this.cacheDir = cacheDir;
 
-    this.pagesDir = path.dirname(require.resolve('@grexie/pages/package.json'));
+    this.pagesDir = fs
+      .realpathSync(path.dirname(require.resolve('@grexie/pages/package.json')))
+      .toString();
     this.modulesDirs = [];
-    let dirname: string;
-    dirname = this.pagesDir;
-    while (dirname) {
-      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
-      if (path.dirname(dirname) === dirname) {
-        break;
-      }
-      dirname = path.dirname(dirname);
-    }
-    dirname = this.rootDir;
-    while (dirname) {
-      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
-      if (path.dirname(dirname) === dirname) {
-        break;
-      }
-      dirname = path.dirname(dirname);
-    }
+    if (process.env.PAGES_DEV_LINK === 'true') {
+      let dirname: string;
 
+      dirname = this.rootDir;
+      while (dirname) {
+        this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
+        if (path.dirname(dirname) === dirname) {
+          break;
+        }
+        dirname = path.dirname(dirname);
+      }
+
+      dirname = this.pagesDir;
+      while (dirname) {
+        this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
+        if (path.dirname(dirname) === dirname) {
+          break;
+        }
+        dirname = path.dirname(dirname);
+      }
+    }
     this.outputDir = path.resolve(this.rootDir, 'build');
 
     this.registry = new Registry(this as BuildContext);
@@ -609,10 +614,7 @@ class ChildBuildContext extends Context implements BuildContext {
   }
 
   get modulesDirs() {
-    return [
-      path.resolve(this.rootDir, 'node_modules'),
-      ...this.parent.modulesDirs.slice(1),
-    ];
+    return this.parent.modulesDirs;
   }
 
   get builder() {
