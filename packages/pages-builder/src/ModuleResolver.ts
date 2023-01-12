@@ -75,7 +75,7 @@ export class ModuleResolver {
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
       conditionNames: ['import', 'default', 'require'],
-      mainFields: ['module', 'main'],
+      mainFields: ['main', 'module'],
       extensions: extensions,
       // modules: context.modulesDirs,
       fullySpecified: false,
@@ -151,7 +151,8 @@ export class ModuleResolver {
     if (builtin) {
       loader = ModuleLoaderType.node;
     } else if (loader !== ModuleLoaderType.esm && descriptionFileData) {
-      if (descriptionFileData.type === 'module' || descriptionFileData.module) {
+      console.info(descriptionFileData.type || descriptionFileData);
+      if (descriptionFileData.type === 'module') {
         loader = ModuleLoaderType.esm;
       }
     }

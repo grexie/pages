@@ -1,5 +1,5 @@
 import { builtinModules } from 'module';
-import type { ModuleLoader } from './ModuleLoader.js';
+import { ModuleLoader, ModuleLoaderType } from './ModuleLoader.js';
 import enhancedResolve from 'enhanced-resolve';
 import path from 'path';
 import fs from 'fs';
@@ -46,7 +46,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
         reference.filename
       );
 
-      return {
+      const result = {
         shortCircuit: true,
         url: url.href,
         format:
@@ -54,6 +54,8 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
             ? ('module' as NodeJS.LoaderHooks.ModuleFormat)
             : undefined,
       };
+
+      return result;
     }
   }
 
