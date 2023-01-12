@@ -74,7 +74,7 @@ export class Server {
 
     const devServer = WebpackDevMiddleware(compiler, {
       publicPath: compiler.options.output.publicPath,
-      writeToDisk: true,
+      writeToDisk: false,
       serverSideRender: false,
       stats: 'errors-warnings',
     });
