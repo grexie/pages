@@ -37,7 +37,7 @@ const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: fs as any,
   conditionNames: ['node', 'import', 'default', 'require'],
   // mainFields: ['main', 'module'],
-  modules: modulesDirs,
+  // modules: modulesDirs,
   fullySpecified: false,
 });
 

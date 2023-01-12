@@ -228,7 +228,7 @@ export class Builder {
         conditionNames: ['deno', 'default', 'require', 'import'],
         // mainFields: ['main', 'module'],
         extensions: this.context.resolverConfig.extensions,
-        modules: this.context.modulesDirs,
+        // modules: this.context.modulesDirs,
         fallback: {
           fs: false,
           os: false,
