@@ -1,8 +1,6 @@
-import type { FC, PropsWithChildren } from 'react';
-import { useFirstRender, useModule } from '@grexie/pages';
+import { FC, PropsWithChildren, useMemo } from 'react';
+import { useModule } from '@grexie/pages';
 import type { StyleSheet } from '@grexie/pages-runtime-styles';
-import { Resource } from '@grexie/pages/api';
-import type { SourceContext } from '@grexie/pages-builder';
 
 const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
   const { default: Component, styles } = useModule({ resource: true });
@@ -21,14 +19,15 @@ const Markdown: FC<PropsWithChildren<{}>> = ({ children }) => {
     loading ||= styles.use();
   }
 
+  const element = useMemo(
+    () => <Component components={{ Block: () => <>{children}</> }} />,
+    []
+  );
+
   if (loading) {
-    return (
-      <div style={{ display: loading ? 'none' : 'block' }}>
-        <Component components={{ Block: () => <>{children}</> }} />
-      </div>
-    );
+    return <div style={{ display: loading ? 'none' : 'block' }}>element</div>;
   } else {
-    return <Component components={{ Block: () => <>{children}</> }} />;
+    return element;
   }
 };
 
