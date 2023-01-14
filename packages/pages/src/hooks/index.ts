@@ -5,3 +5,4 @@ export * from './useStyles.js';
 export * from './useScripts.js';
 export * from './useMountId.js';
 export * from './useLazy.js';
+export * from './useFirstRender.js';

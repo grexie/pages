@@ -1,5 +1,12 @@
 import EventEmitter from 'events';
-import { useEffect, useMemo, useState, startTransition, FC } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  startTransition,
+  FC,
+  useRef,
+} from 'react';
 import { createContextWithProps } from '@grexie/context';
 import { hash } from '@grexie/hash-object';
 import { setImmediate, clearImmediate } from 'timers';
@@ -9,11 +16,18 @@ export interface StylesProviderProps {
   styles: StylesContext;
 }
 
+interface CSSEntry {
+  hash: string;
+  css: string;
+  listeners: (() => void)[];
+  rendered: boolean;
+}
+
 export class StylesContext extends EventEmitter {
   #updateTimeout?: NodeJS.Immediate;
-  #styles = new Map<string, { hash: string; css: string }>();
+  #styles = new Map<string, CSSEntry>();
 
-  constructor(styles?: { hash: string; css: string }[]) {
+  constructor(styles?: CSSEntry[]) {
     super();
     if (styles) {
       for (const style of styles) {
@@ -31,32 +45,49 @@ export class StylesContext extends EventEmitter {
     });
   }
 
-  add(hash: string, css: string) {
-    const entry = { hash, css } as { hash: string; css: string };
+  hasRendered(hash: string) {
+    return this.#styles.get(hash)?.rendered ?? false;
+  }
+
+  add(hash: string, css: string, listener: () => void) {
+    let entry: CSSEntry = {
+      hash,
+      css,
+      listeners: [
+        () => {
+          entry.rendered = true;
+        },
+      ],
+      rendered: false,
+    };
     if (!this.#styles.has(hash)) {
       this.#styles.set(hash, entry);
       this.#emitUpdate();
+    } else {
+      entry = this.#styles.get(hash)!;
+      if (entry.rendered) {
+        listener();
+      }
     }
 
+    entry.listeners.push(listener);
+
     return () => {
-      this.#styles.delete(hash);
-      this.#emitUpdate();
+      const index = entry.listeners.indexOf(listener);
+      if (index === -1) {
+        return;
+      }
+
+      entry.listeners.splice(index, 1);
+      if (entry.listeners.length === 0) {
+        this.#styles.delete(hash);
+        this.#emitUpdate();
+      }
     };
   }
 
-  [Symbol.iterator](): Iterator<{ hash: string; css: string }> {
-    const stylesMap = [...this.#styles].reduce((a, [, { hash, css }]) => {
-      if (hash in a) {
-        return a;
-      } else {
-        return { ...a, [hash]: css };
-      }
-    }, {}) as Record<string, string>;
-    const styles = Object.keys(stylesMap).map(hash => ({
-      hash,
-      css: stylesMap[hash],
-    }));
-    return styles[Symbol.iterator]();
+  [Symbol.iterator](): Iterator<CSSEntry> {
+    return this.#styles.values()[Symbol.iterator]();
   }
 }
 
@@ -101,8 +132,14 @@ export const useWatchStyles = () => {
 export const Styles: FC<{}> = () => {
   const styles = useWatchStyles();
 
+  const onRender = () => {
+    [...styles].forEach(style => {
+      style.listeners.forEach(listener => listener());
+    });
+  };
+
   return (
-    <Head>
+    <Head onRender={onRender}>
       {[...styles].map(({ hash, css }) => (
         <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
       ))}

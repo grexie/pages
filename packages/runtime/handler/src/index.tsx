@@ -1,7 +1,7 @@
 import { createElement, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { compose, createComposable, Composable } from '@grexie/compose';
-import { ResourceContext } from '@grexie/pages';
+import { ResourceContext, withFirstRenderProvider } from '@grexie/pages';
 import {
   StylesContext,
   withContext,
@@ -57,6 +57,7 @@ export const hydrate = (
 
   const Component = compose(
     ...hooks.beforeRender,
+    withFirstRenderProvider,
     withLazy,
     withContext({ context }),
     withStyles({ styles }),

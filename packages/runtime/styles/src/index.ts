@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from 'react';
-import { useStyles } from '@grexie/pages';
+import { useEffect, useMemo, useState } from 'react';
+import { useStyles, useFirstRender } from '@grexie/pages';
 
 export type Class = string | Record<string, any> | null | undefined;
 export type StyleUnuseFunction = () => void;
-export type StyleUseFunction = () => StyleUnuseFunction;
+export type StyleUseFunction = () => boolean;
 export type StyleFunction = ((...classList: Class[]) => string) & {
+  hash: string;
+  css: string;
   use: StyleUseFunction;
   resolve: (cls: string) => string;
   var: (name: string) => string;
@@ -30,21 +32,29 @@ export class StyleSheet {
   }
 
   use() {
+    const isFirstRender = useFirstRender();
     const styles = useStyles();
 
-    const result = useMemo(() => {
-      return styles.add(this.hash, this.css);
-    }, []);
+    let loading;
 
-    // if (typeof window !== 'undefined') {
-    //   useEffect(() => {
-    //     return () => {
-    //       result();
-    //     };
-    //   }, []);
-    // }
+    if (typeof window === 'undefined') {
+      loading = useMemo(() => {
+        styles.add(this.hash, this.css, () => {});
+        return false;
+      }, []);
+    } else {
+      const [_loading, setLoading] = useState(
+        () => !isFirstRender && !styles.hasRendered(this.hash)
+      );
+      loading = _loading;
+      useEffect(() => {
+        return styles.add(this.hash, this.css, () => {
+          setLoading(() => false);
+        });
+      }, []);
+    }
 
-    return result;
+    return loading;
   }
 
   resolve(cls: string) {

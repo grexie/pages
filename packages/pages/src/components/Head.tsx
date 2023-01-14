@@ -369,7 +369,9 @@ export const useHead = () => {
   return head;
 };
 
-export interface HeadProps extends PropsWithChildren {}
+export interface HeadProps extends PropsWithChildren {
+  onRender?: () => void;
+}
 
 export const Head: FC<HeadProps> = ({ children, ...props }) => {
   if (typeof window === 'undefined') {
@@ -399,7 +401,7 @@ const ServerHead: FC<ServerHeadProps> = withHead(({ children }) => {
 
 interface BrowserHeadProps extends HeadProps {}
 
-const useHeadPortal = (node: ReactNode) => {
+const useHeadPortal = (node: ReactNode, onRender?: () => void) => {
   const [show, setShow] = useState(false);
   const head = _useHead();
 
@@ -421,20 +423,19 @@ const useHeadPortal = (node: ReactNode) => {
 
     const observer = new MutationObserver(mutations => {
       head.mutate(mutations);
+      onRender?.();
     });
-    const immediate = setImmediate(() => {
-      head.initialize();
-      observer.observe(fragment, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributeOldValue: true,
-        attributes: true,
-      });
+    onRender?.();
+    head.initialize();
+    observer.observe(fragment, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributeOldValue: true,
+      attributes: true,
     });
 
     return () => {
-      clearImmediate(immediate);
       observer.disconnect();
       unmountComponentAtNode(fragment);
     };
@@ -443,7 +444,7 @@ const useHeadPortal = (node: ReactNode) => {
   return show ? createPortal(node, fragment) : null;
 };
 
-const BrowserHead: FC<BrowserHeadProps> = withHead(({ children }) => {
+const BrowserHead: FC<BrowserHeadProps> = withHead(({ children, onRender }) => {
   // const contexts = useSharedContexts();
-  return useHeadPortal(children);
+  return useHeadPortal(children, onRender);
 });

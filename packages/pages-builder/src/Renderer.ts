@@ -10,6 +10,7 @@ import { withScripts } from '@grexie/pages';
 import { withLazy } from '@grexie/pages';
 import { Writable } from 'stream';
 import { EventManager, EventPhase } from './EventManager.js';
+import { withFirstRenderProvider } from '@grexie/pages';
 
 export class Renderer {
   readonly #events = EventManager.get<Renderer>(this);
@@ -53,6 +54,7 @@ export class Renderer {
 
     const component = compose(
       ...beforeRender,
+      withFirstRenderProvider,
       withLazy,
       withContext({ context: this.context }),
       withResourceContext({ resourceContext }),
