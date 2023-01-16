@@ -16,6 +16,7 @@ export interface ModuleReference {
 export interface ModuleResolverConfig {
   extensions?: string[];
   forceCompileRoots?: string[];
+  excludeCompileRoots?: string[];
   forceCompileExtensions?: string[];
   esmExtensions?: string[];
 }
@@ -168,6 +169,11 @@ export class ModuleResolver {
       (o as any).builtin = true;
     }
 
+    if (filename.endsWith('.json')) {
+      (o as any).loader = 'commonjs';
+      (o as any).compile = true;
+    }
+
     return o;
   }
 
@@ -269,12 +275,7 @@ export class ModuleResolver {
       })
     );
 
-    if (
-      !containsPath(
-        path.resolve(this.context.rootDir, 'node_modules'),
-        resolved.filename
-      )
-    ) {
+    if (!this.context.sources.isRootDir(resolved.filename)) {
       if (
         roots.reduce(
           (a, b) =>

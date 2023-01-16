@@ -14,8 +14,9 @@ export default (context: Events<BuildContext>) => {
         ],
       },
       {
-        type: 'javascript/esm',
+        type: 'javascript/auto',
         test: /\.json$/,
+        // include: [(filename: string) => context.sources.isRootDir(filename)],
         use: [context.builder.loader('@grexie/pages-json-loader')],
         exclude: [/(^\.?|\/\.?|\.)pages\.json$/],
       }
@@ -26,7 +27,7 @@ export default (context: Events<BuildContext>) => {
     context.addConfigExtension(
       ...extensions.map(extname => `.pages${extname}`)
     );
-    context.addEsmExtension(...extensions);
+    // context.addEsmExtension(...extensions);
     context.addCompileExtension(...extensions);
   });
 };

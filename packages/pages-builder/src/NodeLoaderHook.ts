@@ -71,6 +71,7 @@ export const resolve: NodeJS.LoaderHooks.Resolve = async (
       );
 
       const result = {
+        ...context,
         shortCircuit: true,
         url: url.href,
         format:

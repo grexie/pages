@@ -8,7 +8,7 @@ export default async function JSONLoader(
   const callback = this.async();
 
   const document = JSON.parse(content.toString());
-  let chunk = `export default ${JSON.stringify(document, null, 2)};`;
+  let chunk = `module.exports = ${JSON.stringify(document, null, 2)};`;
 
   callback(null, chunk, inputSourceMap);
 }
