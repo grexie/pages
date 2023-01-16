@@ -18,8 +18,8 @@
     "@grexie/pages-cache-loader": "^*",
     "@grexie/pages-runtime-styles": "^*",
     "@grexie/pages-style-loader": "^*",
-    "css-loader": "^6.7.2",
-    "sass": "^1.56.1",
+    "css-loader": "^6.7.3",
+    "sass": "^1.57.1",
     "sass-loader": "^13.2.0"
   },
   "exports": {

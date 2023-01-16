@@ -13,7 +13,7 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@babel/core": "^7.18.2",
+    "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.18.2",
     "@babel/preset-react": "^7.18.2",
     "@babel/preset-typescript": "^7.17.12",
@@ -21,9 +21,9 @@
     "@grexie/pages-builder": "^*",
     "@grexie/pages-config-loader": "^*",
     "@grexie/pages-module-loader": "^*",
-    "babel-loader": "^9.1.0",
+    "babel-loader": "^9.1.2",
     "source-map": "^0.7.4",
-    "typescript": "^4.7.3"
+    "typescript": "^4.9.4"
   },
   "exports": {
     ".": {

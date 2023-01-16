@@ -14,7 +14,7 @@
     "generate:packages": "mkdir -p lib/utils && (cd ../.. && monorepo workspaces -pj) >lib/utils/packages.json"
   },
   "dependencies": {
-    "chalk": "^5.1.2",
+    "chalk": "^5.2.0",
     "enhanced-resolve": "^5.12.0",
     "source-map-support": "^0.5.21"
   },

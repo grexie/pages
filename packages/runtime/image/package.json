@@ -17,6 +17,6 @@
     "react": ">=18.2.0"
   },
   "devDependencies": {
-    "@types/sharp": "^0.31.0"
+    "@types/sharp": "^0.31.1"
   }
 }
