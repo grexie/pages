@@ -1,6 +1,6 @@
 import { Head } from '@grexie/pages';
 import { SourceContext } from '../SourceContext.js';
-import styles from './ErrorPage.module.scss';
+import styles from './ErrorPage.module.css';
 
 export default () => {
   styles.use();

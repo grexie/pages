@@ -4,9 +4,9 @@
   "license": "MIT",
   "type": "module",
   "module": "index.js",
-  "types": "lib/index.d.ts",
+  "types": "lib/external.d.ts",
   "scripts": {
-    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*','**/__snapshots__/*'",
+    "build": "babel src/ -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*','**/__snapshots__/*'",
     "watch": "npm run -s build -- -w"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
     "@grexie/pages-plugin-css": "^*",
     "@grexie/pages-plugin-javascript": "^*",
     "@grexie/pages-plugin-yaml": "^*",
+    "@grexie/pages-plugin-json": "^*",
     "@grexie/pages-resources-plugin": "^*",
     "@grexie/pages-runtime-hmr": "^*",
     "@grexie/pages-runtime-util": "^*",
@@ -53,7 +54,7 @@
   "exports": {
     ".": {
       "@grexie/pages": "./lib/plugins/index.js",
-      "types": "./lib/index.d.ts",
+      "types": "./lib/external.d.ts",
       "default": "./lib/index.js"
     },
     "./loader": "./lib/NodeLoaderHook.js",

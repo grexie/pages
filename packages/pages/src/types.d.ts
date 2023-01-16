@@ -3,7 +3,7 @@ declare module '@babel/preset-env';
 declare module '@babel/preset-react';
 declare module '@babel/traverse';
 declare module 'inline-source-map-comment';
-declare module '*.css';
 declare module 'webpack/lib/dependencies/EntryDependency.js';
 declare module 'webpack/lib/NormalModuleFactory.js';
 declare module 'util-browserify';
+declare module '*.css';

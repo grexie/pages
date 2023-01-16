@@ -1,5 +1,5 @@
 import { SourceContext } from '../SourceContext.js';
-import styles from './index.module.scss';
+import styles from './index.module.css';
 
 export default () => {
   styles.use();

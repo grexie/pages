@@ -4,9 +4,9 @@
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "types": "lib/types.d.ts",
   "scripts": {
-    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "build": "babel src/ -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
     "watch": "npm run -s build -- -w"
   },
   "peerDependencies": {
@@ -24,7 +24,8 @@
   },
   "exports": {
     ".": {
-      "@grexie/pages": "./lib/index.js"
+      "@grexie/pages": "./lib/index.js",
+      "types": "./lib/types.d.ts"
     }
   },
   "publishConfig": {

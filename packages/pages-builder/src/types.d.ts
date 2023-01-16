@@ -1,20 +1,14 @@
 declare module '@grexie/pages-resources-plugin';
 declare module 'webpack/lib/dependencies/EntryDependency.js';
 
-declare module '*.scss' {
-  import type { StyleFunction } from '@grexie/pages-plugin-sass';
-  const styles: StyleFunction;
-  export default styles;
-}
-
 declare module '*.css' {
-  import type { StyleFunction } from '@grexie/pages-plugin-css';
+  import type { StyleFunction } from '@grexie/pages-runtime-styles';
   const styles: StyleFunction;
   export default styles;
 }
 
 declare module '*.svg' {
-  import type { Image } from '@grexie/pages-plugin-image';
+  import type { Image } from '@grexie/pages-runtime-image';
   const Component: Image;
   export default Component;
 }

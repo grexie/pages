@@ -45,7 +45,11 @@ export default async function ImageLoader(
       .update(path.relative(context.rootDir, this.resourcePath))
       .digest('hex')
       .substring(0, 6);
-    const filename = path.join('images', `${basename}-${hash}${extname}`);
+    const filename = path.join(
+      'assets',
+      'images',
+      `${basename}-${hash}${extname}`
+    );
 
     const readFile = promisify(context.fs, context.fs.readFile);
 
@@ -85,7 +89,7 @@ export default async function ImageLoader(
         ],
       })?.code!;
     } else {
-      this._compilation?.emitAsset(filename, new RawSource(content, false));
+      this.emitFile(filename, content);
     }
 
     return jsCode;
