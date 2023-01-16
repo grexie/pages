@@ -1,3 +1,3 @@
 export * from './index.js';
 
-export * from '@grexie/pages-builder';
+import '@grexie/pages-builder';

@@ -18,5 +18,11 @@
   },
   "dependencies": {
     "@grexie/pages": "^*"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
   }
 }

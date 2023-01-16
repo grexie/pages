@@ -1,6 +1,6 @@
 export * from './index.js';
 
-export * from '@grexie/pages-plugin-css';
-export * from '@grexie/pages-plugin-image';
-export * from '@grexie/pages-plugin-yaml';
-export * from '@grexie/pages-plugin-json';
+import '@grexie/pages-plugin-css';
+import '@grexie/pages-plugin-image';
+import '@grexie/pages-plugin-yaml';
+import '@grexie/pages-plugin-json';
