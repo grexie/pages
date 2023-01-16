@@ -16,7 +16,7 @@
     "start": "npm-run-all -p start:types start:build",
     "start:types": "yarn build:types -w --preserveWatchOutput",
     "start:build": "monorepo run -p watch",
-    "build": "monorepo generate:tsconfig && monorepo run -p build && yarn build:types",
+    "build": "monorepo generate:tsconfig && yarn build:types && monorepo run build ",
     "build:types": "tsc -b",
     "publish": "yarn build && monorepo workspaces npm publish",
     "depcheck": "monorepo workspaces depcheck --ignores @jest/globals,util-browserify --ignore-dirs lib 2>&1",
