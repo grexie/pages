@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-json-loader",
-  "version": "0.0.35",
+  "version": "0.3.12",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,7 +19,7 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@grexie/pages-builder": "^*"
+    "@grexie/pages-builder": "^0.3.12"
   },
   "dependencies": {
     "source-map": "^0.7.4",

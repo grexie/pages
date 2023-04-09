@@ -352,8 +352,30 @@ export class Builder {
 
   async build(sources?: Set<Source>): Promise<WebpackStats> {
     await this.context.ready;
-    const config = await this.config(sources);
-    return this.#builder.build({ config });
+
+    const compiler = await this.createCompiler(sources);
+
+    await new Promise<WebpackStats>((resolve, reject) =>
+      compiler.run((err, stats) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(stats!);
+      })
+    );
+
+    return new Promise<WebpackStats>((resolve, reject) =>
+      compiler.run((err, stats) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(stats!);
+      })
+    );
   }
 
   async watch(sources?: Set<Source>): Promise<Watcher> {
