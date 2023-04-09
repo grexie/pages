@@ -23,7 +23,7 @@
     "@grexie/pages-module-loader": "^*",
     "babel-loader": "^9.1.2",
     "source-map": "^0.7.4",
-    "typescript": "^4.9.4"
+    "typescript": "^5.0.4"
   },
   "exports": {
     ".": {

@@ -41,7 +41,7 @@ export class NodeModuleLoader extends ModuleLoader {
       }
     );
 
-    await vmModule.link(() => {});
+    await vmModule.link((() => {}) as any);
     await vmModule.evaluate();
 
     return { ...module, vmModule, exports };

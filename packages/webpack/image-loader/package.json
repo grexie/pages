@@ -24,8 +24,8 @@
     "@babel/preset-react": "^7.18.6",
     "@grexie/pages-runtime-image": "^*",
     "@grexie/promisify": "^*",
-    "@svgr/core": "^6.5.1",
-    "sharp": "^0.31.3",
+    "@svgr/core": "^7.0.0",
+    "sharp": "^0.32.0",
     "webpack": "^5.75.0"
   },
   "peerDependencies": {

@@ -20,115 +20,115 @@
   ],
   "references": [
     {
-      "path": "packages/pages-builder"
+      "path": "packages/pages-serve"
     },
     {
       "path": "packages/pages-cli"
     },
     {
-      "path": "packages/pages-serve"
+      "path": "packages/pages-builder"
     },
     {
       "path": "packages/pages"
     },
     {
-      "path": "packages/plugins/css"
-    },
-    {
-      "path": "packages/plugins/image"
-    },
-    {
-      "path": "packages/plugins/javascript"
-    },
-    {
-      "path": "packages/plugins/json"
-    },
-    {
-      "path": "packages/plugins/markdown"
-    },
-    {
-      "path": "packages/plugins/preact"
-    },
-    {
-      "path": "packages/plugins/sass"
+      "path": "packages/plugins/yaml"
     },
     {
       "path": "packages/plugins/typescript"
     },
     {
-      "path": "packages/plugins/yaml"
+      "path": "packages/plugins/sass"
     },
     {
-      "path": "packages/runtime/config"
+      "path": "packages/plugins/preact"
     },
     {
-      "path": "packages/runtime/handler"
+      "path": "packages/plugins/markdown"
     },
     {
-      "path": "packages/runtime/hmr"
+      "path": "packages/plugins/json"
     },
     {
-      "path": "packages/runtime/image"
+      "path": "packages/plugins/javascript"
     },
     {
-      "path": "packages/runtime/styles"
+      "path": "packages/plugins/image"
+    },
+    {
+      "path": "packages/plugins/css"
     },
     {
       "path": "packages/runtime/util"
     },
     {
-      "path": "packages/utils/context"
+      "path": "packages/runtime/styles"
     },
     {
-      "path": "packages/utils/hash-object"
+      "path": "packages/runtime/image"
     },
     {
-      "path": "packages/utils/is-plain-object"
+      "path": "packages/runtime/hmr"
     },
     {
-      "path": "packages/utils/mutex"
+      "path": "packages/runtime/handler"
     },
     {
-      "path": "packages/utils/promisify"
-    },
-    {
-      "path": "packages/utils/proxy"
-    },
-    {
-      "path": "packages/utils/resolvable"
-    },
-    {
-      "path": "packages/utils/source-maps"
-    },
-    {
-      "path": "packages/utils/stream"
+      "path": "packages/runtime/config"
     },
     {
       "path": "packages/utils/timed"
     },
     {
-      "path": "packages/webpack/cache-loader"
+      "path": "packages/utils/stream"
     },
     {
-      "path": "packages/webpack/config-loader"
+      "path": "packages/utils/source-maps"
     },
     {
-      "path": "packages/webpack/image-loader"
+      "path": "packages/utils/resolvable"
     },
     {
-      "path": "packages/webpack/json-loader"
+      "path": "packages/utils/proxy"
     },
     {
-      "path": "packages/webpack/module-loader"
+      "path": "packages/utils/promisify"
     },
     {
-      "path": "packages/webpack/resources-plugin"
+      "path": "packages/utils/mutex"
+    },
+    {
+      "path": "packages/utils/is-plain-object"
+    },
+    {
+      "path": "packages/utils/hash-object"
+    },
+    {
+      "path": "packages/utils/context"
+    },
+    {
+      "path": "packages/webpack/yaml-loader"
     },
     {
       "path": "packages/webpack/style-loader"
     },
     {
-      "path": "packages/webpack/yaml-loader"
+      "path": "packages/webpack/resources-plugin"
+    },
+    {
+      "path": "packages/webpack/module-loader"
+    },
+    {
+      "path": "packages/webpack/json-loader"
+    },
+    {
+      "path": "packages/webpack/image-loader"
+    },
+    {
+      "path": "packages/webpack/config-loader"
+    },
+    {
+      "path": "packages/webpack/cache-loader"
     }
   ]
 }

@@ -104,7 +104,7 @@ export class Provider {
         );
       }
 
-      const files = await globAsync(
+      const files = (await globAsync(
         `**/*{${[
           ...(this.context.providerConfig.extensions ?? []),
           ...(this.context.providerConfig.configExtensions ?? []),
@@ -118,7 +118,7 @@ export class Provider {
           fs: this.context.fs as any,
           ignore,
         }
-      );
+      )) as string[];
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>

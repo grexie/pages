@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "typings": "lib/index.d.ts",
   "scripts": {
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
     "watch": "npm run -s build -- -w"
@@ -18,5 +18,11 @@
   },
   "devDependencies": {
     "@types/sharp": "^0.31.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
   }
 }

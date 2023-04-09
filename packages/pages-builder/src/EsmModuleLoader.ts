@@ -8,13 +8,13 @@ export class EsmModuleLoader extends ModuleLoader {
       context: this.vmContext,
       initializeImportMeta: () => {},
       identifier: module.filename,
-      importModuleDynamically: async request => {
+      importModuleDynamically: (async (request: string) => {
         const childModule = await this.context.requireModule(
           module.context,
           request
         );
         return childModule.vmModule;
-      },
+      }) as any,
     });
 
     await vmModule.link(async (request: string) => {

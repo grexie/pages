@@ -23,7 +23,7 @@ export class CommonJsModuleLoader extends ModuleLoader {
     const script = new vm.Script(wrapScript(module.source), {
       filename: module.filename,
       displayErrors: true,
-    }).runInContext(this.vmContext) as WrappedScript;
+    } as any).runInContext(this.vmContext) as WrappedScript;
 
     const scriptModule = new NodeModule(module.filename);
     scriptModule.require = createRequire(module.filename);
@@ -62,7 +62,7 @@ export class CommonJsModuleLoader extends ModuleLoader {
       }
     );
 
-    await vmModule.link(() => {});
+    await vmModule.link((() => {}) as any);
     await vmModule.evaluate();
 
     return { ...module, vmModule, exports };
