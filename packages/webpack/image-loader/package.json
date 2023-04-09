@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-image-loader",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -22,14 +22,14 @@
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-react": "^7.18.6",
-    "@grexie/pages-runtime-image": "^0.3.12",
-    "@grexie/promisify": "^0.3.12",
-    "@svgr/core": "^7.0.0",
+    "@grexie/pages-runtime-image": "^0.3.13",
+    "@grexie/promisify": "^0.3.13",
+    "@svgr/core": "^6.0.0",
     "sharp": "^0.32.0",
     "webpack": "^5.75.0"
   },
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.3.12"
+    "@grexie/pages-builder": "^0.3.13"
   },
   "exports": {
     ".": {

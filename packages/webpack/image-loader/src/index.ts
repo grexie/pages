@@ -82,6 +82,8 @@ export default async function ImageLoader(
         }
       );
 
+      console.info(jsCode);
+
       jsCode = babelTransform(jsCode, {
         presets: [
           [babelPresetReact, { runtime: 'automatic' }],

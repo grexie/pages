@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.js",
@@ -11,11 +11,11 @@
   },
   "dependencies": {
     "@grexie/compose": "^0.1.17",
-    "@grexie/context": "^0.3.12",
-    "@grexie/hash-object": "^0.3.12",
-    "@grexie/pages-builder": "^0.3.12",
-    "@grexie/pages-cli": "^0.3.12",
-    "@grexie/proxy": "^0.3.12",
+    "@grexie/context": "^0.3.13",
+    "@grexie/hash-object": "^0.3.13",
+    "@grexie/pages-builder": "^0.3.13",
+    "@grexie/pages-cli": "^0.3.13",
+    "@grexie/proxy": "^0.3.13",
     "react": ">=18.2.0",
     "react-is": ">=18.2.0"
   },
