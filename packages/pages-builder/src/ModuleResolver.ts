@@ -15,6 +15,7 @@ export interface ModuleReference {
 
 export interface ModuleResolverConfig {
   extensions?: string[];
+  excludeCompileRoots?: string[];
   forceCompileRoots?: string[];
   forceCompileExtensions?: string[];
   esmExtensions?: string[];

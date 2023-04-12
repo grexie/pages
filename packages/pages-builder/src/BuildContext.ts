@@ -108,6 +108,7 @@ export interface BuildContext extends Context {
   addConfigExtension(...extensions: string[]): void;
   addExcludeGlob(...globs: string[]): void;
   addCompilationRoot(...paths: string[]): void;
+  addCompilationExcludeRoot(...paths: string[]): void;
   addResolveExtension(...extensions: string[]): void;
   addEsmExtension(...extensions: string[]): void;
   addCompileExtension(...extensions: string[]): void;
@@ -148,6 +149,15 @@ export class SourceResolver {
       !value.startsWith(path.resolve(rootDir, 'node_modules'))
     ) {
       return true;
+    }
+
+    if (
+      this.context.resolverConfig.excludeCompileRoots.reduce(
+        (a, b) => a || value.startsWith(b),
+        false
+      )
+    ) {
+      return false;
     }
 
     if (
@@ -471,6 +481,7 @@ export class RootBuildContext extends Context implements BuildContext {
       forceCompileRoots: Array.from(
         new Set([...(resolver.forceCompileRoots ?? [this.rootDir])])
       ),
+      excludeCompileRoots: [],
     };
     this.addCompilationRoot(path.resolve(__dirname, 'defaults'));
 
@@ -561,6 +572,10 @@ export class RootBuildContext extends Context implements BuildContext {
 
   addCompilationRoot(...paths: string[]) {
     this.resolverConfig.forceCompileRoots.push(...paths);
+  }
+
+  addCompilationExcludeRoot(...paths: string[]): void {
+    this.resolverConfig.excludeCompileRoots.push(...paths);
   }
 
   addResolveExtension(...extensions: string[]) {
@@ -671,6 +686,10 @@ class ChildBuildContext extends Context implements BuildContext {
 
   addCompilationRoot(...paths: string[]) {
     return this.parent.addCompilationRoot(...paths);
+  }
+
+  addCompilationExcludeRoot(...paths: string[]): void {
+    return this.parent.addCompilationExcludeRoot(...paths);
   }
 
   addResolveExtension(...extensions: string[]) {
