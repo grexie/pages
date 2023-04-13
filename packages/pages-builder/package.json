@@ -19,6 +19,7 @@
     "@grexie/pages": "^*",
     "@grexie/pages-plugin-css": "^*",
     "@grexie/pages-plugin-javascript": "^*",
+    "@grexie/pages-plugin-json": "^*",
     "@grexie/pages-plugin-yaml": "^*",
     "@grexie/pages-resources-plugin": "^*",
     "@grexie/pages-runtime-hmr": "^*",

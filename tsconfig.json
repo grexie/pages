@@ -41,6 +41,9 @@
       "path": "packages/plugins/javascript"
     },
     {
+      "path": "packages/plugins/json"
+    },
+    {
       "path": "packages/plugins/markdown"
     },
     {
@@ -111,6 +114,9 @@
     },
     {
       "path": "packages/webpack/image-loader"
+    },
+    {
+      "path": "packages/webpack/json-loader"
     },
     {
       "path": "packages/webpack/module-loader"
