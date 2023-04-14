@@ -69,11 +69,6 @@
         ]
       }
     },
-    "npm": {
-      "publish": true,
-      "versionArgs": [
-        "--workspaces-update=true"
-      ]
-    }
+    "npm": false
   }
 }

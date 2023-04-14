@@ -48,5 +48,5 @@ jobs:
           find . -type d -exec chmod ugo+rwx {} \;
           npm run release patch --github.release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
