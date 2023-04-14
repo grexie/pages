@@ -55,9 +55,7 @@
     "webpack": "^5.75.0"
   },
   "release-it": {
-    "git": {
-      "commit": true
-    },
+    "git": true,
     "plugins": {
       "@release-it-plugins/workspaces": {
         "workspaces": [
