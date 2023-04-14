@@ -1,5 +1,5 @@
 {
-  "version": "0.4.10",
+  "version": "0.4.11",
   "private": true,
   "workspaces": [
     "packages/pages*",
@@ -69,6 +69,15 @@
         ]
       }
     },
-    "npm": false
+    "npm": {
+      "publish": true,
+      "versionArgs": [
+        "--allow-same-version",
+        "--workspaces-update=true"
+      ],
+      "publishArgs": [
+        "--include-workspace-root"
+      ]
+    }
   }
 }
