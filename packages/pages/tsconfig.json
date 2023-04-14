@@ -5,23 +5,7 @@
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
-    "allowSyntheticDefaultImports": true,
-    "paths": {
-      "@grexie/hash-object": ["../utils/hash-object/src"],
-      "@grexie/context": ["../utils/context/src"],
-      "@grexie/proxy": ["../utils/proxy/src"]
-    }
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [
-    {
-      "path": "../utils/hash-object"
-    },
-    {
-      "path": "../utils/context"
-    },
-    {
-      "path": "../utils/proxy"
-    }
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

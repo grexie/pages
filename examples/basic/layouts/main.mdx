@@ -4,14 +4,14 @@ styles:
   main: ./main.module.scss
 ---
 
-import { Once, Head, Metadata } from '@grexie/pages';
+import { Once, Head, RenderConfig } from '@grexie/pages';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 <Once fallback={Block}>
   <Head>
     <title>
-      <Metadata
+      <RenderConfig
         field="title"
         render={title => (title ? title + ' | My Site' : 'My Site')}
       />

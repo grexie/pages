@@ -77,36 +77,6 @@
       "path": "packages/runtime/util"
     },
     {
-      "path": "packages/utils/context"
-    },
-    {
-      "path": "packages/utils/hash-object"
-    },
-    {
-      "path": "packages/utils/is-plain-object"
-    },
-    {
-      "path": "packages/utils/mutex"
-    },
-    {
-      "path": "packages/utils/promisify"
-    },
-    {
-      "path": "packages/utils/proxy"
-    },
-    {
-      "path": "packages/utils/resolvable"
-    },
-    {
-      "path": "packages/utils/source-maps"
-    },
-    {
-      "path": "packages/utils/stream"
-    },
-    {
-      "path": "packages/utils/timed"
-    },
-    {
       "path": "packages/webpack/cache-loader"
     },
     {

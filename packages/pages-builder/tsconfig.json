@@ -10,11 +10,7 @@
     "paths": {
       "@grexie/pages": ["../pages/src"],
       "@grexie/pages/api": ["../pages/src/api"],
-      "@grexie/resolvable": ["../utils/resolvable/src"],
-      "@grexie/pages-runtime-hmr": ["../runtime/hmr/src"],
-      "@grexie/is-plain-object": ["../utils/is-plain-object/src"],
-      "@grexie/promisify": ["../utils/promisify/src"],
-      "@grexie/mutex": ["../utils/mutex/src"]
+      "@grexie/pages-runtime-hmr": ["../runtime/hmr/src"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
@@ -24,19 +20,7 @@
       "path": "../pages"
     },
     {
-      "path": "../utils/resolvable"
-    },
-    {
       "path": "../runtime/hmr"
-    },
-    {
-      "path": "../utils/is-plain-object"
-    },
-    {
-      "path": "../utils/promisify"
-    },
-    {
-      "path": "../utils/mutex"
     }
   ]
 }
