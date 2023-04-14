@@ -71,6 +71,7 @@
     },
     "npm": {
       "publish": true,
+      "ignoreVersion": true,
       "versionArgs": [
         "--allow-same-version",
         "--workspaces-update=false"
