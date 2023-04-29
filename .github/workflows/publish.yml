@@ -54,7 +54,7 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           find . -type f -exec chmod ugo+rw {} \;
           find . -type d -exec chmod ugo+rwx {} \;
-          npx semantic-release -e semantic-release-monorepo
+          npx release-it
         env:
           GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
