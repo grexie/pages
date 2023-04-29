@@ -51,6 +51,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-lorem-ipsum": "^1.4.10",
+    "release-it": "^15.10.1",
     "semantic-release": "^20.0.1",
     "semantic-release-monorepo": "^7.0.5",
     "ts-node": "^10.9.1",
@@ -60,5 +61,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/grexie/pages.git"
+  },
+  "release-it": {
+    "plugins": {
+      "@release-it-plugins/workspaces": true
+    }
   }
 }
