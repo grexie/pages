@@ -758,3 +758,5 @@ class ChildBuildContext extends Context implements BuildContext {
     this.parent.sources.children.delete(this.sources);
   }
 }
+
+const tmp = {};
