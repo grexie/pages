@@ -65,7 +65,14 @@
   "release-it": {
     "github": true,
     "npm": {
-      "ignoreVersion": true
+      "ignoreVersion": true,
+      "versionArgs": [
+        "--allow-same-version",
+        "--workspaces-update=false"
+      ],
+      "publishArgs": [
+        "--include-workspace-root"
+      ]
     },
     "plugins": {
       "@release-it-plugins/workspaces": true
