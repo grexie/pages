@@ -14,7 +14,7 @@ export const Header: FC<HeaderProps> = ({ className }) => {
   return (
     <div className={styles('container', className)}>
       <Logo size={40} className={styles('logo')} />
-      <h1>My Site</h1>
+      <h1>Kate's Site</h1>
     </div>
   );
 };
