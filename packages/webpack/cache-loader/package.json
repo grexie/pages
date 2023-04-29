@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-cache-loader",
-  "version": "0.0.35",
+  "version": "0.5.1",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -18,7 +18,7 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@grexie/pages-builder": "^*"
+    "@grexie/pages-builder": "^0.5.1"
   },
   "dependencies": {
     "webpack": "^5.75.0"

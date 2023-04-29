@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-javascript",
-  "version": "0.0.35",
+  "version": "0.5.1",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -16,10 +16,10 @@
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
     "@babel/preset-react": "^7.18.2",
-    "@grexie/pages": "^*",
-    "@grexie/pages-builder": "^*",
-    "@grexie/pages-config-loader": "^*",
-    "@grexie/pages-module-loader": "^*",
+    "@grexie/pages": "^0.5.1",
+    "@grexie/pages-builder": "^0.5.1",
+    "@grexie/pages-config-loader": "^0.5.1",
+    "@grexie/pages-module-loader": "^0.5.1",
     "babel-loader": "^9.1.0",
     "source-map": "^0.7.4"
   },

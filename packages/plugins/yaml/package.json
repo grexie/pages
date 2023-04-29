@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-yaml",
-  "version": "0.0.35",
+  "version": "0.5.1",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -15,11 +15,11 @@
   "dependencies": {
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
-    "@grexie/pages": "^*",
-    "@grexie/pages-builder": "^*",
-    "@grexie/pages-cache-loader": "0.0.35",
-    "@grexie/pages-config-loader": "^*",
-    "@grexie/pages-yaml-loader": "^*",
+    "@grexie/pages": "^0.5.1",
+    "@grexie/pages-builder": "^0.5.1",
+    "@grexie/pages-cache-loader": "0.5.1",
+    "@grexie/pages-config-loader": "^0.5.1",
+    "@grexie/pages-yaml-loader": "^0.5.1",
     "source-map": "^0.7.4"
   },
   "exports": {
