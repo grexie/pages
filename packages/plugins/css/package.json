@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-css",
-  "version": "0.5.1",
+  "version": "1.0.2",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -13,11 +13,11 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^0.5.1",
-    "@grexie/pages-builder": "^0.5.1",
-    "@grexie/pages-cache-loader": "^0.5.1",
-    "@grexie/pages-runtime-styles": "^0.5.1",
-    "@grexie/pages-style-loader": "^0.5.1",
+    "@grexie/pages": "^1.0.2",
+    "@grexie/pages-builder": "^1.0.2",
+    "@grexie/pages-cache-loader": "^1.0.2",
+    "@grexie/pages-runtime-styles": "^1.0.2",
+    "@grexie/pages-style-loader": "^1.0.2",
     "css-loader": "^6.7.2"
   },
   "exports": {
