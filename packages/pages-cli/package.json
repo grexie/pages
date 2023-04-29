@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-cli",
-  "version": "1.0.2",
+  "version": "0.4.2",
   "license": "MIT",
   "bin": {
     "pages": "bin/cli.sh"

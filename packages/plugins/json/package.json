@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-json",
-  "version": "1.0.2",
+  "version": "0.4.2",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -15,11 +15,11 @@
   "dependencies": {
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.18.2",
-    "@grexie/pages": "^1.0.2",
-    "@grexie/pages-builder": "^1.0.2",
-    "@grexie/pages-cache-loader": "^1.0.2",
-    "@grexie/pages-config-loader": "^1.0.2",
-    "@grexie/pages-json-loader": "^1.0.2",
+    "@grexie/pages": "^0.4.2",
+    "@grexie/pages-builder": "^0.4.2",
+    "@grexie/pages-cache-loader": "^0.4.2",
+    "@grexie/pages-config-loader": "^0.4.2",
+    "@grexie/pages-json-loader": "^0.4.2",
     "source-map": "^0.7.4"
   },
   "exports": {
