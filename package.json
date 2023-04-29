@@ -63,6 +63,7 @@
     "url": "https://github.com/grexie/pages.git"
   },
   "release-it": {
+    "github": true,
     "plugins": {
       "@release-it-plugins/workspaces": true
     }
