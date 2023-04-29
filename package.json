@@ -64,6 +64,9 @@
   },
   "release-it": {
     "github": true,
+    "npm": {
+      "ignoreVersion": true
+    },
     "plugins": {
       "@release-it-plugins/workspaces": true
     }
