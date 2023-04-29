@@ -111,6 +111,7 @@ export interface BuildContext extends Context {
   addCompilationExcludeRoot(...paths: string[]): void;
   addResolveExtension(...extensions: string[]): void;
   addEsmExtension(...extensions: string[]): void;
+  addCommonJSExtension(...extensions: string[]): void;
   addCompileExtension(...extensions: string[]): void;
 }
 
@@ -478,6 +479,7 @@ export class RootBuildContext extends Context implements BuildContext {
         new Set([...(resolver.forceCompileExtensions ?? [])])
       ),
       esmExtensions: [...new Set([...(resolver.esmExtensions ?? [])])],
+      cjsExtensions: [...new Set([...(resolver.cjsExtensions ?? [])])],
       forceCompileRoots: Array.from(
         new Set([...(resolver.forceCompileRoots ?? [this.rootDir])])
       ),
@@ -584,6 +586,10 @@ export class RootBuildContext extends Context implements BuildContext {
 
   addEsmExtension(...extensions: string[]) {
     this.resolverConfig.esmExtensions.push(...extensions);
+  }
+
+  addCommonJSExtension(...extensions: string[]) {
+    this.resolverConfig.cjsExtensions.push(...extensions);
   }
 
   addCompileExtension(...extensions: string[]) {
@@ -699,6 +705,11 @@ class ChildBuildContext extends Context implements BuildContext {
   addEsmExtension(...extensions: string[]) {
     return this.parent.addEsmExtension(...extensions);
   }
+
+  addCommonJSExtension(...extensions: string[]) {
+    return this.parent.addCommonJSExtension(...extensions);
+  }
+
   addCompileExtension(...extensions: string[]) {
     return this.parent.addCompileExtension(...extensions);
   }

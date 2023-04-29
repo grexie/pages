@@ -19,6 +19,7 @@ export interface ModuleResolverConfig {
   forceCompileRoots?: string[];
   forceCompileExtensions?: string[];
   esmExtensions?: string[];
+  cjsExtensions?: string[];
 }
 
 export interface ModuleResolverOptions extends ModuleResolverConfig {
@@ -52,6 +53,7 @@ export class ModuleResolver {
   readonly #forceCompileRoots: string[];
   readonly #forceCompileExtensions: string[];
   readonly #esmExtensions: string[];
+  readonly #cjsExtensions: string[];
   readonly #resolve;
 
   constructor({
@@ -61,6 +63,7 @@ export class ModuleResolver {
     forceCompileRoots,
     forceCompileExtensions,
     esmExtensions,
+    cjsExtensions,
   }: ModuleResolverOptions) {
     this.context = context;
     this.compilation = compilation;
@@ -72,6 +75,7 @@ export class ModuleResolver {
     this.#extensions = extensions ?? [];
     this.#forceCompileExtensions = forceCompileExtensions ?? [];
     this.#esmExtensions = esmExtensions ?? [];
+    this.#cjsExtensions = cjsExtensions ?? [];
 
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
@@ -137,10 +141,11 @@ export class ModuleResolver {
     {
       compile = false,
       builtin = false,
-      loader = this.#esmExtensions.reduce(
+      loader = !this.#cjsExtensions.reduce(
         (a, b) => a || filename.endsWith(b),
         false
-      )
+      ) &&
+      this.#esmExtensions.reduce((a, b) => a || filename.endsWith(b), false)
         ? ModuleLoaderType.esm
         : ModuleLoaderType.commonjs,
       descriptionFileData,
@@ -153,7 +158,11 @@ export class ModuleResolver {
   ) {
     if (builtin) {
       loader = ModuleLoaderType.node;
-    } else if (loader !== ModuleLoaderType.esm && descriptionFileData) {
+    } else if (
+      loader !== ModuleLoaderType.esm &&
+      descriptionFileData &&
+      !this.#cjsExtensions.reduce((a, b) => a || filename.endsWith(b), false)
+    ) {
       if (descriptionFileData.type === 'module') {
         loader = ModuleLoaderType.esm;
       }
