@@ -23,7 +23,7 @@
     "depcheck": "monorepo workspaces depcheck --ignores @jest/globals,util-browserify --ignore-dirs lib 2>&1",
     "dev:link": "monorepo workspaces yarn link",
     "dev:unlink": "monorepo workspaces yarn unlink",
-    "release": "release-it",
+    "release": "semantic-release",
     "test": "NODE_OPTIONS=\"${NODE_OPTIONS} --loader=@grexie/pages-builder/loader --loader=./tools/jest/loader --no-warnings --experimental-specifier-resolution=node --experimental-import-meta-resolve --experimental-vm-modules\" jest",
     "semantic-release": "semantic-release"
   },
