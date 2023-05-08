@@ -15,8 +15,7 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.OS }}-build-${{ hashFiles('package.json', 'yarn.lock') }}
-      - if: steps.cache-modules.outputs.cache-hit != 'true'
-        run: yarn --frozen-lockfile
+      - run: yarn --frozen-lockfile
       - run: yarn build
       # - name: test
       #   run: yarn test
