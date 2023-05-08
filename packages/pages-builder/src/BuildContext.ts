@@ -432,27 +432,28 @@ export class RootBuildContext extends Context implements BuildContext {
       .realpathSync(path.dirname(require.resolve('@grexie/pages/package.json')))
       .toString();
     this.modulesDirs = [];
-    if (process.env.PAGES_DEV_LINK === 'true') {
-      let dirname: string;
+    let dirname: string;
 
-      dirname = this.rootDir;
-      while (dirname) {
-        this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
-        if (path.dirname(dirname) === dirname) {
-          break;
-        }
-        dirname = path.dirname(dirname);
+    dirname = this.rootDir;
+    while (dirname) {
+      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
+      if (path.dirname(dirname) === dirname) {
+        break;
       }
-
-      dirname = this.pagesDir;
-      while (dirname) {
-        this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
-        if (path.dirname(dirname) === dirname) {
-          break;
-        }
-        dirname = path.dirname(dirname);
-      }
+      dirname = path.dirname(dirname);
     }
+
+    dirname = this.pagesDir;
+    while (dirname) {
+      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
+      if (path.dirname(dirname) === dirname) {
+        break;
+      }
+      dirname = path.dirname(dirname);
+    }
+
+    this.modulesDirs = [...new Set(this.modulesDirs)];
+
     this.outputDir = path.resolve(this.rootDir, 'build');
 
     this.registry = new Registry(this as BuildContext);
@@ -480,6 +481,8 @@ export class RootBuildContext extends Context implements BuildContext {
       ),
       esmExtensions: [...new Set([...(resolver.esmExtensions ?? [])])],
       cjsExtensions: [...new Set([...(resolver.cjsExtensions ?? [])])],
+      esmRoots: [...new Set([...(resolver.esmRoots ?? [])])],
+      cjsRoots: [...new Set([...(resolver.cjsRoots ?? [])])],
       forceCompileRoots: Array.from(
         new Set([...(resolver.forceCompileRoots ?? [this.rootDir])])
       ),
@@ -512,6 +515,7 @@ export class RootBuildContext extends Context implements BuildContext {
       ],
       rootDir: path.resolve(__dirname, 'defaults'),
     });
+
     this.resolverConfig.forceCompileRoots.push(
       path.resolve(__dirname, 'defaults')
     );
@@ -586,6 +590,14 @@ export class RootBuildContext extends Context implements BuildContext {
 
   addEsmExtension(...extensions: string[]) {
     this.resolverConfig.esmExtensions.push(...extensions);
+  }
+
+  addEsmRoot(...paths: string[]): void {
+    this.resolverConfig.esmRoots.push(...paths);
+  }
+
+  addCommonJSRoot(...paths: string[]): void {
+    this.resolverConfig.cjsRoots.push(...paths);
   }
 
   addCommonJSExtension(...extensions: string[]) {

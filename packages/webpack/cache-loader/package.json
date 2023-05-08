@@ -21,7 +21,7 @@
     "@grexie/pages-builder": "^0.4.2"
   },
   "dependencies": {
-    "webpack": "^5.75.0"
+    "webpack": "^5.82.0"
   },
   "exports": {
     ".": {

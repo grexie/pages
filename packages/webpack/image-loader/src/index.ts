@@ -67,6 +67,7 @@ export default async function ImageLoader(
           icon: true,
           template: SvgrTemplate(metadata),
           expandProps: 'end',
+          plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
           replaceAttrValues: {
             '#000': 'currentColor',
             '#000000': 'currentColor',

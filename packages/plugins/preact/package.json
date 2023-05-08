@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@grexie/pages-builder": "^0.4.2",
-    "preact": "^10.11.3",
-    "preact-render-to-string": "^5.2.6"
+    "preact": "^10.13.2",
+    "preact-render-to-string": "^6.0.3"
   },
   "exports": {
     ".": {

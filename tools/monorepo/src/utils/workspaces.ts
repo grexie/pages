@@ -1,4 +1,4 @@
-import glob from 'glob';
+import * as glob from 'glob';
 import { dirname, resolve, join } from 'path';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -7,11 +7,15 @@ import chalk from 'chalk';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export const getWorkspaces = () => {
-  const workspaceGlobs: string[] = JSON.parse(
+  let workspaceGlobs: string[] = JSON.parse(
     readFileSync(
       resolve(__dirname, '..', '..', '..', '..', 'package.json')
     ).toString()
-  ).workspaces;
+  ).workspaces as string[];
+
+  if (typeof workspaceGlobs === 'object') {
+    workspaceGlobs = (workspaceGlobs as any).packages;
+  }
 
   const packageFiles = workspaceGlobs
     .map(g => glob.sync(g + '/package.json'))

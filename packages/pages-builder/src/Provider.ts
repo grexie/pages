@@ -1,4 +1,4 @@
-import glob from 'glob';
+import * as _glob from 'glob';
 import * as _path from 'path';
 import { promisify } from 'util';
 import { Source } from './Source.js';
@@ -6,7 +6,12 @@ import { createResolver, ResolvablePromise } from '@grexie/resolvable';
 import { ProviderOptions, ListOptions } from './Registry.js';
 import { BuildContext } from './BuildContext.js';
 
-const globAsync = promisify(glob);
+let glob = _glob;
+if (glob.default) {
+  glob = glob.default as any;
+}
+
+const globAsync = promisify(glob.glob);
 
 export class Provider {
   readonly context: BuildContext;
@@ -80,9 +85,9 @@ export class Provider {
         '**/*.scss',
         '**/*.css',
         '**/*.d.ts',
-        'node_modules/**',
-        '.git/**',
-        '.github/**',
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/.github/**',
         'package.json',
         '.gitignore',
         '.DS_Store',
@@ -104,7 +109,7 @@ export class Provider {
         );
       }
 
-      const files = await globAsync(
+      const files = (await glob.sync(
         `**/*{${[
           ...(this.context.providerConfig.extensions ?? []),
           ...(this.context.providerConfig.configExtensions ?? []),
@@ -118,7 +123,7 @@ export class Provider {
           fs: this.context.fs as any,
           ignore,
         }
-      );
+      )) as string[];
 
       const sources = await Promise.all(
         files.map(async (filename: string) =>

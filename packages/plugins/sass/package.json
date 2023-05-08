@@ -18,9 +18,9 @@
     "@grexie/pages-cache-loader": "^0.4.2",
     "@grexie/pages-runtime-styles": "^0.4.2",
     "@grexie/pages-style-loader": "^0.4.2",
-    "css-loader": "^6.7.2",
-    "sass": "^1.56.1",
-    "sass-loader": "^13.2.0"
+    "css-loader": "^6.7.3",
+    "sass": "^1.62.1",
+    "sass-loader": "^12.2.2"
   },
   "exports": {
     ".": {

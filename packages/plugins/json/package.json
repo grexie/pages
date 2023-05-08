@@ -13,8 +13,8 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@babel/core": "^7.20.12",
-    "@babel/preset-env": "^7.18.2",
+    "@babel/core": "^7.21.8",
+    "@babel/preset-env": "^7.21.5",
     "@grexie/pages": "^0.4.2",
     "@grexie/pages-builder": "^0.4.2",
     "@grexie/pages-cache-loader": "^0.4.2",

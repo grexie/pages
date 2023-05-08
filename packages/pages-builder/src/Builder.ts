@@ -23,6 +23,7 @@ import type { Configuration as WebpackConfiguration } from 'webpack';
 import chalk from 'chalk';
 import { Source } from './Source.js';
 import { isatty } from 'tty';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 export type Configuration = WebpackConfiguration & {
   devServer?: webpack.WebpackOptionsNormalized['devServer'];
@@ -225,8 +226,16 @@ export class Builder {
           'create-hash/md5': require.resolve('create-hash/md5'),
           'create-hash': require.resolve('create-hash/browser'),
         },
-        conditionNames: ['deno', 'default', 'require', 'import'],
-        // mainFields: ['main', 'module'],
+        conditionNames: [
+          'deno',
+          'browser',
+          'module',
+          'import',
+
+          'default',
+          'require',
+        ],
+        // mainFields: ['module', 'main'],
         ...(this.context.modulesDirs.length
           ? { modules: this.context.modulesDirs }
           : {}),
@@ -300,6 +309,7 @@ export class Builder {
             },
           },
       plugins: [
+        new NodePolyfillPlugin(),
         new ResourcesPlugin({ context: this.context, sources }),
         new webpack.DefinePlugin({
           'process.env': `(${JSON.stringify({

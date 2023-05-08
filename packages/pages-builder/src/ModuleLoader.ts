@@ -248,7 +248,7 @@ export abstract class ModuleLoader {
         }
       );
 
-      await vmModule.link(() => {});
+      await vmModule.link((() => {}) as any);
       await vmModule.evaluate();
 
       resolver.resolve({

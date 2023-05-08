@@ -20,6 +20,8 @@ export interface ModuleResolverConfig {
   forceCompileExtensions?: string[];
   esmExtensions?: string[];
   cjsExtensions?: string[];
+  esmRoots?: string[];
+  cjsRoots?: string[];
 }
 
 export interface ModuleResolverOptions extends ModuleResolverConfig {
@@ -54,7 +56,10 @@ export class ModuleResolver {
   readonly #forceCompileExtensions: string[];
   readonly #esmExtensions: string[];
   readonly #cjsExtensions: string[];
+  readonly #esmRoots: string[];
+  readonly #cjsRoots: string[];
   readonly #resolve;
+  readonly #importCache: Record<string, ModuleReference> = {};
 
   constructor({
     context,
@@ -64,6 +69,8 @@ export class ModuleResolver {
     forceCompileExtensions,
     esmExtensions,
     cjsExtensions,
+    esmRoots,
+    cjsRoots,
   }: ModuleResolverOptions) {
     this.context = context;
     this.compilation = compilation;
@@ -76,10 +83,12 @@ export class ModuleResolver {
     this.#forceCompileExtensions = forceCompileExtensions ?? [];
     this.#esmExtensions = esmExtensions ?? [];
     this.#cjsExtensions = cjsExtensions ?? [];
+    this.#esmRoots = esmRoots ?? [];
+    this.#cjsRoots = cjsRoots ?? [];
 
     const resolver = compilation.resolverFactory.get('loader', {
       fileSystem: compilation.compiler.inputFileSystem,
-      conditionNames: ['import', 'default', 'require'],
+      conditionNames: ['module', 'import', 'default', 'require'],
       // mainFields: ['main', 'module'],
       extensions: extensions,
       ...(this.context.modulesDirs.length
@@ -93,7 +102,42 @@ export class ModuleResolver {
       request: string,
       fullySpecified: boolean = false
     ): Promise<WebpackResolveInfo> => {
-      let _resolver = resolver;
+      const contextModuleDirs = [path.join(context, 'node_modules')];
+
+      let moduleDir = context;
+      while (moduleDir !== path.resolve(moduleDir, '..')) {
+        moduleDir = path.resolve(moduleDir, '..');
+        contextModuleDirs.push(path.join(moduleDir, 'node_modules'));
+      }
+
+      const moduleDirs = [
+        ...contextModuleDirs,
+        ...((resolver.options.modules.reduce(
+          (a, b) => [...a, ...(Array.isArray(b) ? b : [b])],
+          []
+        ) as string[]) ?? []),
+      ];
+
+      moduleDirs.sort((a, b) => {
+        if (
+          a.startsWith(this.context.rootDir) &&
+          !b.startsWith(this.context.rootDir)
+        ) {
+          return 1;
+        }
+        if (
+          !a.startsWith(this.context.rootDir) &&
+          b.startsWith(this.context.rootDir)
+        ) {
+          return -1;
+        }
+        return 0;
+      });
+
+      let _resolver = resolver.withOptions({
+        modules: moduleDirs,
+      });
+
       return new Promise((resolve, reject) => {
         _resolver.resolve(
           {},
@@ -139,6 +183,8 @@ export class ModuleResolver {
   async #buildImport(
     filename: string,
     {
+      request,
+      context,
       compile = false,
       builtin = false,
       loader = !this.#cjsExtensions.reduce(
@@ -150,20 +196,26 @@ export class ModuleResolver {
         : ModuleLoaderType.commonjs,
       descriptionFileData,
     }: {
+      context: string;
+      request: string;
       compile?: boolean;
       builtin?: boolean;
       loader?: ModuleLoaderType;
       descriptionFileData?: any;
-    } = {}
+    }
   ) {
     if (builtin) {
       loader = ModuleLoaderType.node;
     } else if (
       loader !== ModuleLoaderType.esm &&
       descriptionFileData &&
-      !this.#cjsExtensions.reduce((a, b) => a || filename.endsWith(b), false)
+      !this.#cjsExtensions.reduce((a, b) => a || filename.endsWith(b), false) &&
+      !this.#cjsRoots.reduce((a, b) => a || filename.startsWith(b), false)
     ) {
-      if (descriptionFileData.type === 'module') {
+      if (
+        descriptionFileData.type === 'module' ||
+        this.#esmRoots.reduce((a, b) => a || filename.startsWith(b), false)
+      ) {
         loader = ModuleLoaderType.esm;
       }
     }
@@ -178,12 +230,18 @@ export class ModuleResolver {
       (o as any).builtin = true;
     }
 
+    this.#importCache[`${context}:${request}`] = o;
+
     return o;
   }
 
   async resolve(context: string, request: string): Promise<ModuleReference> {
+    if (this.#importCache[`${context}:${request}`]) {
+      return this.#importCache[`${context}:${request}`];
+    }
+
     if (builtinModules.includes(request)) {
-      return this.#buildImport(request, { builtin: true });
+      return this.#buildImport(request, { context, request, builtin: true });
     }
 
     if (/\!/.test(request)) {
@@ -211,14 +269,14 @@ export class ModuleResolver {
         )
         .join('!');
 
-      return this.#buildImport(result, { compile: true });
+      return this.#buildImport(result, { context, request, compile: true });
     }
 
     let resolved: WebpackResolveInfo;
     try {
       resolved = await this.#resolve(context, request);
     } catch (err) {
-      return this.#buildImport(request, { builtin: true });
+      return this.#buildImport(request, { context, request, builtin: true });
     }
 
     resolved.filename = await this.#realpath(resolved.filename);
@@ -230,6 +288,8 @@ export class ModuleResolver {
       this.#require.resolve('@grexie/pages/defaults.pages')
     ) {
       return this.#buildImport(resolved.filename, {
+        context,
+        request,
         compile: true,
         descriptionFileData,
       });
@@ -242,6 +302,8 @@ export class ModuleResolver {
       )
     ) {
       return this.#buildImport(resolved.filename, {
+        context,
+        request,
         compile: true,
         descriptionFileData,
       });
@@ -252,6 +314,8 @@ export class ModuleResolver {
       )
     ) {
       return this.#buildImport(resolved.filename, {
+        context,
+        request,
         compile: true,
         descriptionFileData,
       });
@@ -298,6 +362,8 @@ export class ModuleResolver {
         )
       ) {
         return this.#buildImport(resolved.filename, {
+          context,
+          request,
           compile: true,
           descriptionFileData,
         });
@@ -305,6 +371,8 @@ export class ModuleResolver {
     }
 
     return this.#buildImport(resolved.filename, {
+      context,
+      request,
       descriptionFileData,
     });
   }
