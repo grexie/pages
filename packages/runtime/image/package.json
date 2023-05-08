@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-runtime-image",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",

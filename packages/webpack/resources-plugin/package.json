@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-resources-plugin",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -14,10 +14,10 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.4.2"
+    "@grexie/pages-builder": "^0.4.3"
   },
   "dependencies": {
-    "@grexie/pages": "^0.4.2",
+    "@grexie/pages": "^0.4.3",
     "@grexie/stream": "^*",
     "webpack": "^5.75.0"
   },

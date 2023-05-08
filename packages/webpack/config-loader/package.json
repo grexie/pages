@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-config-loader",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,10 +19,10 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.4.2"
+    "@grexie/pages-builder": "^0.4.3"
   },
   "dependencies": {
-    "@grexie/pages-runtime-config": "^0.4.2",
+    "@grexie/pages-runtime-config": "^0.4.3",
     "webpack": "^5.82.0"
   },
   "exports": {
