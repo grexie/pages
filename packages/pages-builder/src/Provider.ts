@@ -7,8 +7,8 @@ import { ProviderOptions, ListOptions } from './Registry.js';
 import { BuildContext } from './BuildContext.js';
 
 let glob = _glob;
-if (glob.default) {
-  glob = glob.default as any;
+if ((glob as any).default) {
+  glob = (glob as any).default as any;
 }
 
 const globAsync = promisify(glob.glob);

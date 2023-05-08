@@ -205,7 +205,7 @@ export const load: NodeJS.LoaderHooks.Load = async (url, context, next) => {
       return {
         format: format!,
         shortCircuit: true,
-        source,
+        source: source as string,
       };
     }
   }
