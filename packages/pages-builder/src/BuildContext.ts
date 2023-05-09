@@ -432,27 +432,6 @@ export class RootBuildContext extends Context implements BuildContext {
       .realpathSync(path.dirname(require.resolve('@grexie/pages/package.json')))
       .toString();
     this.modulesDirs = [];
-    let dirname: string;
-
-    dirname = this.rootDir;
-    while (dirname) {
-      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
-      if (path.dirname(dirname) === dirname) {
-        break;
-      }
-      dirname = path.dirname(dirname);
-    }
-
-    dirname = this.pagesDir;
-    while (dirname) {
-      this.modulesDirs.push(path.resolve(dirname, 'node_modules'));
-      if (path.dirname(dirname) === dirname) {
-        break;
-      }
-      dirname = path.dirname(dirname);
-    }
-
-    this.modulesDirs = [...new Set(this.modulesDirs)];
 
     this.outputDir = path.resolve(this.rootDir, 'build');
 

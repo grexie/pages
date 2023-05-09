@@ -91,9 +91,6 @@ export class ModuleResolver {
       conditionNames: ['module', 'import', 'default', 'require'],
       // mainFields: ['main', 'module'],
       extensions: extensions,
-      ...(this.context.modulesDirs.length
-        ? { modules: this.context.modulesDirs }
-        : {}),
       fullySpecified: false,
     });
 
@@ -102,41 +99,7 @@ export class ModuleResolver {
       request: string,
       fullySpecified: boolean = false
     ): Promise<WebpackResolveInfo> => {
-      const contextModuleDirs = [path.join(context, 'node_modules')];
-
-      let moduleDir = context;
-      while (moduleDir !== path.resolve(moduleDir, '..')) {
-        moduleDir = path.resolve(moduleDir, '..');
-        contextModuleDirs.push(path.join(moduleDir, 'node_modules'));
-      }
-
-      const moduleDirs = [
-        ...contextModuleDirs,
-        ...((resolver.options.modules.reduce(
-          (a, b) => [...a, ...(Array.isArray(b) ? b : [b])],
-          []
-        ) as string[]) ?? []),
-      ];
-
-      moduleDirs.sort((a, b) => {
-        if (
-          a.startsWith(this.context.rootDir) &&
-          !b.startsWith(this.context.rootDir)
-        ) {
-          return 1;
-        }
-        if (
-          !a.startsWith(this.context.rootDir) &&
-          b.startsWith(this.context.rootDir)
-        ) {
-          return -1;
-        }
-        return 0;
-      });
-
-      let _resolver = resolver.withOptions({
-        modules: moduleDirs,
-      });
+      let _resolver = resolver;
 
       return new Promise((resolve, reject) => {
         _resolver.resolve(

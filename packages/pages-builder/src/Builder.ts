@@ -231,14 +231,10 @@ export class Builder {
           'browser',
           'module',
           'import',
-
           'default',
           'require',
         ],
         // mainFields: ['module', 'main'],
-        ...(this.context.modulesDirs.length
-          ? { modules: this.context.modulesDirs }
-          : {}),
         extensions: this.context.resolverConfig.extensions,
 
         // modules: this.context.modulesDirs,
