@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-runtime-handler",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@grexie/compose": "^0.1.17",
-    "@grexie/pages": "^0.4.3",
-    "@grexie/pages-builder": "^0.4.3"
+    "@grexie/pages": "^0.4.4",
+    "@grexie/pages-builder": "^0.4.4"
   }
 }

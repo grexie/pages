@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-module-loader",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -22,15 +22,15 @@
     "@babel/core": "^7.21.8",
     "@babel/preset-env": "^7.21.5",
     "@grexie/compose": "^0.1.17",
-    "@grexie/pages": "^0.4.3",
-    "@grexie/pages-runtime-handler": "^0.4.3",
+    "@grexie/pages": "^0.4.4",
+    "@grexie/pages-runtime-handler": "^0.4.4",
     "@grexie/source-maps": "^*",
     "react-hot-loader": "^4.13.1",
     "react-refresh": "^0.14.0",
     "webpack": "^5.82.0"
   },
   "peerDependencies": {
-    "@grexie/pages-builder": "^0.4.3"
+    "@grexie/pages-builder": "^0.4.4"
   },
   "exports": {
     ".": {
