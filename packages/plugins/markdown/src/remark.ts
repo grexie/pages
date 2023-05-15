@@ -484,80 +484,81 @@ export const remarkPages: Plugin<[RemarkPagesOptions?]> =
                       body: [
                         {
                           type: 'ReturnStatement',
-                          argument: (
-                            (pageConfig?.layout ?? []) as string[]
-                          ).reduce(
-                            (node, _, i) => ({
-                              type: 'CallExpression',
-                              callee: {
-                                type: 'Identifier',
-                                name: '__pages_jsx',
-                              },
-                              arguments: [
-                                {
+                          argument: ((pageConfig?.layout ?? []) as string[])
+                            .slice()
+                            .reverse()
+                            .reduce(
+                              (node, _, i) => ({
+                                type: 'CallExpression',
+                                callee: {
                                   type: 'Identifier',
-                                  name: `__pages_layout_${i}`,
+                                  name: '__pages_jsx',
                                 },
-                                {
-                                  type: 'ObjectExpression',
-                                  properties: [
-                                    {
-                                      type: 'Property',
-                                      kind: 'init',
-                                      method: false,
-                                      shorthand: false,
-                                      computed: false,
-                                      key: {
-                                        type: 'Identifier',
-                                        name: 'children',
-                                      },
-                                      value: node,
-                                    },
-                                  ],
-                                },
-                              ],
-                            }),
-                            {
-                              type: 'CallExpression',
-                              callee: {
-                                type: 'Identifier',
-                                name: '__pages_jsx',
-                              },
-                              arguments: [
-                                {
-                                  type: 'Identifier',
-                                  name: `Component`,
-                                },
-                                {
-                                  type: 'ObjectExpression',
-                                  properties: [
-                                    {
-                                      type: 'Property',
-                                      kind: 'init',
-                                      method: false,
-                                      shorthand: false,
-                                      computed: false,
-                                      key: {
-                                        type: 'Identifier',
-                                        name: 'children',
-                                      },
-                                      value: {
-                                        type: 'MemberExpression',
-                                        object: {
-                                          type: 'Identifier',
-                                          name: 'props',
-                                        },
-                                        property: {
+                                arguments: [
+                                  {
+                                    type: 'Identifier',
+                                    name: `__pages_layout_${i}`,
+                                  },
+                                  {
+                                    type: 'ObjectExpression',
+                                    properties: [
+                                      {
+                                        type: 'Property',
+                                        kind: 'init',
+                                        method: false,
+                                        shorthand: false,
+                                        computed: false,
+                                        key: {
                                           type: 'Identifier',
                                           name: 'children',
                                         },
+                                        value: node,
                                       },
-                                    },
-                                  ],
+                                    ],
+                                  },
+                                ],
+                              }),
+                              {
+                                type: 'CallExpression',
+                                callee: {
+                                  type: 'Identifier',
+                                  name: '__pages_jsx',
                                 },
-                              ],
-                            } as any
-                          ),
+                                arguments: [
+                                  {
+                                    type: 'Identifier',
+                                    name: `Component`,
+                                  },
+                                  {
+                                    type: 'ObjectExpression',
+                                    properties: [
+                                      {
+                                        type: 'Property',
+                                        kind: 'init',
+                                        method: false,
+                                        shorthand: false,
+                                        computed: false,
+                                        key: {
+                                          type: 'Identifier',
+                                          name: 'children',
+                                        },
+                                        value: {
+                                          type: 'MemberExpression',
+                                          object: {
+                                            type: 'Identifier',
+                                            name: 'props',
+                                          },
+                                          property: {
+                                            type: 'Identifier',
+                                            name: 'children',
+                                          },
+                                        },
+                                      },
+                                    ],
+                                  },
+                                ],
+                              } as any
+                            ),
                         },
                       ],
                     },
