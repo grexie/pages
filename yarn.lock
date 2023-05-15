@@ -1147,23 +1147,22 @@
   dependencies:
     object-hash "^3.0.0"
 
-"@grexie/pages-runtime-metadata@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@grexie/pages-runtime-metadata/-/pages-runtime-metadata-1.0.1.tgz#5324b5fac1b0b372aecaa49f549602080167f6e1"
-  integrity sha512-/Dt0b9IV4m7vck5CFWPHB4MvYCfob4wk1U7zF8kJNCzIgTTzMDubLQXhah1Y/WS1lv6ZBOIjRr8IE2NC44Q6wQ==
+"@grexie/pages-json-loader@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-json-loader/-/pages-json-loader-1.0.2.tgz#45d4436f8b9f681efc9976e7f4f4d941762b6351"
+  integrity sha512-MHcnvB+btvLxwMyiyvV/8nlGh1KSNe0HtSLy5iwUj/DvL99H6HN1OxtyzQug/eimGU09IKFw1CyeVNlbF4MUZg==
   dependencies:
-    "@grexie/pages" "^1.0.1"
-    "@grexie/proxy" "^0.4.1"
-    mdast-util-mdx "^2.0.1"
+    source-map "^0.7.4"
+    webpack "^5.82.0"
 
-"@grexie/pages@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@grexie/pages/-/pages-1.0.1.tgz#df5e5d0c19839bf71ab59ec404f91059365687c6"
-  integrity sha512-0Qz48a6dHr0qAcUbP0cfcJ2ErZHXtcKFxWPX1LhvUZWMTUgxXmGSCP6RBFODlxXiq07MPOiCed3yf35kqsj1cg==
+"@grexie/pages-yaml-loader@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-yaml-loader/-/pages-yaml-loader-1.0.2.tgz#6f7c23d791b35926662e2582498c90638b6c2840"
+  integrity sha512-zMasH4ILEIuSMy4qrYaBOaSVrBOUXbyDn2ydqB+uO9fnc0P/0qDVamSRrIJSGIhWSxphmUDLEPm+QSGYC6Qdfg==
   dependencies:
-    "@grexie/context" "^0.4.1"
-    "@grexie/hash-object" "^0.4.1"
-    next "^13.4.2"
+    source-map "^0.7.4"
+    webpack "^5.75.0"
+    yaml "^2.1.3"
 
 "@grexie/proxy@^0.4.1":
   version "0.4.1"
