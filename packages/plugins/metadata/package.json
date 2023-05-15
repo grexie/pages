@@ -14,8 +14,9 @@
   },
   "dependencies": {
     "@grexie/pages": "^1.0.2",
-    "@grexie/pages-runtime-metadata": "^1.0.2",
     "@grexie/pages-json-loader": "^1.0.2",
+    "@grexie/pages-metadata-loader": "^1.0.2",
+    "@grexie/pages-runtime-metadata": "^1.0.2",
     "@grexie/pages-yaml-loader": "^1.0.2"
   },
   "exports": {
