@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-json-loader",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
