@@ -266,6 +266,8 @@ export const remarkPages: Plugin<[RemarkPagesOptions?]> =
       };
     };
 
+    const layoutLength = pageConfig?.layout?.length ?? 0;
+
     imports.unshift({
       type: 'mdxjsEsm',
       value: '',
@@ -497,7 +499,9 @@ export const remarkPages: Plugin<[RemarkPagesOptions?]> =
                                 arguments: [
                                   {
                                     type: 'Identifier',
-                                    name: `__pages_layout_${i}`,
+                                    name: `__pages_layout_${
+                                      layoutLength - i - 1
+                                    }`,
                                   },
                                   {
                                     type: 'ObjectExpression',
