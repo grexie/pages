@@ -5,6 +5,7 @@
     "outDir": "./lib/",
     "rootDir": "./src/",
     "moduleResolution": "node16",
+    "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@grexie/pages": ["../../pages/src"]
@@ -12,9 +13,5 @@
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
-  "references": [
-    {
-      "path": "../../pages"
-    }
-  ]
+  "references": [{ "path": "../../pages" }]
 }

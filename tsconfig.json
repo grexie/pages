@@ -20,61 +20,31 @@
   ],
   "references": [
     {
-      "path": "packages/pages-serve"
-    },
-    {
-      "path": "packages/pages-cli"
-    },
-    {
-      "path": "packages/pages-builder"
+      "path": "examples/basic"
     },
     {
       "path": "packages/pages"
     },
     {
-      "path": "packages/plugins/yaml"
-    },
-    {
-      "path": "packages/plugins/typescript"
+      "path": "packages/plugins/svg"
     },
     {
       "path": "packages/plugins/sass"
     },
     {
-      "path": "packages/plugins/preact"
+      "path": "packages/plugins/metadata"
     },
     {
       "path": "packages/plugins/markdown"
     },
     {
-      "path": "packages/plugins/json"
-    },
-    {
-      "path": "packages/plugins/javascript"
-    },
-    {
-      "path": "packages/plugins/image"
-    },
-    {
       "path": "packages/plugins/css"
-    },
-    {
-      "path": "packages/runtime/util"
     },
     {
       "path": "packages/runtime/styles"
     },
     {
-      "path": "packages/runtime/image"
-    },
-    {
-      "path": "packages/runtime/hmr"
-    },
-    {
-      "path": "packages/runtime/handler"
-    },
-    {
-      "path": "packages/runtime/config"
+      "path": "packages/runtime/metadata"
     },
     {
       "path": "packages/webpack/yaml-loader"
@@ -83,22 +53,10 @@
       "path": "packages/webpack/style-loader"
     },
     {
-      "path": "packages/webpack/resources-plugin"
-    },
-    {
-      "path": "packages/webpack/module-loader"
+      "path": "packages/webpack/metadata-loader"
     },
     {
       "path": "packages/webpack/json-loader"
-    },
-    {
-      "path": "packages/webpack/image-loader"
-    },
-    {
-      "path": "packages/webpack/config-loader"
-    },
-    {
-      "path": "packages/webpack/cache-loader"
     }
   ]
 }

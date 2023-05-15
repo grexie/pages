@@ -1,9 +1,24 @@
-import { useMemo } from 'react';
-import { Document, DocumentOptions } from '../api/Document.js';
+import { useMemo, ComponentType } from 'react';
 import { createContextWithProps } from '@grexie/context';
+import { compose } from '@grexie/compose';
+import EventEmitter from 'events';
+import { Resource } from './useResource.js';
+
+export interface DocumentOptions {
+  resource: Resource;
+}
+
+export class Document extends EventEmitter {
+  readonly resource: Resource;
+
+  constructor({ resource }: DocumentOptions) {
+    super();
+
+    this.resource = resource;
+  }
+}
 
 const {
-  Context,
   Provider: DocumentProvider,
   with: withDocument,
   use: useDocumentContext,
@@ -11,6 +26,12 @@ const {
   'Pages.Document',
   Provider =>
     ({ children, ...options }) => {
+      const existingDocument = useDocumentContext();
+
+      if (existingDocument) {
+        return <>{children}</>;
+      }
+
       const document = useMemo(() => new Document(options), []);
       return <Provider value={document}>{children}</Provider>;
     }
@@ -25,5 +46,10 @@ export const useDocument = () => {
 
   return document;
 };
+
+export const wrapDocument = (
+  Component: ComponentType<any>,
+  resource: Resource<any>
+) => compose(withDocument({ resource }), Component);
 
 export { DocumentProvider, withDocument, useDocumentContext };

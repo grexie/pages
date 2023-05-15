@@ -3,33 +3,34 @@
   "version": "0.4.3",
   "license": "MIT",
   "type": "module",
-  "main": "lib/index.js",
+  "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
-    "watch": "npm run -s build -- -w"
+    "start": "npm run -s build -- -w"
   },
   "peerDependencies": {
     "react": ">=18.2.0"
   },
   "dependencies": {
     "@grexie/pages": "^0.4.3",
-    "@grexie/pages-builder": "^0.4.3",
-    "@grexie/pages-module-loader": "^0.4.3",
-    "@grexie/pages-runtime-styles": "^0.4.3",
-    "@mdx-js/mdx": "^2.3.0",
-    "gray-matter": "^4.0.3",
-    "source-map": "^0.7.4"
+    "@next/mdx": "^13.4.2",
+    "remark-frontmatter": "^4.0.1",
+    "remark-mdx-next": "^0.1.1"
   },
   "exports": {
     ".": {
-      "@grexie/pages": "./lib/index.js",
-      "types": "./lib/handler.d.ts",
-      "default": "./lib/handler.js"
+      "default": "./lib/index.js"
+    },
+    "./remark": {
+      "default": "./lib/remark.js"
     }
   },
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.5"
+  }
 }

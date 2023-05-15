@@ -1,0 +1,31 @@
+{
+  "name": "@grexie/pages-plugin-svg",
+  "version": "0.4.3",
+  "license": "MIT",
+  "type": "module",
+  "module": "lib/index.js",
+  "types": "lib/types.d.ts",
+  "scripts": {
+    "build": "babel src/ -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "start": "npm run -s build -- -w"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0"
+  },
+  "dependencies": {
+    "@grexie/pages": "^0.4.3",
+    "@svgr/webpack": "^8.0.1"
+  },
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types.d.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false
+}

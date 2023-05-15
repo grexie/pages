@@ -1,0 +1,18 @@
+type: page
+
+head:
+  title: "${typeof title !== 'undefined' && title ? `${title} | Wisdom and Love` : 'Wisdom and Love'}"
+  description: "${typeof description !== 'undefined' && description ? description : head.title}"
+  robots:
+    index: true
+    follow: true
+  viewport: 'width=device-width, initial-scale=1.0, user-scalable=false'
+  charset: UTF-8
+  refresh: null
+  scripts:
+  styles:
+  preload:
+
+page:
+  layout:
+    - layouts/main.mdx

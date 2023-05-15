@@ -1,59 +1,60 @@
-import { Events, BuildContext, Configuration } from '@grexie/pages-builder';
+import { NextConfig } from 'next';
 export type { StyleSheet } from '@grexie/pages-runtime-styles';
 
-const extensions = ['.sass', '.scss'];
+export default function SassPagesPlugin() {
+  return function SassNextPlugin(config: NextConfig) {
+    const nextConfigWebpack = config.webpack;
 
-export default (context: Events<BuildContext>) => {
-  context.builder.after('config', (config: Configuration) => {
-    config.module?.rules?.push(
-      {
-        type: 'javascript/esm',
-        test: /\.s[ac]ss$/,
-        use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-style-loader'),
-          {
-            loader: 'css-loader',
-            options: {
-              sourceMap: true,
-            },
-          },
-          {
-            loader: 'sass-loader',
-          },
-        ],
-        include: /\.global\.s[ac]ss$/,
-      },
-      {
-        type: 'javascript/esm',
-        test: /\.s[ac]ss$/,
-        use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-style-loader'),
-          {
-            loader: 'css-loader',
-            options: {
-              modules:
-                process.env.NODE_ENV === 'production'
-                  ? true
-                  : {
-                      localIdentName: '[path][name]__[local]--[hash:base64:5]',
-                    },
-            },
-          },
-          {
-            loader: 'sass-loader',
-          },
-        ],
-        include: /\.module\.s[ac]ss$/,
-      }
-    );
-  });
+    config.webpack = function SassWebpackConfig(config, context: any) {
+      config = nextConfigWebpack?.(config, context) ?? config;
 
-  context.after('config', (context: BuildContext) => {
-    for (const ext of extensions) {
-      context.addEsmExtension(ext);
-      context.addCompileExtension(ext);
-    }
-  });
-};
+      config.module?.rules?.unshift(
+        {
+          type: 'javascript/esm',
+          test: /\.s[ac]ss$/,
+          use: [
+            '@grexie/pages-style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                esModule: false,
+                sourceMap: true,
+              },
+            },
+            {
+              loader: 'sass-loader',
+            },
+          ],
+          include: /\.global\.s[ac]ss$/,
+        },
+        {
+          type: 'javascript/esm',
+          test: /\.s[ac]ss$/,
+          use: [
+            '@grexie/pages-style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                esModule: false,
+                modules:
+                  process.env.NODE_ENV === 'production'
+                    ? true
+                    : {
+                        localIdentName:
+                          '[path][name]__[local]--[hash:base64:5]',
+                      },
+              },
+            },
+            {
+              loader: 'sass-loader',
+            },
+          ],
+          include: /\.module\.s[ac]ss$/,
+        }
+      );
+
+      return config;
+    };
+    return config;
+  };
+}

@@ -1,16 +1,9 @@
 import EventEmitter from 'events';
-import {
-  useEffect,
-  useMemo,
-  useState,
-  startTransition,
-  FC,
-  useRef,
-} from 'react';
+import { useEffect, useMemo, useState, FC } from 'react';
+import Head from 'next/head.js';
 import { createContextWithProps } from '@grexie/context';
 import { hash } from '@grexie/hash-object';
 import { setImmediate, clearImmediate } from 'timers';
-import { Head } from '../components/Head.js';
 
 export interface StylesProviderProps {
   styles: StylesContext;
@@ -91,13 +84,18 @@ export class StylesContext extends EventEmitter {
   }
 }
 
-export const { with: withStyles, use: useStyles } = createContextWithProps<
-  StylesContext,
-  StylesProviderProps
->('Pages.Styles', Provider => ({ styles, children }) => {
-  const _styles = useMemo(() => styles, [hash(styles)]);
-  return <Provider value={_styles}>{children}</Provider>;
-});
+export const {
+  Provider: StylesProvider,
+  with: withStyles,
+  use: useStyles,
+} = createContextWithProps<StylesContext, StylesProviderProps>(
+  'Pages.Styles',
+  Provider =>
+    ({ styles, children }) => {
+      const _styles = useMemo(() => styles, [hash(styles)]);
+      return <Provider value={_styles}>{children}</Provider>;
+    }
+);
 
 export const useWatchStyles = () => {
   const [, setState] = useState({});
@@ -138,11 +136,18 @@ export const Styles: FC<{}> = () => {
     });
   };
 
+  useMemo(() => onRender(), []);
+
+  const _Head = Head as any;
+
   return (
-    <Head onRender={onRender}>
-      {[...styles].map(({ hash, css }) => (
-        <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
-      ))}
-    </Head>
+    <_Head>
+      {[...styles]
+        .slice()
+        .reverse()
+        .map(({ hash, css }) => (
+          <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
+        ))}
+    </_Head>
   );
 };

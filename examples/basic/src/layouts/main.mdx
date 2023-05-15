@@ -1,0 +1,28 @@
+---
+page:
+  styles:
+    site: ./site.global.scss
+    main: ./main.module.scss
+---
+
+import Head from 'next/head';
+import { useMetadata } from '@grexie/pages';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
+
+<Head>
+  <title>{useMetadata().head?.title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossOrigin="anonymous"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Domine:wght@500&family=Open+Sans:wght@400&display=swap"
+    rel="stylesheet"
+  />
+</Head>
+<Header className={main('header')} />
+<div className={main('content')}>{props.children}</div>
+<Footer className={main('footer')} />

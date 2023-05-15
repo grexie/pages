@@ -1,43 +1,40 @@
 import { LoaderContext } from 'webpack';
-import type { BuildContext } from '@grexie/pages-builder';
 import { offsetLines } from '@grexie/source-maps';
 import { createResolver } from '@grexie/resolvable';
 import { createHash } from 'crypto';
 import { parse as parseCSS } from 'css';
 import { default as traverse } from 'ast-traverse';
-
-import path from 'path';
-
-interface StyleLoaderOptions {
-  context: BuildContext;
-}
+import { createRequire } from 'module';
 
 export default async function StyleLoader(
-  this: LoaderContext<StyleLoaderOptions>,
+  this: LoaderContext<void>,
   content: Buffer,
   inputSourceMap: any
 ) {
   if (process.env.PAGES_DEBUG_LOADERS === 'true') {
     console.debug('style-loader', this.resourcePath);
   }
-  const { context } = this.getOptions();
   const resolver = createResolver();
   // context.modules.addBuild(this.resourcePath, resolver);
   const callback = this.async();
 
-  const modules = context.getModuleContext(this._compilation!);
-
   // const factory = context.modules.createModuleFactory(this._compilation!);
 
   try {
-    const stylesModule = await modules.createModule(
-      path.dirname(this.resourcePath),
-      this.resourcePath,
-      `const module = ${JSON.stringify({ id: this.resourcePath })};\n` +
-        content.toString()
+    const require = createRequire(this.resourcePath);
+    const module: any = {
+      id: this.resourcePath,
+      exports: {},
+      require,
+    };
+
+    new Function('module', 'exports', 'require', content.toString())(
+      module,
+      module.exports,
+      require
     );
 
-    const styles = stylesModule.exports.default;
+    const styles = module.exports;
     const css = styles.toString();
     const variables = parseVariables(css, this.resourcePath);
 

@@ -7,6 +7,7 @@ import {
   useContext,
   useLayoutEffect,
   useState,
+  FC,
 } from 'react';
 import {
   RenderTreeNode,
@@ -38,7 +39,7 @@ describe('useRenderTree', () => {
         return useRenderTreeNode();
       },
       {
-        wrapper: ({ children }) => {
+        wrapper: (({ children }) => {
           const [mutate, setMutate] = useState(0);
 
           return (
@@ -66,7 +67,7 @@ describe('useRenderTree', () => {
               </TreeNode>
             </MutateContext.Provider>
           );
-        },
+        }) as FC<PropsWithChildren>,
         initialProps: {
           mutate: 0,
         },

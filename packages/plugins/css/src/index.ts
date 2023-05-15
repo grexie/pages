@@ -1,50 +1,72 @@
-import { Events, BuildContext, Configuration } from '@grexie/pages-builder';
+import { NextConfig } from 'next';
+import { Configuration } from 'webpack';
 export type { StyleSheet } from '@grexie/pages-runtime-styles';
 
-const extensions = ['.sass', '.scss'];
+export default function CssPagesPlugin() {
+  return function CssNextPlugin(config: NextConfig) {
+    const nextConfigWebpack = config.webpack;
 
-export default (context: Events<BuildContext>) => {
-  context.builder.after('config', (config: Configuration) => {
-    config.module?.rules?.push(
-      {
-        type: 'javascript/esm',
-        test: /\.css$/,
-        use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-style-loader'),
-          {
-            loader: 'css-loader',
-          },
-        ],
-        include: /\.global\.css$/,
-      },
-      {
-        type: 'javascript/esm',
-        test: /\.s[ac]ss$/,
-        use: [
-          // context.builder.loader('@grexie/pages-cache-loader'),
-          context.builder.loader('@grexie/pages-style-loader'),
-          {
-            loader: 'css-loader',
-            options: {
-              modules:
-                process.env.NODE_ENV === 'production'
-                  ? true
-                  : {
-                      localIdentName: '[path][name]__[local]--[hash:base64:5]',
-                    },
+    config.webpack = function CssWebpackConfig(
+      config: Configuration,
+      context: any
+    ) {
+      config = nextConfigWebpack?.(config, context) ?? config;
+
+      config.module?.rules?.unshift(
+        {
+          type: 'javascript/esm',
+          test: /\.css$/,
+          use: [
+            '@grexie/pages-style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                esModule: false,
+                sourceMap: true,
+              },
             },
-          },
-        ],
-        include: /\.module\.css$/,
-      }
-    );
-  });
+          ],
+        },
+        {
+          type: 'javascript/esm',
+          test: /\.css$/,
+          use: [
+            '@grexie/pages-style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                esModule: false,
+                sourceMap: true,
+              },
+            },
+          ],
+          include: /\.global\.css$/,
+        },
+        {
+          type: 'javascript/esm',
+          test: /\.css$/,
+          use: [
+            '@grexie/pages-style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                esModule: false,
+                modules:
+                  process.env.NODE_ENV === 'production'
+                    ? true
+                    : {
+                        localIdentName:
+                          '[path][name]__[local]--[hash:base64:5]',
+                      },
+              },
+            },
+          ],
+          include: /\.module\.css$/,
+        }
+      );
 
-  context.after('config', (context: BuildContext) => {
-    for (const ext of extensions) {
-      context.addEsmExtension(ext);
-      context.addCompileExtension(ext);
-    }
-  });
-};
+      return config;
+    };
+    return config;
+  };
+}

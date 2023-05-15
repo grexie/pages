@@ -1,0 +1,33 @@
+{
+  "name": "@grexie/pages-example-basic",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "next dev",
+    "build": "next build",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@grexie/pages": "^*",
+    "@grexie/pages-plugin-sass": "^*",
+    "@grexie/pages-plugin-metadata": "^*",
+    "@grexie/pages-plugin-markdown": "^*",
+    "@grexie/pages-plugin-svg": "^*",
+    "@apollo/client": "^3.7.14",
+    "@next/mdx": "^13.4.1",
+    "@types/node": "20.1.2",
+    "@types/react": "18.2.6",
+    "@types/react-dom": "18.2.4",
+    "eslint": "8.40.0",
+    "eslint-config-next": "13.4.1",
+    "next": "13.4.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "typescript": "5.0.4"
+  },
+  "devDependencies": {
+    "@mdx-js/loader": "^2.3.0",
+    "remark-frontmatter": "^4.0.1",
+    "remark-mdx-next": "^0.1.1"
+  }
+}

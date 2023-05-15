@@ -1,15 +1,61 @@
-import { useMemo } from 'react';
+import { useMemo, ComponentType } from 'react';
 import { createContextWithProps } from '@grexie/context';
-import type {
-  ContentResource,
-  Resource,
-  ResourceMetadata,
-  ModuleResource,
-} from '../api/Resource.js';
-import { ResourceContext, ResourceContextSet } from '../api/Resource.js';
 import { useDocument } from './useDocument.js';
-import type { Context } from '../api/Context.js';
-import { useContext } from './useContext.js';
+import { compose } from '@grexie/compose';
+
+export interface Metadata {
+  [k: symbol | string | number]: any;
+}
+
+export interface Resource<M extends any = Metadata> {
+  path: string[];
+  slug: string;
+  metadata: M;
+}
+
+export class ResourceContext {
+  readonly parent?: ResourceContext;
+  readonly #children: ResourceContext[] = [];
+  #resource: Resource;
+
+  constructor(resource: Resource, parent?: ResourceContext) {
+    this.parent = parent;
+    this.#resource = resource;
+
+    if (parent) {
+      parent.#children.push(this);
+    }
+  }
+
+  get root() {
+    let self: ResourceContext = this;
+    while (self.parent) {
+      self = self.parent;
+    }
+    return self;
+  }
+
+  get children() {
+    return this.#children.slice();
+  }
+
+  get resource() {
+    return this.#resource;
+  }
+
+  get resources() {
+    const stack: ResourceContext[] = [this];
+    let el: ResourceContext | undefined;
+    const out: Resource[] = [];
+    while ((el = stack.shift())) {
+      if (el.resource) {
+        out.push(el.resource);
+      }
+      stack.push(...el.#children);
+    }
+    return out;
+  }
+}
 
 export interface ResourceContextProviderProps {
   resourceContext: ResourceContext;
@@ -33,7 +79,7 @@ export const useRootResourceContext = () => {
 };
 
 export interface ResourceProviderProps {
-  resource: (context: Context) => Resource;
+  resource: Resource;
 }
 
 const {
@@ -43,26 +89,16 @@ const {
 } = createContextWithProps<Resource, ResourceProviderProps>(
   'Pages.Resource',
   Provider =>
-    ({ resource: resourceFactory, children }) => {
-      const context = useContext();
+    ({ resource, children }) => {
       const parentResourceContext = useResourceContext();
 
       const resourceContext = useMemo(() => {
-        let resourceContext = parentResourceContext;
-        if (resourceContext.resource) {
-          resourceContext = new ResourceContext(resourceContext);
-        }
-        const resource = resourceContext.root.createResource(
-          resourceFactory,
-          context
-        );
-        resourceContext[ResourceContextSet](resource);
-        return resourceContext;
-      }, [parentResourceContext, resourceFactory]);
+        return new ResourceContext(resource, parentResourceContext);
+      }, [parentResourceContext, resource]);
 
       return (
         <ResourceContextProvider resourceContext={resourceContext}>
-          <Provider value={resourceContext.resource}>{children}</Provider>
+          <Provider value={resource}>{children}</Provider>
         </ResourceContextProvider>
       );
     }
@@ -73,11 +109,10 @@ export interface ResourceQueryOptions {
 }
 
 export const useResource = <
-  M extends ResourceMetadata = any,
+  M extends Metadata = any,
   T extends Resource<M> = Resource<M>
 >({ resource = false }: ResourceQueryOptions = {}) => {
   const parentResource = useResourceUntyped() as T;
-
   const document = useDocument();
 
   if (resource) {
@@ -87,14 +122,13 @@ export const useResource = <
   }
 };
 
-export const useConfig = <M extends ResourceMetadata = any>(
+export const useMetadata = <M extends Metadata = any>(
   options?: ResourceQueryOptions
-) => useResource<M>(options).config;
-export const useContent = <C = any,>(options?: ResourceQueryOptions) =>
-  useResource<any, ContentResource<C>>(options).content;
-export const useModule = <X = any,>(options?: ResourceQueryOptions) =>
-  useResource<any, ModuleResource<X>>(options).exports;
+) => useResource<M>(options).metadata;
 export const usePath = (options?: ResourceQueryOptions) =>
   useResource(options).path;
 
 export { ResourceProvider, withResource };
+
+export const wrapResource = (Component: ComponentType, resource: Resource) =>
+  compose(withResource({ resource }), Component);

@@ -3,48 +3,29 @@
   "version": "0.4.3",
   "license": "MIT",
   "type": "module",
-  "module": "lib/index.js",
+  "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
-    "watch": "npm run -s build -- -w"
-  },
-  "dependencies": {
-    "@grexie/compose": "^0.1.17",
-    "@grexie/context": "^*",
-    "@grexie/hash-object": "^*",
-    "@grexie/pages-builder": "^0.4.3",
-    "@grexie/pages-cli": "^0.4.3",
-    "@grexie/proxy": "^*",
-    "react": ">=18.2.0",
-    "react-is": ">=18.2.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.0.12",
-    "@types/react-dom": "^18.0.5",
-    "@types/react-is": "^18.2.0"
+    "start": "npm run -s build -- -w"
   },
   "exports": {
-    "./api": {
-      "import": "./lib/api/index.js",
-      "types": "./lib/api/index.d.ts",
-      "default": "./lib/api/index.js"
-    },
-    "./defaults.pages": {
-      "import": "./lib/defaults.pages.js",
-      "types": "./lib/defaults.pages.d.ts",
-      "default": "./lib/defaults.pages.js"
-    },
-    "./package.json": "./package.json",
     ".": {
-      "@grexie/pages": "./lib/plugin.js",
       "import": "./lib/index.js",
-      "types": "./lib/index.d.ts",
-      "default": "./lib/index.js"
+      "types": "./lib/index.d.ts"
+    },
+    "./next": {
+      "import": "./lib/next/index.js",
+      "types": "./lib/next/index.d.ts"
     }
   },
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "@grexie/context": "^0.4.1",
+    "@grexie/hash-object": "^0.4.1",
+    "next": "^13.4.2"
+  }
 }

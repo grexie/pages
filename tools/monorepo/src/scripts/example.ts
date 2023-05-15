@@ -11,8 +11,7 @@ export default (
   name: string,
   ...args: string[]
 ) => {
-  spawnSync('pages', args, {
-    cwd: path.resolve(process.cwd(), 'examples', name),
+  spawnSync('yarn', ['workspace', `@grexie/pages-example-${name}`, ...args], {
     env: {
       ...process.env,
       PORT: `${port}`,
