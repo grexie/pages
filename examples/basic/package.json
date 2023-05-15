@@ -1,16 +1,16 @@
 {
   "name": "@grexie/pages-example-basic",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "scripts": {
     "start": "next dev"
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.3",
-    "@grexie/pages-plugin-sass": "^1.0.3",
-    "@grexie/pages-plugin-metadata": "^1.0.3",
-    "@grexie/pages-plugin-markdown": "^1.0.3",
-    "@grexie/pages-plugin-svg": "^1.0.3",
+    "@grexie/pages": "^1.0.4",
+    "@grexie/pages-plugin-sass": "^1.0.4",
+    "@grexie/pages-plugin-metadata": "^1.0.4",
+    "@grexie/pages-plugin-markdown": "^1.0.4",
+    "@grexie/pages-plugin-svg": "^1.0.4",
     "@apollo/client": "^3.7.14",
     "@next/mdx": "^13.4.1",
     "@types/node": "20.1.2",
