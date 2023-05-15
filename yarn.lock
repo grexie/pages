@@ -1147,6 +1147,24 @@
   dependencies:
     object-hash "^3.0.0"
 
+"@grexie/pages-runtime-metadata@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@grexie/pages-runtime-metadata/-/pages-runtime-metadata-1.0.1.tgz#5324b5fac1b0b372aecaa49f549602080167f6e1"
+  integrity sha512-/Dt0b9IV4m7vck5CFWPHB4MvYCfob4wk1U7zF8kJNCzIgTTzMDubLQXhah1Y/WS1lv6ZBOIjRr8IE2NC44Q6wQ==
+  dependencies:
+    "@grexie/pages" "^1.0.1"
+    "@grexie/proxy" "^0.4.1"
+    mdast-util-mdx "^2.0.1"
+
+"@grexie/pages@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@grexie/pages/-/pages-1.0.1.tgz#df5e5d0c19839bf71ab59ec404f91059365687c6"
+  integrity sha512-0Qz48a6dHr0qAcUbP0cfcJ2ErZHXtcKFxWPX1LhvUZWMTUgxXmGSCP6RBFODlxXiq07MPOiCed3yf35kqsj1cg==
+  dependencies:
+    "@grexie/context" "^0.4.1"
+    "@grexie/hash-object" "^0.4.1"
+    next "^13.4.2"
+
 "@grexie/proxy@^0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@grexie/proxy/-/proxy-0.4.1.tgz#fe974cd0d9d6f3de8a0a308cf7e5759cdb158c36"
