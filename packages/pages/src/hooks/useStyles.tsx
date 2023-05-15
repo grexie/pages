@@ -141,13 +141,13 @@ export const Styles: FC<{}> = () => {
   const _Head = Head as any;
 
   return (
-    <_Head>
+    <>
       {[...styles]
         .slice()
         .reverse()
         .map(({ hash, css }) => (
           <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
         ))}
-    </_Head>
+    </>
   );
 };

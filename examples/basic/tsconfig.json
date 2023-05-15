@@ -8,14 +8,32 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@grexie/pages": ["../../packages/pages/src"],
-      "@grexie/pages-plugin-sass": ["../../packages/plugins/sass/src"]
-    }
+      "@grexie/pages": [
+        "../../packages/pages/src"
+      ],
+      "@grexie/pages-plugin-sass": [
+        "../../packages/plugins/sass/src"
+      ]
+    },
+    "noEmit": true,
+    "isolatedModules": true,
+    "jsx": "preserve"
   },
-  "include": ["pages-env.d.ts", "next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"],
+  "include": [
+    "pages-env.d.ts",
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "references": [
-    { "path": "../../packages/pages" },
-    { "path": "../../packages/plugins/sass" }
+    {
+      "path": "../../packages/pages"
+    },
+    {
+      "path": "../../packages/plugins/sass"
+    }
   ]
 }
