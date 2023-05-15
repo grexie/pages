@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-monorepo",
-  "version": "0.4.3",
+  "version": "1.0.0",
   "license": "MIT",
   "private": true,
   "type": "module",

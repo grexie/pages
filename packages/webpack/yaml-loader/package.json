@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-yaml-loader",
-  "version": "0.4.3",
+  "version": "1.0.0",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
