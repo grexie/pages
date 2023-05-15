@@ -1,4 +1,10 @@
-import { createContext, useContext, useMemo } from 'react';
+import {
+  FC,
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useMemo,
+} from 'react';
 import {
   ApolloClient,
   InMemoryCache,
@@ -12,7 +18,7 @@ const PagesContext = createContext<ApolloClient<NormalizedCacheObject> | null>(
 );
 
 export const useQuery: typeof _useQuery = (query, options) => {
-  const client = useContext(PagesContext);
+  const client = useContext(PagesContext)!;
 
   return _useQuery(query, {
     client,
@@ -20,7 +26,7 @@ export const useQuery: typeof _useQuery = (query, options) => {
   });
 };
 
-export const PagesProvider = ({ children }) => {
+export const PagesProvider: FC<PropsWithChildren> = ({ children }) => {
   const client = useMemo(
     () =>
       new ApolloClient({

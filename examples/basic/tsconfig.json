@@ -1,21 +1,21 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "baseUrl": "src/",
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    "incremental": true,
-    "esModuleInterop": true,
-    "module": "esnext",
+    "outDir": "./lib/",
+    "rootDir": "./",
+    "baseUrl": "./src/",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "noEmit": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages": ["../../packages/pages/src"],
+      "@grexie/pages-plugin-sass": ["../../packages/plugins/sass/src"]
+    }
   },
   "include": ["pages-env.d.ts", "next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "references": [
+    { "path": "../../packages/pages" },
+    { "path": "../../packages/plugins/sass" }
+  ]
 }
