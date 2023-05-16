@@ -23,7 +23,7 @@ export default async function YamlLoader(
     const documents = YAML.parseAllDocuments(content.toString());
     const document = documents[documents.length - 1];
     const chunk = `export default ${JSON.stringify(
-      transform?.(document) ?? document,
+      transform?.(document.toJSON()) ?? document,
       null,
       2
     )};`;

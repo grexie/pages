@@ -5,8 +5,9 @@ import { createRequire } from 'module';
 const require = createRequire(process.cwd());
 
 export type Plugin<C extends any = void> = (
-  config: C
-) => (nextConfig: NextConfig) => Promise<NextConfig>;
+  config: C,
+  context: Omit<PagesConfig, 'plugins'>
+) => (nextConfig: NextConfig) => NextConfig | PromiseLike<NextConfig>;
 
 export type PluginConfig<C extends any> =
   | string
@@ -14,6 +15,7 @@ export type PluginConfig<C extends any> =
   | [plugin: string | Plugin<C>, config?: C];
 
 export interface PagesConfig {
+  pagesDir: string;
   plugins: PluginConfig<any>[];
 }
 
@@ -32,9 +34,9 @@ export const withPages = async (
       if ((m as any).default) {
         m = (m as any).default;
       }
-      nextConfig = await m(plugin[1])(nextConfig);
+      nextConfig = await m(plugin[1], config)(nextConfig);
     } else {
-      nextConfig = await plugin[0](plugin[1])(nextConfig);
+      nextConfig = await plugin[0](plugin[1], config)(nextConfig);
     }
   }
   return nextConfig;

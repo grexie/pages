@@ -8,6 +8,7 @@ const nextConfig = {
 };
 
 export default await withPages(nextConfig, {
+  pagesDir: 'pages',
   plugins: [
     '@grexie/pages-plugin-metadata',
     '@grexie/pages-plugin-sass',

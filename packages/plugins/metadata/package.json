@@ -17,11 +17,16 @@
     "@grexie/pages-json-loader": "^1.0.6",
     "@grexie/pages-metadata-loader": "^1.0.6",
     "@grexie/pages-runtime-metadata": "^1.0.6",
-    "@grexie/pages-yaml-loader": "^1.0.6"
+    "@grexie/pages-yaml-loader": "^1.0.6",
+    "babel-loader": "^9.1.2"
   },
   "exports": {
     ".": {
       "default": "./lib/index.js"
+    },
+    "./babel": {
+      "default": "./lib/babel.js",
+      "types": "./lib/babel.d.ts"
     }
   },
   "publishConfig": {
