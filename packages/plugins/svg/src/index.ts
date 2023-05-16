@@ -24,7 +24,20 @@ export default function SvgPagesPlugin() {
         {
           test: /\.svg$/i,
           issuer: /\.([jt]sx?|mdx?)$/,
-          resourceQuery: { not: /url/ },
+          resourceQuery: /icon/,
+          use: [
+            {
+              loader: '@svgr/webpack',
+              options: {
+                icon: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.svg$/i,
+          issuer: /\.([jt]sx?|mdx?)$/,
+          resourceQuery: { not: [/url/, /icon/] },
           use: ['@svgr/webpack'],
         }
       );

@@ -33,6 +33,12 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
   return {
     visitor: {
       Program: {
+        enter(_, state) {
+          state.set('metadata', {
+            type: 'ObjectExpression',
+            properties: [],
+          });
+        },
         exit(p, state) {
           if (!state.get('pageConfig')?.transform) {
             return;
