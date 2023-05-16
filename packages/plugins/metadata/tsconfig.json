@@ -6,8 +6,12 @@
     "rootDir": "./src/",
     "moduleResolution": "node16",
     "jsx": "react-jsx",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@grexie/pages-runtime-metadata": ["../../runtime/metadata/src"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [{ "path": "../../runtime/metadata" }]
 }
