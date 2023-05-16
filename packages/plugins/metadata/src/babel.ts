@@ -38,7 +38,7 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             return;
           }
 
-          state.get('mangleComponentName')?.();
+          state.get('mangleComponentName')();
 
           const layouts = (state.get('pageConfig')?.layout ?? []).map(
             (layout: string, i: number) =>
@@ -477,8 +477,6 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
           ];
 
           p.unshiftContainer('body', imports);
-
-          // console.info(generator.default(p.node).code);
           p.pushContainer('body', exports);
         },
       },
@@ -557,17 +555,6 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
               }
             },
           });
-
-          // console.info('completing metadata export', p.node);
-          // if (
-          //   !(
-          //     p.get('declaration')
-          //       .node as BabelTypesNamespace.VariableDeclaration
-          //   ).declarations.length
-          // ) {
-          //   p.remove();
-          // }
-          // console.info('completed metadata export');
         }
       },
       ExportDefaultDeclaration(p, state) {

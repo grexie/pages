@@ -23,7 +23,7 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
           options: {
             presets: [['@babel/env', { modules: false }]],
             plugins: [[BabelPagesPlugin, { pagesDir }]],
-            sourceMaps: !!config.devtool,
+            sourceMaps: true,
             compact: false,
           },
         },
@@ -55,7 +55,7 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
               loader: 'babel-loader',
               options: {
                 presets: ['@babel/react', ['@babel/env', { modules: false }]],
-                sourceMaps: !!config.devtool,
+                sourceMaps: true,
                 compact: false,
               },
             },
@@ -74,7 +74,7 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
                   '@babel/react',
                   ['@babel/env', { modules: false }],
                 ],
-                sourceMaps: !!config.devtool,
+                sourceMaps: true,
                 compact: false,
               },
             },
@@ -90,7 +90,6 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
               options: {
                 transform: (doc: any) => {
                   delete doc.page;
-                  console.info(doc);
                   return doc;
                 },
               },

@@ -1,7 +1,8 @@
 type: page
 
 head:
-  title: "${typeof title !== 'undefined' && title ? `${title} | Wisdom and Love` : 'Wisdom and Love'}"
+  title: |
+    ${typeof title !== 'undefined' && title ? `${title} | Katie's Page` : "Katie's Page"}
   description: "${typeof description !== 'undefined' && description ? description : head.title}"
   robots:
     index: true

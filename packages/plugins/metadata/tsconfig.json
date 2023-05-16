@@ -8,10 +8,15 @@
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "paths": {
+      "@grexie/pages": ["../../pages/src"],
+      "@grexie/pages/next": ["../../pages/src/next"],
       "@grexie/pages-runtime-metadata": ["../../runtime/metadata/src"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
-  "references": [{ "path": "../../runtime/metadata" }]
+  "references": [
+    { "path": "../../pages" },
+    { "path": "../../runtime/metadata" }
+  ]
 }

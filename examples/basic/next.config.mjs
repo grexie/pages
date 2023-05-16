@@ -5,6 +5,7 @@ import { withPages } from '@grexie/pages/next';
 const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   reactStrictMode: true,
+  productionBrowserSourceMaps: true,
 };
 
 export default await withPages(nextConfig, {

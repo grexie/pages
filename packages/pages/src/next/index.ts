@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next';
-
+import { PagesInfrastructurePlugin } from './plugin.js';
 import { createRequire } from 'module';
 
 const require = createRequire(process.cwd());
@@ -19,11 +19,13 @@ export interface PagesConfig {
   plugins: PluginConfig<any>[];
 }
 
+const defaultPlugins: PluginConfig<any>[] = [PagesInfrastructurePlugin];
+
 export const withPages = async (
   nextConfig: NextConfig,
   config: PagesConfig
 ) => {
-  for (let plugin of config.plugins) {
+  for (let plugin of [...defaultPlugins, ...config.plugins]) {
     if (!Array.isArray(plugin)) {
       plugin = [plugin];
     }
