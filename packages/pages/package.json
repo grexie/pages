@@ -26,6 +26,10 @@
   "dependencies": {
     "@grexie/context": "^0.4.1",
     "@grexie/hash-object": "^0.4.1",
-    "next": "^13.4.2"
+    "html-entities": "^2.3.3",
+    "react-is": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react-is": "^18.2.0"
   }
 }

@@ -1,10 +1,12 @@
 import type { AppProps } from 'next/app';
-import { withStyles, StylesContext, Styles } from '@grexie/pages';
-import { compose } from '@grexie/compose';
-import { styles } from './_document';
+import { DocumentContent } from '@grexie/pages';
 
 const App = ({ Component, pageProps }: AppProps) => {
-  return <Component {...pageProps} />;
+  return (
+    <DocumentContent>
+      <Component {...pageProps} />
+    </DocumentContent>
+  );
 };
 
-export default compose(withStyles({ styles }), App);
+export default App;

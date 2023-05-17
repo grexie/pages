@@ -3,3 +3,4 @@ export * from './useFirstRender.js';
 export * from './useRenderTree.js';
 export * from './useDocument.js';
 export * from './useResource.js';
+export * from './useLazy.js';

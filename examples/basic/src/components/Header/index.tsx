@@ -6,15 +6,13 @@ interface HeaderProps {
   className?: string;
 }
 
-export default () => null;
-
 export const Header: FC<HeaderProps> = ({ className }) => {
   styles.use();
 
   return (
     <div className={styles('container', className)}>
       <Logo width={40} className={styles('logo')} />
-      <h1>Katie's Site</h1>
+      <h1>Katie&apos;s Site</h1>
     </div>
   );
 };

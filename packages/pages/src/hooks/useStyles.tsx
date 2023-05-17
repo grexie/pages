@@ -1,9 +1,9 @@
 import EventEmitter from 'events';
 import { useEffect, useMemo, useState, FC } from 'react';
-import Head from 'next/head.js';
 import { createContextWithProps } from '@grexie/context';
 import { hash } from '@grexie/hash-object';
 import { setImmediate, clearImmediate } from 'timers';
+import { Head } from '../components/Head.js';
 
 export interface StylesProviderProps {
   styles: StylesContext;
@@ -136,18 +136,14 @@ export const Styles: FC<{}> = () => {
     });
   };
 
-  useMemo(() => onRender(), []);
-
-  const _Head = Head as any;
-
   return (
-    <>
+    <Head onRender={onRender}>
       {[...styles]
         .slice()
         .reverse()
         .map(({ hash, css }) => (
           <style key={hash} dangerouslySetInnerHTML={{ __html: css }} />
         ))}
-    </>
+    </Head>
   );
 };

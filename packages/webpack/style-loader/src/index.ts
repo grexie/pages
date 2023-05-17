@@ -47,15 +47,7 @@ export default async function StyleLoader(
     )}, ${JSON.stringify(locals, null, 2)}, ${JSON.stringify(variables)}); 
   `;
 
-    let map;
-
-    if (this.sourceMap) {
-      map =
-        inputSourceMap &&
-        (await offsetLines(inputSourceMap, chunk.split(/\r\n|\n/g).length));
-    }
-
-    callback(null, chunk, inputSourceMap);
+    callback(null, chunk);
   } catch (err) {
     callback(err as any);
     resolver.reject(err);

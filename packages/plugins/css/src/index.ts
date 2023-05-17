@@ -22,7 +22,7 @@ export default function CssPagesPlugin() {
               loader: 'css-loader',
               options: {
                 esModule: false,
-                sourceMap: true,
+                sourceMap: false,
               },
             },
           ],
@@ -36,7 +36,7 @@ export default function CssPagesPlugin() {
               loader: 'css-loader',
               options: {
                 esModule: false,
-                sourceMap: true,
+                sourceMap: false,
               },
             },
           ],
@@ -51,6 +51,7 @@ export default function CssPagesPlugin() {
               loader: 'css-loader',
               options: {
                 esModule: false,
+                sourceMap: false,
                 modules:
                   process.env.NODE_ENV === 'production'
                     ? true

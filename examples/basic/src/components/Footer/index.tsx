@@ -5,8 +5,6 @@ interface FooterProps {
   className?: string;
 }
 
-export default () => null;
-
 export const Footer: FC<FooterProps> = ({ className }) => {
   styles.use();
 
