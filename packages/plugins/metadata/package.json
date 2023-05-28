@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-metadata",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.js",
@@ -17,11 +17,11 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.10",
-    "@grexie/pages-json-loader": "^1.0.10",
-    "@grexie/pages-metadata-loader": "^1.0.10",
-    "@grexie/pages-runtime-metadata": "^1.0.10",
-    "@grexie/pages-yaml-loader": "^1.0.10",
+    "@grexie/pages": "^1.0.11",
+    "@grexie/pages-json-loader": "^1.0.11",
+    "@grexie/pages-metadata-loader": "^1.0.11",
+    "@grexie/pages-runtime-metadata": "^1.0.11",
+    "@grexie/pages-yaml-loader": "^1.0.11",
     "babel-loader": "^9.1.2"
   },
   "exports": {
