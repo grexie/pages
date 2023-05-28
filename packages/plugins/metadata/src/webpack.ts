@@ -213,6 +213,16 @@ export class Loader {
     }>();
     this.#modules[result] = resolver;
 
+    const rootDir = process.cwd();
+
+    if (
+      result.substring(0, rootDir.length) !== rootDir &&
+      !/\.(esm\.js|es\.js|mjs)$/.test(result)
+    ) {
+      resolver.resolve({ module: await this.#nodeLoader(specifier) });
+      return resolver;
+    }
+
     try {
       const dependency = new webpack.dependencies.ModuleDependency(result);
 
@@ -222,7 +232,7 @@ export class Loader {
             {
               context,
               contextInfo: {
-                issuer: 'context',
+                issuer: parent!,
                 issuerLayer,
                 compiler: 'javascript/auto',
               },
@@ -263,8 +273,7 @@ export class Loader {
       if (
         !/\.(esm\.js|es\.js|mjs)$/.test(result) &&
         (resolveContext.descriptionFileData.type !== 'module' ||
-          /\.cjs$/.test(result) ||
-          /\.json$/.test(result))
+          /\.cjs$/.test(result))
       ) {
         resolver.resolve({
           webpackModule,
