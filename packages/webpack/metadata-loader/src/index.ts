@@ -13,7 +13,12 @@ export default async function MetadataLoader(
 
   try {
     const compiled = await transformAsync(content.toString(), {
-      plugins: [configModulePlugin],
+      presets: [['@babel/env', { modules: false }]],
+      plugins: [
+        '@babel/syntax-jsx',
+        ['@babel/syntax-typescript', { isTSX: true }],
+        configModulePlugin,
+      ],
       filename: this.resourcePath,
       sourceFileName: this.resourcePath,
       inputSourceMap: inputSourceMap,
@@ -33,42 +38,93 @@ export default async function MetadataLoader(
 
 const configModulePlugin: (b: typeof babel) => PluginObj<PluginPass> = ({
   types: t,
-}) => ({
-  visitor: {
-    ExportDefaultDeclaration: {
-      enter: path => {
-        path.insertBefore(
-          t.importDeclaration(
-            [
-              t.importSpecifier(
-                t.identifier('__pages_wrap_metadata'),
-                t.identifier('wrapMetadata')
+}) => {
+  return {
+    visitor: {
+      ExportNamedDeclaration: {
+        enter(p, state) {
+          if (
+            p.get('declaration').isVariableDeclaration() &&
+            p
+              .get('declaration')
+              .get('declarations')
+              .find((p: any) => p.get('id').isIdentifier({ name: 'typeDefs' }))
+              ?.isVariableDeclarator()
+          ) {
+            state.set('hasTypeDefs', true);
+          }
+
+          if (
+            p.get('declaration').isVariableDeclaration() &&
+            p
+              .get('declaration')
+              .get('declarations')
+              .find((p: any) => p.get('id').isIdentifier({ name: 'resolvers' }))
+              ?.isVariableDeclarator()
+          ) {
+            state.set('hasResolvers', true);
+          }
+        },
+      },
+      ExportDefaultDeclaration: {
+        enter: path => {
+          path.insertBefore(
+            t.importDeclaration(
+              [
+                t.importSpecifier(
+                  t.identifier('__pages_wrap_metadata'),
+                  t.identifier('wrapMetadata')
+                ),
+              ],
+              t.stringLiteral('@grexie/pages-runtime-metadata')
+            )
+          );
+          path.insertBefore(
+            t.variableDeclaration('const', [
+              t.variableDeclarator(
+                t.identifier('__pages_metadata'),
+                path.node.declaration as any
               ),
-            ],
-            t.stringLiteral('@grexie/pages-runtime-metadata')
-          )
-        );
-        path.insertBefore(
-          t.variableDeclaration('const', [
-            t.variableDeclarator(
-              t.identifier('__pages_metadata'),
-              path.node.declaration as any
-            ),
-          ])
-        );
-        path.remove();
-      },
-    },
-    Program: {
-      exit(path) {
-        path.node.body.push(
-          t.exportDefaultDeclaration(
-            t.callExpression(t.identifier('__pages_wrap_metadata'), [
-              t.identifier('__pages_metadata'),
             ])
-          )
-        );
+          );
+          path.remove();
+        },
+      },
+      Program: {
+        exit(path, state) {
+          if (!state.get('hasTypeDefs')) {
+            path.unshiftContainer('body', [
+              t.exportNamedDeclaration(
+                t.variableDeclaration('const', [
+                  t.variableDeclarator(
+                    t.identifier('typeDefs'),
+                    t.arrayExpression()
+                  ),
+                ])
+              ),
+            ]);
+          }
+          if (!state.get('hasResolvers')) {
+            path.unshiftContainer('body', [
+              t.exportNamedDeclaration(
+                t.variableDeclaration('const', [
+                  t.variableDeclarator(
+                    t.identifier('resolvers'),
+                    t.arrayExpression()
+                  ),
+                ])
+              ),
+            ]);
+          }
+          path.node.body.push(
+            t.exportDefaultDeclaration(
+              t.callExpression(t.identifier('__pages_wrap_metadata'), [
+                t.identifier('__pages_metadata'),
+              ])
+            )
+          );
+        },
       },
     },
-  },
-});
+  };
+};

@@ -7,7 +7,6 @@ import {
   Suspense,
   SuspenseProps,
 } from 'react';
-import { setImmediate } from 'timers';
 import { createContext } from '@grexie/context';
 import { name } from '../utils/name.js';
 

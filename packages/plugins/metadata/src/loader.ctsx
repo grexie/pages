@@ -1,0 +1,156 @@
+import type * as BabelCoreNamespace from '@babel/core';
+import type * as BabelTypesNamespace from '@babel/types';
+import type { PluginObj } from '@babel/core';
+import { Compilation, LoaderContext, Module } from 'webpack';
+import * as babel from '@babel/core';
+import * as vm from 'vm';
+import * as path from 'path';
+import { renderToString } from 'react-dom/server';
+import { compose } from '@grexie/compose';
+import * as url from 'url';
+export type Babel = typeof BabelCoreNamespace;
+export type BabelTypes = typeof BabelTypesNamespace;
+
+export interface PagesPlugin {
+  readonly resources?: Record<string, any>;
+  readonly ready?: Promise<void>;
+  createLoader(compilation: Compilation, debug?: boolean): Loader;
+}
+export interface Loader {
+  executeModule(
+    filename: string,
+    source: string
+  ): Promise<{ module: vm.Module }>;
+  importModule(
+    context: string,
+    specifier: string,
+    parent?: string
+  ): Promise<{ webpackModule: Module; module: vm.Module }>;
+}
+
+export interface PagesLoaderOptions {
+  pagesDir: string;
+  plugin: PagesPlugin;
+}
+
+export default async function WebpackPagesLoader(
+  this: LoaderContext<PagesLoaderOptions>
+) {
+  if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+    console.debug('pages-loader', this.resourcePath);
+  }
+
+  const callback = this.async();
+  this.cacheable(true);
+
+  const { plugin } = this.getOptions();
+
+  await plugin.ready;
+
+  Object.keys(plugin.resources).forEach(file => this.addDependency(file));
+
+  return callback(null, JSON.stringify(plugin.resources, null, 2));
+}
+//   if (
+//     this.resourcePath.substring(0, path.resolve(pagesDir).length) !==
+//     path.resolve(pagesDir)
+//   ) {
+//     return callback(null, content, inputMap);
+//   }
+
+//   const url = new URL(this._module?.issuer?.identifier(), 'file://');
+//   if (url.pathname.endsWith('next-client-pages-loader.js')) {
+//     return callback(null, content, inputMap);
+//   } else {
+//     console.info(url);
+//   }
+
+//   try {
+//     const { code } = (await babel.transformAsync(content.toString(), {
+//       presets: [
+//         '@babel/typescript',
+//         ['@babel/react', { runtime: 'automatic' }],
+//         ['@babel/env', { modules: false }],
+//       ],
+//       filename: this.resourcePath,
+//     }))!;
+
+//     const loader = plugin.createLoader(this._compilation!);
+
+//     const {
+//       module: {
+//         namespace: { default: Page, getStaticPaths, getStaticProps },
+//       },
+//     }: any = await loader.executeModule(this.resourcePath, code!);
+
+//     if (Page) {
+//       const {
+//         module: {
+//           namespace: { default: App },
+//         },
+//       }: any = await loader.importModule(
+//         path.dirname(this.resourcePath),
+//         path.resolve(pagesDir, '_app'),
+//         this.resourcePath
+//       );
+
+//       const queryCollector = new QueryCollector();
+
+//       const SSRApp = compose(
+//         withPagesContext({
+//           queryCollector,
+//           resources: Object.values(plugin.resources),
+//         }),
+//         App
+//       );
+
+//       renderToString(<SSRApp Component={Page} pageProps={{}} />);
+
+//       [...queryCollector.files].forEach(file => this.addBuildDependency(file));
+
+//       const result = await babel.transformAsync(content.toString(), {
+//         presets: [['@babel/env', { modules: false }]],
+//         plugins: [
+//           '@babel/syntax-jsx',
+//           ['@babel/syntax-typescript', { isTSX: true }],
+//           [
+//             PagesQueryInjectionPlugin,
+//             {
+//               data: JSON.parse(JSON.stringify(queryCollector.data)),
+//             },
+//           ],
+//         ],
+//         filename: this.resourcePath,
+//         sourceMaps: true,
+//         compact: false,
+//       });
+
+//       return callback(null, result!.code!, result!.map!, additionalData);
+//     }
+
+//     return callback(null, content, inputMap, additionalData);
+//   } catch (err: any) {
+//     console.error(this.resourcePath, err);
+//     return callback(err);
+//   } finally {
+//     if (process.env.PAGES_DEBUG_LOADERS === 'true') {
+//       console.debug('pages-loader:complete', this.resourcePath);
+//     }
+//   }
+// }
+
+// const PagesQueryInjectionPlugin = (babel: Babel): PluginObj => ({
+//   visitor: {
+//     ExportDefaultDeclaration(p, state) {
+//       p.get('declaration').replaceWith(
+//         babel.types.callExpression(
+//           babel.types.callExpression(
+//             babel.types.identifier('__pages_with_pages_context'),
+//             [babel.types.valueToNode({ data: (state.opts as any).data })]
+//           ),
+//           [p.get('declaration').node as any]
+//         )
+//       );
+//     },
+//   },
+// });

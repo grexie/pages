@@ -4,7 +4,7 @@
     "composite": true,
     "outDir": "./lib/",
     "rootDir": "./src/",
-    "moduleResolution": "node16",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

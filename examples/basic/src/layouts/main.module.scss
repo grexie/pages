@@ -1,15 +1,21 @@
-
 .content {
   display: flex;
   flex: 1 1 auto;
   flex-flow: column nowrap;
   padding: 1em;
+
+  hr {
+    border: none;
+    opacity: 0.2;
+    border-top: 1px solid var(--color-header-background);
+    height: 0;
+    width: 100%;
+    margin: 1em 0;
+  }
 }
 
 .header {
-  
 }
 
 .footer {
-
 }

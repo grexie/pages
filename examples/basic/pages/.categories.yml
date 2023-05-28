@@ -1,0 +1,6 @@
+blog:
+  name: Blog
+  slug: /
+g:
+  name: Hello
+  slug: /g

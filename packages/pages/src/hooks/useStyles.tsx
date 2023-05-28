@@ -2,8 +2,9 @@ import EventEmitter from 'events';
 import { useEffect, useMemo, useState, FC } from 'react';
 import { createContextWithProps } from '@grexie/context';
 import { hash } from '@grexie/hash-object';
-import { setImmediate, clearImmediate } from 'timers';
 import { Head } from '../components/Head.js';
+import setImmediate from 'core-js-pure/stable/set-immediate.js';
+import clearImmediate from 'core-js-pure/stable/clear-immediate.js';
 
 export interface StylesProviderProps {
   styles: StylesContext;

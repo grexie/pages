@@ -1,0 +1,68 @@
+---
+page:
+  layout:
+    - layouts/main.mdx
+  queries:
+    latestPosts: |
+      query PageQuery($categories: [Category!]!, $slug: String) {
+        pages(
+          filter: {
+            slug: { ne: $slug }
+            type: { in: [page, post] }
+            categories: { in: $categories }
+          }
+          sort: ["-date", "-title"]
+          limit: 3
+        ) {
+          resources {
+            slug
+            title
+            date
+          }
+          count
+        }
+
+        page {
+          next {
+            slug
+            title
+            date
+          }
+          previous {
+            slug
+            title
+            date
+          }
+        }
+      }
+    categories: |
+      {
+        categories
+      }
+variables:
+  categories: |
+    ${$.document.categories ?? []}
+  slug: |
+    ${$.document.slug}
+---
+
+import Post from './category-index.mdx';
+import Backlinks from './backlinks';
+
+<Backlinks />
+
+{props.children}
+
+---
+
+# Up next
+
+{latestPosts().page.next && <Post {...latestPosts().page.next} />}
+
+# Just before
+
+{latestPosts().page.previous && <Post {...latestPosts().page.previous} />}
+
+# Latest posts
+
+{latestPosts().pages.resources.map(post => <Post key={post.slug} {...post} />)}

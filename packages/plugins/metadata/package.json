@@ -6,8 +6,12 @@
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
-    "start": "npm run -s build -- -w"
+    "build": "run-p -s build:ts-mjs build:ts-cjs",
+    "build:ts-mjs": "NODE_ENV=esm babel src/ --no-copy-ignored -d ./lib/ -x .ts,.tsx --out-file-extension .js --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "build:ts-cjs": "NODE_ENV=commonjs babel src/ --no-copy-ignored -d ./lib/ -x .cts,.ctsx --out-file-extension .cjs --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "start": "run-p -s start:ts-mjs start:ts-cjs",
+    "start:ts-mjs": "npm run -s build:ts-mjs -- -w",
+    "start:ts-cjs": "npm run -s build:ts-cjs -- -w"
   },
   "peerDependencies": {
     "react": ">=18.2.0"
@@ -25,8 +29,16 @@
       "default": "./lib/index.js"
     },
     "./babel": {
-      "default": "./lib/babel.js",
-      "types": "./lib/babel.d.ts"
+      "types": "./lib/babel.d.ts",
+      "default": "./lib/babel.js"
+    },
+    "./webpack": {
+      "types": "./lib/webpack.d.ts",
+      "default": "./lib/webpack.js"
+    },
+    "./loader": {
+      "types": "./lib/loader.d.ts",
+      "default": "./lib/loader.cjs"
     }
   },
   "publishConfig": {

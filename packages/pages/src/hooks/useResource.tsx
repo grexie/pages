@@ -4,6 +4,8 @@ import { useDocument } from './useDocument.js';
 import { compose } from '@grexie/compose';
 
 export interface Metadata {
+  path: string[];
+  slug: string;
   [k: symbol | string | number]: any;
 }
 

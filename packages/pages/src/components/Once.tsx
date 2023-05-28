@@ -8,7 +8,7 @@ import {
   FunctionComponent,
   ReactNode,
 } from 'react';
-import { useResource } from '../index.js';
+import { useResource } from '../hooks/useResource.js';
 
 const DefaultKey = Symbol.for('default');
 

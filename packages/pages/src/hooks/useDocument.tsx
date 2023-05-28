@@ -2,7 +2,7 @@ import { useMemo, ComponentType } from 'react';
 import { createContextWithProps } from '@grexie/context';
 import { compose } from '@grexie/compose';
 import EventEmitter from 'events';
-import { Resource } from './useResource.js';
+import type { Resource } from './useResource.js';
 
 export interface DocumentOptions {
   resource: Resource;

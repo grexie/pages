@@ -16,7 +16,7 @@
     "@grexie/pages": "^1.0.10",
     "@grexie/pages-runtime-styles": "^1.0.10",
     "@grexie/pages-style-loader": "^1.0.10",
-    "css-loader": "^6.7.3"
+    "css-loader": "^6.7.4"
   },
   "exports": {
     ".": {

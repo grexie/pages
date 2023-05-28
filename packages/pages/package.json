@@ -3,20 +3,22 @@
   "version": "1.0.10",
   "license": "MIT",
   "type": "module",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
   "scripts": {
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
     "start": "npm run -s build -- -w"
   },
   "exports": {
     ".": {
-      "import": "./lib/index.js",
-      "types": "./lib/index.d.ts"
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./graphql": {
+      "types": "./lib/graphql/index.d.ts",
+      "default": "./lib/graphql/index.js"
     },
     "./next": {
-      "import": "./lib/next/index.js",
-      "types": "./lib/next/index.d.ts"
+      "types": "./lib/next/index.d.ts",
+      "default": "./lib/next/index.js"
     }
   },
   "publishConfig": {
@@ -24,12 +26,22 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/context": "^0.4.1",
-    "@grexie/hash-object": "^0.4.1",
+    "@graphql-tools/schema": "^10.0.0",
+    "@grexie/context": "^1.0.0",
+    "@grexie/hash-object": "^1.0.0",
+    "core-js-pure": "^3.30.2",
+    "escodegen": "^2.0.0",
+    "graphql": "^16.6.0",
     "html-entities": "^2.3.3",
-    "react-is": "^18.2.0"
+    "lodash": "^4.17.21",
+    "react-is": "^18.2.0",
+    "uppercamelcase": "^3.0.0",
+    "urql": "^4.0.2"
   },
   "devDependencies": {
+    "@types/core-js": "^2.5.5",
+    "@types/escodegen": "^0.0.7",
+    "@types/lodash": "^4.14.195",
     "@types/react-is": "^18.2.0"
   }
 }

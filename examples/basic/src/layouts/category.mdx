@@ -1,0 +1,40 @@
+---
+page:
+  layout:
+    - layouts/main.mdx
+  queries:
+    index: |
+      query PageQuery($categories: [Category!]!) {
+        posts: pages(
+          filter: {
+            type: { in: [page, post] }
+            categories: { in: $categories }
+          }
+          sort: ["-date", "title"]
+          limit: 3
+        ) {
+          resources {
+            slug
+            title
+            date
+          }
+          count
+        }
+      }
+variables:
+  categories: |
+    ${$.document.categories ?? []}
+---
+
+import { useMetadata } from '@grexie/pages';
+import Post from './category-index.mdx';
+
+# {useMetadata().title}
+
+{props.children}
+
+---
+
+{index().posts.count} posts
+
+{index().posts.resources.map(post => <Post key={post.slug} {...post} />)}

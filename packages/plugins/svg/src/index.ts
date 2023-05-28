@@ -23,7 +23,6 @@ export default function SvgPagesPlugin() {
         },
         {
           test: /\.svg$/i,
-          issuer: /\.([jt]sx?|mdx?)$/,
           resourceQuery: /icon/,
           use: [
             {
@@ -36,7 +35,6 @@ export default function SvgPagesPlugin() {
         },
         {
           test: /\.svg$/i,
-          issuer: /\.([jt]sx?|mdx?)$/,
           resourceQuery: { not: [/url/, /icon/] },
           use: ['@svgr/webpack'],
         }

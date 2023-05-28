@@ -10,10 +10,11 @@
     "paths": {
       "@grexie/pages": ["../../pages/src"],
       "@grexie/pages/next": ["../../pages/src/next"],
+      "@grexie/pages/graphql": ["../../pages/src/graphql"],
       "@grexie/pages-runtime-metadata": ["../../runtime/metadata/src"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.ctsx"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
     { "path": "../../pages" },

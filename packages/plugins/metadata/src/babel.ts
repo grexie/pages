@@ -5,8 +5,12 @@ import path from 'path';
 import { wrapMetadata } from '@grexie/pages-runtime-metadata';
 import glob from 'glob';
 import yaml from 'yaml';
+import { transformSync } from '@babel/core';
 import { readFileSync } from 'fs';
 import generator from '@babel/generator';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 export type Babel = typeof BabelCoreNamespace;
 export type BabelTypes = typeof BabelTypesNamespace;
@@ -44,7 +48,7 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             return;
           }
 
-          state.get('mangleComponentName')();
+          state.get('mangleComponentName')?.();
 
           const layouts = (state.get('pageConfig')?.layout ?? []).map(
             (layout: string, i: number) =>
@@ -122,11 +126,15 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
 
           const resourcePath = path
             .relative((state.opts as any).pagesDir, state.filename!)
-            .split(path.delimiter);
+            .split(new RegExp(path.sep, 'g'));
 
           resourcePath[resourcePath.length - 1] = resourcePath[
             resourcePath.length - 1
           ].replace(/\.\w+$/i, '');
+
+          if (resourcePath[resourcePath.length - 1] === 'index') {
+            resourcePath.pop();
+          }
 
           const resource = {
             type: 'ObjectExpression',
@@ -159,7 +167,7 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                 },
                 value: {
                   type: 'StringLiteral',
-                  value: ['', ...resourcePath].join('/'),
+                  value: '/' + [...resourcePath, ''].join('/'),
                 },
               },
               {
@@ -186,6 +194,112 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
               callee: { type: 'Identifier', name: '__pages_with_once' },
               arguments: [node],
             };
+          };
+
+          const withPagesContext = (node: any) => {
+            const pagesFiles = state.get('files') as string[];
+
+            const pagesContext = babel.types.arrowFunctionExpression(
+              [],
+              babel.types.objectExpression([
+                babel.types.objectProperty(
+                  babel.types.identifier('filename'),
+                  babel.types.memberExpression(
+                    babel.types.memberExpression(
+                      babel.types.identifier('import'),
+                      babel.types.identifier('meta')
+                    ),
+                    babel.types.identifier('url')
+                  )
+                ),
+                babel.types.objectProperty(
+                  babel.types.identifier('variables'),
+                  babel.types.memberExpression(
+                    babel.types.callExpression(
+                      babel.types.identifier('__pages_use_metadata'),
+                      [babel.types.valueToNode({ resource: true })]
+                    ),
+                    babel.types.identifier('variables')
+                  )
+                ),
+                babel.types.objectProperty(
+                  babel.types.identifier('typeDefs'),
+                  babel.types.callExpression(
+                    babel.types.memberExpression(
+                      babel.types.arrayExpression(
+                        pagesFiles.map((_, i) =>
+                          babel.types.identifier(`__pages_typeDefs_${i}`)
+                        )
+                      ),
+                      babel.types.identifier('reduce')
+                    ),
+                    [
+                      babel.types.arrowFunctionExpression(
+                        [
+                          babel.types.identifier('a'),
+                          babel.types.identifier('b'),
+                        ],
+                        babel.types.arrayExpression([
+                          babel.types.spreadElement(
+                            babel.types.identifier('a')
+                          ),
+                          babel.types.spreadElement(
+                            babel.types.logicalExpression(
+                              '??',
+                              babel.types.identifier('b'),
+                              babel.types.arrayExpression()
+                            )
+                          ),
+                        ])
+                      ),
+                      babel.types.arrayExpression(),
+                    ]
+                  )
+                ),
+                babel.types.objectProperty(
+                  babel.types.identifier('resolvers'),
+                  babel.types.callExpression(
+                    babel.types.memberExpression(
+                      babel.types.arrayExpression(
+                        pagesFiles.map((_, i) =>
+                          babel.types.identifier(`__pages_resolvers_${i}`)
+                        )
+                      ),
+                      babel.types.identifier('reduce')
+                    ),
+                    [
+                      babel.types.arrowFunctionExpression(
+                        [
+                          babel.types.identifier('a'),
+                          babel.types.identifier('b'),
+                        ],
+                        babel.types.arrayExpression([
+                          babel.types.spreadElement(
+                            babel.types.identifier('a')
+                          ),
+                          babel.types.spreadElement(
+                            babel.types.logicalExpression(
+                              '??',
+                              babel.types.identifier('b'),
+                              babel.types.arrayExpression()
+                            )
+                          ),
+                        ])
+                      ),
+                      babel.types.arrayExpression(),
+                    ]
+                  )
+                ),
+              ])
+            );
+
+            return babel.types.callExpression(
+              babel.types.callExpression(
+                babel.types.identifier('__pages_with_pages_context'),
+                [pagesContext]
+              ),
+              [node]
+            );
           };
 
           const layoutLength = state.get('pageConfig')?.layout?.length ?? 0;
@@ -270,6 +384,19 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                 },
               ],
             },
+            babel.types.importDeclaration(
+              [
+                babel.types.importSpecifier(
+                  babel.types.identifier('__pages_with_pages_context'),
+                  babel.types.identifier('withPagesContext')
+                ),
+                babel.types.importSpecifier(
+                  babel.types.identifier('__pages_use_metadata'),
+                  babel.types.identifier('useMetadata')
+                ),
+              ],
+              babel.types.stringLiteral('@grexie/pages')
+            ),
             ...(state.get('files') as string[]).map(
               (file, i) =>
                 ({
@@ -283,11 +410,17 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                         name: `__pages_metadata_${i}`,
                       },
                     },
+                    babel.types.importSpecifier(
+                      babel.types.identifier(`__pages_typeDefs_${i}`),
+                      babel.types.identifier('typeDefs')
+                    ),
+                    babel.types.importSpecifier(
+                      babel.types.identifier(`__pages_resolvers_${i}`),
+                      babel.types.identifier('resolvers')
+                    ),
                   ],
                 } as any)
             ),
-          ];
-          const exports: any = [
             {
               type: 'ExportNamedDeclaration',
               specifiers: [],
@@ -303,73 +436,49 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                 ],
               },
             },
-            {
-              type: 'VariableDeclaration',
-              kind: 'const',
-              declarations: [
-                {
-                  type: 'VariableDeclarator',
-                  id: {
-                    type: 'Identifier',
-                    name: '__pages_wrapped_resource',
-                  },
-                  init: {
-                    type: 'CallExpression',
-                    callee: {
-                      type: 'Identifier',
-                      name: '__pages_wrap_resource',
-                    },
-                    arguments: [
-                      withOnce({
-                        type: 'FunctionDeclaration',
-                        id: {
-                          type: 'Identifier',
-                          name: '__pages_component_wrapper',
-                        },
-                        params: [{ type: 'Identifier', name: 'props' }],
-                        body: {
-                          type: 'BlockStatement',
-                          body: [
+          ];
+
+          const exports: any = [
+            babel.types.variableDeclaration('const', [
+              babel.types.variableDeclarator(
+                babel.types.identifier('__pages_wrapped_resource'),
+                babel.types.callExpression(
+                  babel.types.identifier('__pages_wrap_resource'),
+                  [
+                    withOnce(
+                      withPagesContext(
+                        babel.types.functionExpression(
+                          babel.types.identifier('__pages_component_wrapper'),
+                          [babel.types.identifier('props')],
+                          babel.types.blockStatement([
                             ...Object.keys(
                               state.get('pageConfig')?.styles ?? {}
-                            ).map(name => ({
-                              type: 'ExpressionStatement',
-                              expression: {
-                                type: 'CallExpression',
-                                callee: {
-                                  type: 'MemberExpression',
-                                  object: { type: 'Identifier', name },
-                                  property: {
-                                    type: 'Identifier',
-                                    name: 'use',
-                                  },
-                                },
-                                arguments: [],
-                              },
-                            })),
-                            {
-                              type: 'ReturnStatement',
-                              argument: {
-                                type: 'MemberExpression',
-                                object: {
-                                  type: 'Identifier',
-                                  name: 'props',
-                                },
-                                property: {
-                                  type: 'Identifier',
-                                  name: 'children',
-                                },
-                              },
-                            },
-                          ],
-                        },
-                      }),
-                      { type: 'Identifier', name: 'resource' },
-                    ],
-                  },
-                },
-              ],
-            },
+                            ).map(name =>
+                              babel.types.expressionStatement(
+                                babel.types.callExpression(
+                                  babel.types.memberExpression(
+                                    babel.types.identifier(name),
+                                    babel.types.identifier('use')
+                                  ),
+                                  []
+                                )
+                              )
+                            ),
+                            babel.types.returnStatement(
+                              babel.types.memberExpression(
+                                babel.types.identifier('props'),
+                                babel.types.identifier('children')
+                              )
+                            ),
+                          ])
+                        )
+                      )
+                    ),
+                    babel.types.identifier('resource'),
+                  ]
+                )
+              ),
+            ]),
             {
               type: 'ExportDefaultDeclaration',
               specifiers: [],
@@ -482,88 +591,324 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             },
           ];
 
+          if (state.get('pageConfig')?.queries) {
+            imports.push(
+              babel.types.importDeclaration(
+                [
+                  babel.types.importSpecifier(
+                    babel.types.identifier('__pages_query'),
+                    babel.types.identifier('pages')
+                  ),
+                ],
+                babel.types.stringLiteral('@grexie/pages')
+              ),
+              ...Object.entries(
+                (state.get('pageConfig')?.queries ?? {}) as Record<
+                  string,
+                  string
+                >
+              )?.map(([name, query]) =>
+                babel.types.variableDeclaration('const', [
+                  babel.types.variableDeclarator(
+                    babel.types.identifier(name),
+                    babel.types.arrowFunctionExpression(
+                      [],
+                      babel.types.taggedTemplateExpression(
+                        babel.types.identifier('__pages_query'),
+                        babel.types.templateLiteral(
+                          [babel.types.templateElement({ raw: query })],
+                          []
+                        )
+                      )
+                    )
+                  ),
+                ])
+              )
+            );
+          }
+
           p.unshiftContainer('body', imports);
           p.pushContainer('body', exports);
+
+          // const querySymbols: string[] = [];
+
+          // // SWC fix
+          // p.traverse({
+          //   ImportDeclaration(p) {
+          //     if (p.get('source').isStringLiteral({ value: '@grexie/pages' })) {
+          //       const specifier = p
+          //         .get('specifiers')
+          //         .find(p =>
+          //           (p.get('imported') as any).isIdentifier({ name: 'pages' })
+          //         );
+          //       if (specifier) {
+          //         querySymbols.push(specifier.node.local.name);
+          //       }
+          //     }
+          //   },
+          //   CallExpression(p2) {
+          //     if (querySymbols.includes((p2.get('callee').node as any).name)) {
+          //       let query: string | undefined;
+
+          //       p2.traverse({
+          //         ArrayExpression(p5) {
+          //           query = p5.node.elements
+          //             .map(
+          //               literal =>
+          //                 (literal as BabelTypesNamespace.StringLiteral).value
+          //             )
+          //             .join('');
+          //         },
+          //         CallExpression(p3) {
+          //           const name = (p3.get('callee').node as any).name;
+          //           p.traverse({
+          //             FunctionDeclaration(p4) {
+          //               if (!p4.get('id').isIdentifier({ name: name })) {
+          //                 return p4.skip();
+          //               }
+
+          //               p4.traverse({
+          //                 ArrayExpression(p5) {
+          //                   query = p5.node.elements
+          //                     .map(
+          //                       literal =>
+          //                         (literal as BabelTypesNamespace.StringLiteral)
+          //                           .value
+          //                     )
+          //                     .join('');
+          //                   p4.remove();
+          //                 },
+          //               });
+          //             },
+          //           });
+          //         },
+          //       });
+
+          //       if (query) {
+          //         p2.replaceWith(
+          //           babel.types.taggedTemplateExpression(
+          //             babel.types.identifier(querySymbols[0]),
+          //             babel.types.templateLiteral(
+          //               [babel.types.templateElement({ raw: query })],
+          //               []
+          //             )
+          //           )
+          //         );
+          //       }
+          //     }
+          //   },
+          // });
+
+          // querySymbols.splice(0, querySymbols.length);
+
+          // let pagesIndex = 0;
+          // p.traverse({
+          //   ImportDeclaration(p) {
+          //     if (p.get('source').isStringLiteral({ value: '@grexie/pages' })) {
+          //       const specifier = p
+          //         .get('specifiers')
+          //         .find(p =>
+          //           (p.get('imported') as any).isIdentifier({ name: 'pages' })
+          //         );
+          //       if (specifier) {
+          //         querySymbols.push(specifier.node.local.name);
+          //         // specifier.remove();
+          //       }
+          //     }
+          //   },
+          //   TaggedTemplateExpression(p2) {
+          //     if (querySymbols.includes((p2.node.tag as any).name)) {
+          //       const query = p2.node.quasi.quasis
+          //         .map(x => x.value.raw)
+          //         .join('');
+
+          //       // p.unshiftContainer('body', [
+          //       //   babel.types.importDeclaration(
+          //       //     [
+          //       //       babel.types.importDefaultSpecifier(
+          //       //         babel.types.identifier(`__pages_query_${pagesIndex}`)
+          //       //       ),
+          //       //     ],
+          //       //     babel.types.stringLiteral(
+          //       //       `@grexie/pages-loader/lib/query.mjs?query=${encodeURIComponent(
+          //       //         Buffer.from(query).toString('base64url')
+          //       //       )}&resource=${encodeURIComponent(
+          //       //         Buffer.from(
+          //       //           JSON.stringify({
+          //       //             path: resourcePath,
+          //       //             slug: '/' + [...resourcePath, ''].join('/'),
+          //       //             metadata: {
+          //       //               ...state.get('metadataJson'),
+          //       //             },
+          //       //           })
+          //       //         ).toString('base64url')
+          //       //       )}&filename=${encodeURIComponent(
+          //       //         Buffer.from(state.filename!).toString('base64url')
+          //       //       )}`
+          //       //     )
+          //       //   ),
+          //       // ]);
+
+          //       // p2.replaceWith(
+          //       //   babel.types.callExpression(
+          //       //     babel.types.identifier(`__pages_query`),
+          //       //     []
+          //       //   )
+          //       // );
+
+          //       pagesIndex++;
+          //     }
+          //   },
+          // });
         },
       },
       ExportNamedDeclaration(p, state) {
-        if (p.get('declaration').isVariableDeclaration({ kind: 'const' })) {
-          p.traverse({
-            VariableDeclarator(p) {
-              if (p.get('id').isIdentifier({ name: 'metadata' })) {
-                p.get('init').traverse({
-                  ObjectProperty(p2) {
-                    if (
-                      p2.parentPath.node === p.get('init').node &&
-                      p2.get('key').isIdentifier({ name: 'page' })
-                    ) {
-                      p2.remove();
-                    }
-                  },
+        if (
+          p.get('declaration').isVariableDeclaration({ kind: 'const' }) &&
+          p
+            .get('declaration')
+            .get('declarations')
+            .find((p: any) =>
+              p.get('id').isIdentifier({ name: 'getStaticProps' })
+            )
+        ) {
+          console.info('has getStaticProps');
+        } else if (
+          p.get('declaration').isVariableDeclaration({ kind: 'const' })
+        ) {
+          const p2: BabelCoreNamespace.NodePath<BabelTypesNamespace.VariableDeclarator> =
+            p
+              .get('declaration')
+              .get('declarations')
+              .find((p2: any) =>
+                p2.get('id').isIdentifier({ name: 'metadata' })
+              ) as any;
+
+          if (!p2) {
+            return p.skip();
+          }
+
+          const resourcePath = path
+            .relative((state.opts as any).pagesDir, state.filename!)
+            .split(new RegExp(path.sep, 'g'));
+
+          resourcePath[resourcePath.length - 1] = resourcePath[
+            resourcePath.length - 1
+          ].replace(/\.\w+$/i, '');
+
+          if (resourcePath[resourcePath.length - 1] === 'index') {
+            resourcePath.pop();
+          }
+
+          (
+            p2.get(
+              'init'
+            ) as BabelCoreNamespace.NodePath<BabelTypesNamespace.ObjectExpression>
+          ).unshiftContainer('properties', [
+            babel.types.objectProperty(
+              babel.types.identifier('path'),
+              babel.types.valueToNode(resourcePath)
+            ),
+            babel.types.objectProperty(
+              babel.types.identifier('slug'),
+              babel.types.valueToNode('/' + [...resourcePath, ''].join('/'))
+            ),
+          ]);
+
+          state.set('metadata', p2.get('init').node);
+
+          state.set(
+            'pagesFiles',
+            glob
+              .sync('**/*.pages.{' + extensions.join(',') + '}', {
+                cwd: process.cwd(),
+                ignore: ['**/node_modules/**', '**/.next/**'],
+                nodir: true,
+                dot: true,
+              })
+              .map(file => path.resolve(process.cwd(), file))
+          );
+
+          state.set(
+            'files',
+            (state.get('pagesFiles') as string[]).slice().filter(filename => {
+              const basename = path
+                .basename(filename)
+                .replace(/\.pages\.\w+$/i, '');
+              const sourceBasename = path
+                .basename(state.filename!)
+                .replace(/\.\w+$/i, '');
+              const dirname = path.dirname(filename);
+
+              return (
+                (path.dirname(state.filename!).substring(0, dirname.length) ===
+                  dirname &&
+                  basename === '') ||
+                (path.dirname(state.filename!) === dirname &&
+                  basename === sourceBasename)
+              );
+            })
+          );
+
+          const data = new Function(
+            `return (${generator.default(state.get('metadata')).code})`
+          )();
+
+          p2.get('init')
+            .get('properties')
+            .find(((p: any) => {
+              if (p.get('key').isIdentifier({ name: 'page' })) {
+                p.remove();
+              }
+            }) as any);
+
+          const metadata = wrapMetadata(data)(
+            { filename: state.filename! },
+            (state.get('files') as string[]).reduce((a, b) => {
+              const extension = path.extname(b);
+              let data: any;
+              if (/\.ya?ml$/.test(extension)) {
+                data = yaml.parse(readFileSync(b).toString());
+              } else if (/\.json$/.test(extension)) {
+                data = JSON.parse(readFileSync(b).toString());
+              } else if (/\.[cm]?[jt]s?$/.test(extension)) {
+                const result = babel.parseSync(readFileSync(b).toString(), {
+                  filename: b,
+                  presets: [['@babel/env', { modules: false }]],
+                  plugins: [
+                    '@babel/syntax-jsx',
+                    ['@babel/syntax-typescript', { isTSX: true }],
+                  ],
                 });
 
-                state.set('metadata', p.get('init').node);
-
-                state.set(
-                  'pagesFiles',
-                  glob
-                    .sync('**/*.pages.{' + extensions.join(',') + '}', {
-                      cwd: process.cwd(),
-                      ignore: ['**/node_modules/**', '**/.next/**'],
-                      nodir: true,
-                      dot: true,
-                    })
-                    .map(file => path.resolve(process.cwd(), file))
-                );
-
-                state.set(
-                  'files',
-                  (state.get('pagesFiles') as string[])
-                    .slice()
-                    .filter(filename => {
-                      const basename = path
-                        .basename(filename)
-                        .replace(/\.pages\.\w+$/i, '');
-                      const sourceBasename = path
-                        .basename(state.filename!)
-                        .replace(/\.\w+$/i, '');
-                      const dirname = path.dirname(filename);
-
-                      return (
-                        (path
-                          .dirname(state.filename!)
-                          .substring(0, dirname.length) === dirname &&
-                          basename === '') ||
-                        (path.dirname(state.filename!) === dirname &&
-                          basename === sourceBasename)
-                      );
-                    })
-                );
-
-                const data = new Function(
-                  `return (${generator.default(state.get('metadata')).code})`
-                )();
-
-                state.set(
-                  'pageConfig',
-                  wrapMetadata(data)(
-                    { filename: state.filename! },
-                    (state.get('files') as string[]).reduce((a, b) => {
-                      const data = yaml.parse(readFileSync(b).toString());
-                      return wrapMetadata(data)({ filename: b }, a);
-                    }, undefined as any)
-                  ).page
-                );
-
-                if (state.get('pageConfig')?.transform) {
-                  p.remove();
-                }
+                babel.traverse(result, {
+                  ExportDefaultDeclaration(p) {
+                    data = new Function(
+                      `return (${
+                        generator.default(p.get('declaration').node).code
+                      })`
+                    )();
+                  },
+                });
+              } else {
+                throw new Error('invalid pages file: ' + b);
               }
-            },
-          });
+
+              return wrapMetadata(data)({ filename: b }, a);
+            }, undefined as any)
+          );
+
+          state.set('metadataJson', JSON.parse(JSON.stringify(metadata)));
+
+          state.set('pageConfig', metadata.page);
+
+          if (state.get('pageConfig')?.transform) {
+            p2.remove();
+          }
         }
       },
       ExportDefaultDeclaration(p, state) {
+        state.set('component', p.get('declaration'));
         state.set('mangleComponentName', () => {
           const component: any = p.get('declaration').node;
 

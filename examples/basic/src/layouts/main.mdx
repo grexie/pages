@@ -5,15 +5,24 @@ page:
     main: ./main.module.scss
   layout:
     - ../hooks/useTest
+  queries:
+    data: |
+      query {
+        page {
+          head {
+            title
+            description
+          }
+        }
+      }
 ---
 
 import { Head } from '@grexie/pages';
-import { useMetadata } from '@grexie/pages';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 <Head>
-  <title>{useMetadata().head?.title}</title>
+  <title>{data().page.head.title}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     rel="preconnect"

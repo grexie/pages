@@ -4,7 +4,8 @@ import { join } from 'path';
 
 export default () => {
   const workspaces = getWorkspaces().filter(
-    ({ workspace }) => workspace !== '@grexie/pages-monorepo'
+    ({ workspace, location }) =>
+      workspace !== '@grexie/pages-monorepo' && !/^examples\//.test(location)
   );
 
   const tsconfig = JSON.parse(readFileSync('tsconfig.json').toString());

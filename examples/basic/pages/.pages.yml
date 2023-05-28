@@ -2,7 +2,7 @@ type: page
 
 head:
   title: |
-    ${typeof title !== 'undefined' && title ? `${title} | Katie's Page` : "Katie's Page"}
+    ${typeof title !== 'undefined' && title ? `${title} | My Page` : "My Page"}
   description: "${typeof description !== 'undefined' && description ? description : head.title}"
   robots:
     index: true
@@ -16,5 +16,20 @@ head:
 
 page:
   transform: true
-  layout:
-    - layouts/main.mdx
+  layout: |
+    ${
+      (() => {
+        switch(type) {
+          case 'page':
+            return ['layouts/page.mdx'];
+          case 'category':
+            return ['layouts/category.mdx']
+          case 'post':
+            return ['layouts/post.mdx'];
+          case 'import':
+            return [];
+          default:
+            throw new TypeError('unknown page type: ' + type);
+        }
+      })()
+    }

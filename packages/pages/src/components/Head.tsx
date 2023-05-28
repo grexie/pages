@@ -24,11 +24,13 @@ import {
   useRenderTreeNode,
   withRenderTree,
 } from '../hooks/useRenderTree.js';
-import { setImmediate } from 'timers';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createPortal, unmountComponentAtNode } from 'react-dom';
 import { decode } from 'html-entities';
+import setImmediate from 'core-js-pure/stable/set-immediate.js';
+import clearImmediate from 'core-js-pure/stable/clear-immediate.js';
+import { useRouter } from '../hooks/useRouter.js';
 
 const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
   if (!element) {
@@ -41,9 +43,7 @@ const flattenElement = (element: ReactElement, contexts: SharedContexts) => {
     ...props
   } = element?.props ?? {};
 
-  const Component = () => (
-    <SharedContextClone contexts={contexts}>{children}</SharedContextClone>
-  );
+  const Component = () => <>{children}</>;
 
   const string = html ?? renderToStaticMarkup(<Component />);
 
@@ -409,9 +409,9 @@ const ServerHead: FC<ServerHeadProps> = withHead(({ children }) => {
   const head = _useHead();
   const contexts = useSharedContexts();
 
-  useMemo(() => {
-    head.setProps({ children }, contexts);
-  }, [hash(children), contexts]);
+  // useMemo(() => {
+  head.setProps({ children }, contexts);
+  // }, [hash(children), contexts]);
 
   return null;
 });

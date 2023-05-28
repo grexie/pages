@@ -1,6 +1,10 @@
 const ContextTable = new WeakMap();
 
 export interface MetadataContext {
+  $resource?: Metadata;
+  $document?: Metadata;
+  $props?: any;
+  $router?: any;
   filename: string;
 }
 
@@ -33,11 +37,20 @@ export class Metadata {
           ) {
             let program = value.trim();
             program = program.substring(2, program.length - 1);
+
+            const $context = Metadata.getContext(root ?? self);
+
             const keys = Array.from(Reflect.ownKeys(root ?? self)).filter(
-              x => typeof x === 'string' && (path.length > 0 || x !== p)
+              x =>
+                typeof x === 'string' &&
+                /^[a-z_$]/g.test(x) &&
+                (path.length > 0 || x !== p)
             ) as string[];
 
             const values = keys.map(k => Reflect.get(root ?? self, k));
+
+            keys.push('$');
+            values.push($context);
 
             return (
               new Function(...keys, `return (${program});`)(...values) ?? null
@@ -109,7 +122,7 @@ export class Metadata {
         for (let cmp of path) {
           o = o?.[cmp];
         }
-        if (typeof o === 'object' && o !== null) {
+        if (typeof o === 'object' && o !== null && !Array.isArray(o)) {
           for (const k of Reflect.ownKeys(o)) {
             out.add(k);
           }
