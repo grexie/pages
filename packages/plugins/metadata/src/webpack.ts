@@ -163,7 +163,12 @@ export class Loader {
     module: vm.Module;
   }> {
     if (builtinModules.includes(specifier)) {
-      return { module: await this.#nodeLoader(specifier) };
+      if (!this.#modules[specifier]) {
+        this.#modules[specifier] = Promise.resolve({
+          module: await this.#nodeLoader(specifier),
+        });
+      }
+      return this.#modules[specifier];
     }
 
     var result: string, resolveContext: any;
@@ -207,16 +212,6 @@ export class Loader {
       module: vm.Module;
     }>();
     this.#modules[result] = resolver;
-
-    const rootDir = process.cwd();
-
-    if (
-      result.substring(0, rootDir.length) !== rootDir ||
-      (/node_modules/.test(result) && !/\.json$/.test(result))
-    ) {
-      resolver.resolve({ module: await this.#nodeLoader(result) });
-      return resolver;
-    }
 
     try {
       const dependency = new webpack.dependencies.ModuleDependency(result);
