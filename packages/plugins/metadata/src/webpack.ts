@@ -212,7 +212,7 @@ export class Loader {
 
     if (
       result.substring(0, rootDir.length) !== rootDir ||
-      /node_modules/.test(result)
+      (/node_modules/.test(result) && !/\.json$/.test(result))
     ) {
       resolver.resolve({ module: await this.#nodeLoader(result) });
       return resolver;
@@ -266,9 +266,10 @@ export class Loader {
       const source = webpackModule.originalSource()!.buffer().toString();
 
       if (
-        !/\.mjs$/.test(result) &&
+        !/\.(esm\.js|es\.js|mjs)$/.test(result) &&
         (resolveContext.descriptionFileData.type !== 'module' ||
-          /\.cjs$/.test(result))
+          /\.cjs$/.test(result) ||
+          /\.json$/.test(result))
       ) {
         resolver.resolve({
           webpackModule,
