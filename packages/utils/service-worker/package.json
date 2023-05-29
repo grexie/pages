@@ -1,0 +1,37 @@
+{
+  "name": "@grexie/service-worker",
+  "version": "1.0.24",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "build": "run-s build:webpack build:plugin",
+    "build:webpack": "NODE_OPTIONS=\"--no-warnings --loader ts-node/esm/transpile-only ${NODE_OPTIONS}\" webpack",
+    "build:plugin": "babel -d lib/ src/plugin.ts src/hooks.tsx -x .cjs,.js,.ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
+    "watch:webpack": "npm run -s build:webpack -- -w",
+    "watch:plugin": "npm run -s build:plugin -- -w",
+    "start": "run-p watch:webpack watch:plugin"
+  },
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./dist/sw.js"
+    },
+    "./plugin": {
+      "types": "./lib/plugin.d.ts",
+      "default": "./lib/plugin.js"
+    },
+    "./hooks": {
+      "types": "./lib/hooks.d.ts",
+      "default": "./lib/hooks.js"
+    }
+  },
+  "dependencies": {
+    "@grexie/pages": "^1.0.18",
+    "copy-webpack-plugin": "^11.0.0",
+    "webpack-manifest-plugin": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

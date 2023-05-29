@@ -44,6 +44,9 @@
       "path": "packages/runtime/metadata"
     },
     {
+      "path": "packages/utils/service-worker"
+    },
+    {
       "path": "packages/webpack/yaml-loader"
     },
     {
