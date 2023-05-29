@@ -79,6 +79,7 @@ export class Loader {
   }
 
   async #nodeLoader(specifier: string) {
+    console.info(specifier);
     const exports = await import(specifier);
 
     return this.#createSyntheticModule(exports);
@@ -213,16 +214,6 @@ export class Loader {
     }>();
     this.#modules[result] = resolver;
 
-    const rootDir = process.cwd();
-
-    if (
-      result.substring(0, rootDir.length) !== rootDir &&
-      !/\.(esm\.js|es\.js)$/.test(result)
-    ) {
-      resolver.resolve({ module: await this.#nodeLoader(specifier) });
-      return resolver;
-    }
-
     try {
       const dependency = new webpack.dependencies.ModuleDependency(result);
 
@@ -272,6 +263,7 @@ export class Loader {
 
       if (
         !/\.(esm\.js|es\.js|mjs)$/.test(result) &&
+        !/^\s*import[{\s]|^\s*export[{\s]/.test(source) &&
         (resolveContext.descriptionFileData.type !== 'module' ||
           /\.cjs$/.test(result))
       ) {

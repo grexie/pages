@@ -47,7 +47,7 @@ export default async function WebpackPagesLoader(
 
   await plugin.ready;
 
-  Object.keys(plugin.resources).forEach(file => this.addDependency(file));
+  Object.keys(plugin.resources ?? {}).forEach(file => this.addDependency(file));
 
   return callback(null, JSON.stringify(plugin.resources, null, 2));
 }

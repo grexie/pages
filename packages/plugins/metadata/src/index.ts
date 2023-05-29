@@ -17,6 +17,9 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
   (config: NextConfig) => {
     const nextConfigWebpack = config.webpack;
 
+    config.experimental = config.experimental || {};
+    config.experimental.esmExternals = 'loose';
+
     const plugin = new WebpackPagesPlugin({ pagesDir });
 
     config.webpack = function MetadataWebpackConfig(
