@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-runtime-styles",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -17,6 +17,6 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.15"
+    "@grexie/pages": "^1.0.16"
   }
 }
