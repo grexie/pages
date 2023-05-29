@@ -8,6 +8,7 @@ import { createRequire } from 'module';
 import glob from 'glob';
 
 const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
 
 const require = createRequire(import.meta.url);
 
@@ -129,7 +130,7 @@ const ServiceWorkerPlugin: Plugin<ServiceWorkerPluginOptions> =
           new CopyWebpackPlugin({
             patterns: [
               {
-                from: path.resolve(__filename, '..', 'dist', 'sw.js'),
+                from: path.resolve(__dirname, '..', 'dist', 'sw.js'),
                 to: path.resolve('public', 'sw.js'),
                 noErrorOnMissing: false,
               },
