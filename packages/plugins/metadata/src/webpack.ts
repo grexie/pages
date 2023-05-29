@@ -174,7 +174,7 @@ export class Loader {
   }> {
     if (
       builtinModules.includes(specifier) ||
-      /^next\/config(\.js)?$)/.test(specifier)
+      /^next\/config(\.js)?$/.test(specifier)
     ) {
       if (!this.#modules[specifier]) {
         this.#modules[specifier] = Promise.resolve({
