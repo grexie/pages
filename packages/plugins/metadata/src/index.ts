@@ -20,7 +20,7 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
     config.experimental = config.experimental || {};
     config.experimental.esmExternals = 'loose';
 
-    const plugin = new WebpackPagesPlugin({ pagesDir });
+    const plugin = new WebpackPagesPlugin({ pagesDir, config });
 
     config.webpack = function MetadataWebpackConfig(
       config: Configuration,

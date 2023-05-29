@@ -7,6 +7,8 @@ import { ResolvablePromise, createResolver } from '@grexie/resolvable';
 import { Resource } from '@grexie/pages';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
+import type { NextConfig } from 'next';
+import { setConfig } from 'next/config.js';
 
 type WrappedScript = (
   exports: any,
@@ -171,7 +173,7 @@ export class Loader {
     webpackModule?: webpack.Module;
     module: vm.Module;
   }> {
-    if (builtinModules.includes(specifier)) {
+    if (builtinModules.includes(specifier) || /^next(\/|$)/.test(specifier)) {
       if (!this.#modules[specifier]) {
         this.#modules[specifier] = Promise.resolve({
           module: await this.#nodeLoader(specifier),
@@ -325,6 +327,7 @@ export class Loader {
 
 export interface WebpackPagesPluginOptions {
   pagesDir: string;
+  config: NextConfig;
 }
 
 export class WebpackPagesPlugin {
@@ -333,9 +336,11 @@ export class WebpackPagesPlugin {
   ready?: ResolvablePromise<void>;
 
   #loader?: Loader;
+  readonly #config: NextConfig;
 
-  constructor({ pagesDir }: WebpackPagesPluginOptions) {
+  constructor({ pagesDir, config }: WebpackPagesPluginOptions) {
     this.pagesDir = pagesDir;
+    this.#config = config;
   }
 
   createLoader(compilation: Compilation) {
@@ -365,6 +370,11 @@ export class WebpackPagesPlugin {
             ).toString()
           );
         }
+
+        setConfig({
+          publicRuntimeConfig: this.#config.publicRuntimeConfig,
+          serverRuntimeConfig: this.#config.serverRuntimeConfig,
+        });
 
         const loader = this.createLoader(compilation);
 

@@ -3,6 +3,7 @@
   "version": "1.0.17",
   "license": "MIT",
   "type": "module",
+  "types": "./lib/index.d.ts",
   "scripts": {
     "build": "babel src/ --no-copy-ignored -D -d ./lib/ -x .ts,.tsx --ignore '**/*.d.ts','**/__snapshots__/*'",
     "start": "npm run -s build -- -w"
