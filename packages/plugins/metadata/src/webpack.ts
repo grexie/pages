@@ -173,7 +173,10 @@ export class Loader {
     webpackModule?: webpack.Module;
     module: vm.Module;
   }> {
-    if (builtinModules.includes(specifier) || /^next(\/|$)/.test(specifier)) {
+    if (
+      builtinModules.includes(specifier) ||
+      /^next\/config(\.js)?$)/.test(specifier)
+    ) {
       if (!this.#modules[specifier]) {
         this.#modules[specifier] = Promise.resolve({
           module: await this.#nodeLoader(specifier),
