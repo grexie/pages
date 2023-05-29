@@ -7,6 +7,8 @@ import { NextConfig } from 'next';
 import { createRequire } from 'module';
 import glob from 'glob';
 
+const __filename = new URL(import.meta.url).pathname;
+
 const require = createRequire(import.meta.url);
 
 export type Rule = string | RegExp | ((file: string) => boolean);
@@ -127,13 +129,7 @@ const ServiceWorkerPlugin: Plugin<ServiceWorkerPluginOptions> =
           new CopyWebpackPlugin({
             patterns: [
               {
-                from: path.resolve(
-                  process.cwd(),
-                  '..',
-                  'web-serviceworker',
-                  'dist',
-                  'sw.js'
-                ),
+                from: path.resolve(__filename, '..', 'dist', 'sw.js'),
                 to: path.resolve('public', 'sw.js'),
                 noErrorOnMissing: false,
               },
