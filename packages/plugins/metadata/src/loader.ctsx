@@ -49,7 +49,7 @@ export default async function WebpackPagesLoader(
 
   Object.keys(plugin.resources ?? {}).forEach(file => this.addDependency(file));
 
-  return callback(null, JSON.stringify(plugin.resources, null, 2));
+  return callback(null, JSON.stringify(plugin.resources ?? {}, null, 2));
 }
 //   if (
 //     this.resourcePath.substring(0, path.resolve(pagesDir).length) !==

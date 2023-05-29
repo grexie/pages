@@ -28,6 +28,8 @@ export class Loader {
   > = {};
   readonly #vmContext = vm.createContext({
     process,
+    fetch,
+    __DEV__: process.env.NODE_ENV !== 'production',
     $RefreshReg$: () => {},
     $RefreshSig$: () => () => {},
   });
@@ -42,6 +44,9 @@ export class Loader {
       keys.push('default');
     } else if (exports.__esModule) {
       keys.push(...Object.keys(exports));
+      if (!keys.includes('default')) {
+        keys.push('default');
+      }
     } else {
       keys.push(...Object.keys(exports));
       if (!keys.includes('default')) {
@@ -56,6 +61,9 @@ export class Loader {
           this.setExport('default', exports);
         } else if (exports.__esModule) {
           for (const key of keys) {
+            if (key === 'default') {
+              this.setExport(key, exports.default ?? exports);
+            }
             this.setExport(key, exports[key]);
           }
         } else {
@@ -263,7 +271,7 @@ export class Loader {
 
       if (
         !/\.(esm\.js|es\.js|mjs)$/.test(result) &&
-        !/^\s*import[{\s]|^\s*export[{\s]/.test(source) &&
+        !/^\s*import[{\s]|^\s*export[{\s]/m.test(source) &&
         (resolveContext.descriptionFileData.type !== 'module' ||
           /\.cjs$/.test(result))
       ) {
