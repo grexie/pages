@@ -51,7 +51,8 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
         props = {
           ...props,
           data: JSON.parse(
-            document.head.querySelector('script[id=__PAGES_DATA__]')!.innerHTML
+            document.head.querySelector('script[id=__PAGES_DATA__]')
+              ?.innerHTML ?? '{}'
           ),
         };
       }

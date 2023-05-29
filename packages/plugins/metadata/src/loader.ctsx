@@ -41,11 +41,9 @@ export default async function WebpackPagesLoader(
   }
 
   const callback = this.async();
-  this.cacheable(true);
+  this.cacheable(false);
 
   const { plugin } = this.getOptions();
-
-  await plugin.ready;
 
   Object.keys(plugin.resources ?? {}).forEach(file => this.addDependency(file));
 
