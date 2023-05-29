@@ -5,7 +5,6 @@ import path from 'path';
 import { wrapMetadata } from '@grexie/pages-runtime-metadata';
 import glob from 'glob';
 import yaml from 'yaml';
-import { transformSync } from '@babel/core';
 import { readFileSync } from 'fs';
 import generator from '@babel/generator';
 import { createRequire } from 'module';

@@ -1,5 +1,5 @@
 import { NextConfig } from 'next';
-import type { Configuration, RuleSetRule } from 'webpack';
+import type { Configuration } from 'webpack';
 import path from 'path';
 import BabelPagesPlugin from './babel.js';
 import { Plugin } from '@grexie/pages/next';

@@ -217,7 +217,7 @@ export class Loader {
 
     if (
       result.substring(0, rootDir.length) !== rootDir &&
-      !/\.(esm\.js|es\.js|mjs)$/.test(result)
+      !/\.(esm\.js|es\.js)$/.test(result)
     ) {
       resolver.resolve({ module: await this.#nodeLoader(specifier) });
       return resolver;
