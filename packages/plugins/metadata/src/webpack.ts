@@ -89,7 +89,6 @@ export class Loader {
   }
 
   async #nodeLoader(specifier: string) {
-    console.info(specifier);
     const exports = await import(specifier);
 
     return this.#createSyntheticModule(exports);
