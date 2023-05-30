@@ -56,8 +56,7 @@ export default function CssPagesPlugin() {
                   process.env.NODE_ENV === 'production'
                     ? true
                     : {
-                        localIdentName:
-                          '[path][name]__[local]--[hash:base64:5]',
+                        localIdentName: '[name]__[local]--[hash:base64:5]',
                       },
               },
             },
