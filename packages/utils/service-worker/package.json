@@ -1,6 +1,6 @@
 {
   "name": "@grexie/service-worker",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "license": "UNLICENSED",
   "private": false,
   "type": "module",
@@ -27,7 +27,7 @@
     }
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.22",
+    "@grexie/pages": "^1.0.23",
     "copy-webpack-plugin": "^11.0.0",
     "webpack-manifest-plugin": "^5.0.0"
   },
