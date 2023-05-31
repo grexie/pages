@@ -37,6 +37,9 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
     visitor: {
       Program: {
         enter(_, state) {
+          if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
+            console.info('- pages', 'transforming', state.filename);
+          }
           state.set('metadata', {
             type: 'ObjectExpression',
             properties: [],
@@ -450,17 +453,41 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                           babel.types.identifier('__pages_component_wrapper'),
                           [babel.types.identifier('props')],
                           babel.types.blockStatement([
-                            ...Object.keys(
-                              state.get('pageConfig')?.styles ?? {}
-                            ).map(name =>
-                              babel.types.expressionStatement(
-                                babel.types.callExpression(
-                                  babel.types.memberExpression(
-                                    babel.types.identifier(name),
-                                    babel.types.identifier('use')
+                            babel.types.ifStatement(
+                              babel.types.callExpression(
+                                babel.types.memberExpression(
+                                  babel.types.arrayExpression(
+                                    Object.keys(
+                                      state.get('pageConfig')?.styles ?? {}
+                                    ).map(name =>
+                                      babel.types.callExpression(
+                                        babel.types.memberExpression(
+                                          babel.types.identifier(name),
+                                          babel.types.identifier('use')
+                                        ),
+                                        []
+                                      )
+                                    )
                                   ),
-                                  []
-                                )
+                                  babel.types.identifier('reduce')
+                                ),
+                                [
+                                  babel.types.arrowFunctionExpression(
+                                    [
+                                      babel.types.identifier('a'),
+                                      babel.types.identifier('b'),
+                                    ],
+                                    babel.types.logicalExpression(
+                                      '||',
+                                      babel.types.identifier('a'),
+                                      babel.types.identifier('b')
+                                    )
+                                  ),
+                                  babel.types.identifier('false'),
+                                ]
+                              ),
+                              babel.types.expressionStatement(
+                                babel.types.nullLiteral()
                               )
                             ),
                             babel.types.returnStatement(
@@ -903,6 +930,10 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
 
           if (state.get('pageConfig')?.transform) {
             p2.remove();
+          }
+
+          if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
+            console.info('- pages', 'transformed', state.filename);
           }
         }
       },

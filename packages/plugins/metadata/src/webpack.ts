@@ -1,6 +1,6 @@
 import webpack, { Compilation, Compiler } from 'webpack';
 import glob from 'glob';
-import path from 'path';
+import path, { isAbsolute } from 'path';
 import vm, { SourceTextModule } from 'vm';
 import NodeModule, { createRequire, builtinModules } from 'module';
 import { ResolvablePromise, createResolver } from '@grexie/resolvable';
@@ -23,7 +23,10 @@ const wrapScript = (code: string): string =>
 
 export class Loader {
   compilation: Compilation;
-  readonly #dependents: Record<string, Set<string>> = {};
+  readonly #dependents: Record<
+    string,
+    { mtimeMs: number; dependents: string[] }
+  > = {};
   readonly #modules: Record<
     string,
     Promise<{ webpackModule?: webpack.Module; module: vm.Module }>
@@ -38,6 +41,57 @@ export class Loader {
 
   constructor(compilation: Compilation) {
     this.compilation = compilation;
+  }
+
+  async persist() {
+    await fs.writeFile(
+      path.resolve('.next', 'cache', 'pages-dependents.json'),
+      JSON.stringify(this.#dependents, null, 2)
+    );
+  }
+
+  async load() {
+    if (!existsSync(path.resolve('.next', 'cache', 'pages-dependents.json'))) {
+      return 0;
+    }
+
+    Object.assign(
+      this.#dependents,
+      JSON.parse(
+        (
+          await fs.readFile(
+            path.resolve('.next', 'cache', 'pages-dependents.json')
+          )
+        ).toString()
+      )
+    );
+
+    return Object.keys(this.#dependents).length;
+  }
+
+  async modified(): Promise<Set<string>> {
+    const modified = new Set<string>();
+
+    const addDependent = (dependent: string) => {
+      modified.add(dependent);
+      const { dependents } = this.#dependents[dependent] ?? { dependents: [] };
+      for (const dependent of dependents) {
+        addDependent(dependent);
+      }
+    };
+
+    for (const record in this.#dependents) {
+      if (!path.isAbsolute(record)) {
+        continue;
+      }
+
+      const { mtimeMs } = await fs.stat(record);
+      if (mtimeMs !== this.#dependents[record].mtimeMs) {
+        addDependent(record);
+      }
+    }
+
+    return modified;
   }
 
   async #createSyntheticModule(exports: any) {
@@ -117,7 +171,7 @@ export class Loader {
 
   evict(...files: string[]): string[] {
     const deleteDependents = (file: string) => {
-      for (const dependent of this.#dependents[file] ?? new Set()) {
+      for (const dependent of this.#dependents[file]?.dependents ?? []) {
         delete this.#modules[dependent];
         files.push(dependent);
         deleteDependents(dependent);
@@ -212,8 +266,10 @@ export class Loader {
       });
 
     if (parent) {
-      this.#dependents[result] = this.#dependents[result] ?? new Set();
-      this.#dependents[result].add(parent);
+      this.#dependents[result] = this.#dependents[result] ?? { dependents: [] };
+      if (!this.#dependents[result].dependents.includes(result)) {
+        this.#dependents[result].dependents.push(parent);
+      }
     }
 
     if (typeof this.#modules[result] !== 'undefined') {
@@ -225,6 +281,11 @@ export class Loader {
       module: vm.Module;
     }>();
     this.#modules[result] = resolver;
+
+    if (!this.#dependents[result]?.mtimeMs) {
+      this.#dependents[result] = this.#dependents[result] ?? { dependents: [] };
+      this.#dependents[result].mtimeMs = (await fs.stat(result)).mtimeMs;
+    }
 
     try {
       const dependency = new webpack.dependencies.ModuleDependency(result);
@@ -379,9 +440,12 @@ export class WebpackPagesPlugin {
         });
 
         const loader = this.createLoader(compilation);
+        const dependents = await loader.load();
 
         let modifiedFiles = compiler.modifiedFiles
           ? new Set<string>([...(compiler.modifiedFiles?.values() ?? [])])
+          : dependents > 0
+          ? await loader.modified()
           : null;
 
         if (modifiedFiles) {
@@ -424,34 +488,46 @@ export class WebpackPagesPlugin {
                           compilation.params.normalModuleFactory
                         );
 
+                        const filesToProcess = files.filter(file => {
+                          return (
+                            modifiedFiles?.has(path.resolve('pages', file)) ??
+                            true
+                          );
+                        });
+
+                        if (filesToProcess.length === 0) {
+                          return;
+                        }
+
+                        if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
+                          console.info(
+                            '- pages',
+                            'evaluating resources for',
+                            filesToProcess.length,
+                            'files'
+                          );
+                        }
+
                         this.resources = {
                           ...(this.resources ?? {}),
                           ...(
                             await Promise.all(
-                              files
-                                .filter(file => {
-                                  return (
-                                    modifiedFiles?.has(
-                                      path.resolve('pages', file)
-                                    ) ?? true
-                                  );
-                                })
-                                .map(file =>
-                                  loader
-                                    .importModule(
-                                      process.cwd(),
-                                      path.resolve('pages', file),
-                                      undefined,
-                                      'pages'
-                                    )
-                                    .then(({ webpackModule, module }) => {
-                                      return {
-                                        [path.resolve('pages', file)]: (
-                                          module.namespace as any
-                                        ).resource,
-                                      };
-                                    })
-                                )
+                              filesToProcess.map(file =>
+                                loader
+                                  .importModule(
+                                    process.cwd(),
+                                    path.resolve('pages', file),
+                                    undefined,
+                                    'pages'
+                                  )
+                                  .then(({ webpackModule, module }) => {
+                                    return {
+                                      [path.resolve('pages', file)]: (
+                                        module.namespace as any
+                                      ).resource,
+                                    };
+                                  })
+                              )
                             )
                           ).reduce((a, b) => ({ ...a, ...b }), {}),
                         };
@@ -467,6 +543,16 @@ export class WebpackPagesPlugin {
                           ),
                           JSON.stringify(this.resources, null, 2)
                         );
+                        await loader.persist();
+
+                        if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
+                          console.info(
+                            '- pages',
+                            'evaluated resources for',
+                            filesToProcess.length,
+                            'files'
+                          );
+                        }
                       }
                     );
                   },
