@@ -85,8 +85,12 @@ export class Loader {
         continue;
       }
 
-      const { mtimeMs } = await fs.stat(record);
-      if (mtimeMs !== this.#dependents[record].mtimeMs) {
+      try {
+        const { mtimeMs } = await fs.stat(record);
+        if (mtimeMs !== this.#dependents[record].mtimeMs) {
+          addDependent(record);
+        }
+      } catch (err) {
         addDependent(record);
       }
     }

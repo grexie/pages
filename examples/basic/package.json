@@ -8,7 +8,6 @@
     "start:build": "NODE_OPTIONS=\"${NODE_OPTIONS} --no-warnings --experimental-vm-modules --experimental-import-meta-resolve\" next build && NODE_OPTIONS=\"${NODE_OPTIONS} --experimental-vm-modules --experimental-import-meta-resolve\" next export && NODE_OPTIONS=\"${NODE_OPTIONS} --experimental-vm-modules --experimental-import-meta-resolve\" next start"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.14",
     "@grexie/pages": "^1.0.23",
     "@grexie/pages-plugin-markdown": "^1.0.23",
     "@grexie/pages-plugin-metadata": "^1.0.23",

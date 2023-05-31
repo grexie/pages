@@ -1,0 +1,15 @@
+{
+  "extension": ["ts", "tsx"],
+  "node-option": [
+    "experimental-import-meta-resolve",
+    "experimental-vm-modules",
+    "experimental-specifier-resolution=node",
+    "no-warnings",
+    "loader=ts-node/esm/transpile-only"
+  ],
+  "spec": [
+    "packages/{pages*,runtime/*,plugins/*,utils/*,webpack/*}/src/**/*.test.{ts,tsx}"
+  ],
+  "exclude": ["**/__snapshots__/**"],
+  "require": ["jsdom-global/register"]
+}

@@ -12,6 +12,10 @@ export const resolve = async (specifier, context, next) => {
   //   return result;
   // };
 
+  if (context.parentURL?.test(/node_modules/)) {
+    return next(specifier, context);
+  }
+
   const { pathname } = new URL(specifier, context.parentURL);
 
   if (

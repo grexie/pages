@@ -14,6 +14,7 @@ import {
 } from '../hooks/useStyles.js';
 import { useLazyComplete, withLazy } from '../hooks/useLazy.js';
 import { compose } from '@grexie/compose';
+import { withFirstRenderProvider } from '../hooks/useFirstRender.js';
 
 export interface DocumentHeadProps {}
 
@@ -50,7 +51,13 @@ const _DocumentContent: FC<PropsWithChildren<DocumentContentProps>> = ({
 const styles = new StylesContext();
 
 export const DocumentContent: FC<PropsWithChildren<DocumentContentProps>> =
-  compose(withLazy, withHead, withStyles({ styles }), _DocumentContent) as any;
+  compose(
+    withLazy,
+    withFirstRenderProvider,
+    withHead,
+    withStyles({ styles }),
+    _DocumentContent
+  ) as any;
 
 const _DocumentRoot: FC<PropsWithChildren> = ({ children }) => {
   return (

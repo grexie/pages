@@ -1,0 +1,557 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Grexie Pages useRenderTree test2 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [],
+          "index": 2,
+          "order": 5,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 6,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`Grexie Pages useRenderTree test2 2`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [],
+          "index": 3,
+          "order": 7,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 8,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`Grexie Pages useRenderTree test2 3`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [],
+                  "index": 0,
+                  "order": 7,
+                },
+              ],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 9,
+            },
+          ],
+          "index": 3,
+          "order": 8,
+        },
+        Object {
+          "children": Array [],
+          "index": 4,
+          "order": 10,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 11,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`Grexie Pages useRenderTree test2 4`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [],
+          "index": 3,
+          "order": 7,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 8,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`Grexie Pages useRenderTree test2 5`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [],
+                  "index": 0,
+                  "order": 7,
+                },
+              ],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 9,
+            },
+          ],
+          "index": 3,
+          "order": 8,
+        },
+        Object {
+          "children": Array [],
+          "index": 4,
+          "order": 10,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 11,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`useRenderTree test2 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [],
+          "index": 2,
+          "order": 5,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 6,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`useRenderTree test2 2`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [],
+          "index": 3,
+          "order": 7,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 8,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`useRenderTree test2 3`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [],
+                  "index": 0,
+                  "order": 7,
+                },
+              ],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 9,
+            },
+          ],
+          "index": 3,
+          "order": 8,
+        },
+        Object {
+          "children": Array [],
+          "index": 4,
+          "order": 10,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 11,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`useRenderTree test2 4`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [],
+          "index": 3,
+          "order": 7,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 8,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
+
+exports[`useRenderTree test2 5`] = `
+Object {
+  "children": Array [
+    Object {
+      "children": Array [],
+      "index": 0,
+      "order": 1,
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [],
+          "index": 0,
+          "order": 3,
+        },
+        Object {
+          "children": Array [],
+          "index": 1,
+          "order": 4,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [],
+                  "index": 0,
+                  "order": 7,
+                },
+              ],
+              "index": 0,
+              "order": 6,
+            },
+          ],
+          "index": 2,
+          "order": 5,
+        },
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [],
+              "index": 0,
+              "order": 9,
+            },
+          ],
+          "index": 3,
+          "order": 8,
+        },
+        Object {
+          "children": Array [],
+          "index": 4,
+          "order": 10,
+        },
+      ],
+      "index": 1,
+      "order": 2,
+    },
+    Object {
+      "children": Array [],
+      "index": 2,
+      "order": 11,
+    },
+  ],
+  "index": 0,
+  "order": 0,
+}
+`;
