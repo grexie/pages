@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-example-basic",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,11 +8,11 @@
     "start:build": "NODE_OPTIONS=\"${NODE_OPTIONS} --no-warnings --experimental-vm-modules --experimental-import-meta-resolve\" next build && NODE_OPTIONS=\"${NODE_OPTIONS} --experimental-vm-modules --experimental-import-meta-resolve\" next export && NODE_OPTIONS=\"${NODE_OPTIONS} --experimental-vm-modules --experimental-import-meta-resolve\" next start"
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.25",
-    "@grexie/pages-plugin-markdown": "^1.0.25",
-    "@grexie/pages-plugin-metadata": "^1.0.25",
-    "@grexie/pages-plugin-sass": "^1.0.25",
-    "@grexie/pages-plugin-svg": "^1.0.25",
+    "@grexie/pages": "^1.0.26",
+    "@grexie/pages-plugin-markdown": "^1.0.26",
+    "@grexie/pages-plugin-metadata": "^1.0.26",
+    "@grexie/pages-plugin-sass": "^1.0.26",
+    "@grexie/pages-plugin-svg": "^1.0.26",
     "@next/mdx": "^13.4.4",
     "@types/node": "20.2.5",
     "@types/react": "18.2.7",
