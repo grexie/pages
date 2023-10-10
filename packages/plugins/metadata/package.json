@@ -39,6 +39,10 @@
     "./loader": {
       "types": "./lib/loader.d.ts",
       "default": "./lib/loader.cjs"
+    },
+    "./loader-result": {
+      "types": "./lib/empty.d.ts",
+      "default": "./lib/empty.js"
     }
   },
   "publishConfig": {

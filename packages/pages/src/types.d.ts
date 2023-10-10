@@ -10,4 +10,4 @@ declare module 'core-js-pure/stable/clear-immediate.js' {
 
 declare module 'uppercamelcase';
 
-declare module '@grexie/pages-plugin-metadata/loader';
+declare module '@grexie/pages-plugin-metadata/loader-result';

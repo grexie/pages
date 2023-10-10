@@ -1,7 +1,7 @@
 import { PropsWithChildren, createContext, useContext } from 'react';
 import { Pages, PagesContextOptions } from '../graphql/index.js';
 import { createComposableWithProps } from '@grexie/compose';
-import resources from '@grexie/pages-plugin-metadata/loader';
+import resources from '@grexie/pages-plugin-metadata/loader-result';
 import { Head } from '../components/Head.js';
 
 const PagesContext = createContext<Pages>(new Pages());
