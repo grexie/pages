@@ -907,11 +907,11 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                   ],
                 });
 
-                babel.traverse(result, {
+                babel.traverse(result!, {
                   ExportDefaultDeclaration(p) {
                     data = new Function(
                       `return (${
-                        generator.default(p.get('declaration').node).code
+                        generator.default(p.get('declaration').node as any).code
                       })`
                     )();
                   },
