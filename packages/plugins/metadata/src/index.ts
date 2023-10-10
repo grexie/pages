@@ -86,25 +86,25 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
       const rootDir = process.cwd();
       const apiDir = path.resolve(pagesDir, 'api');
 
-      if (context.isServer) {
-        config.module?.rules?.push({
-          type: 'javascript/esm',
-          test: require.resolve('@grexie/pages-plugin-metadata/loader'),
-          use: [
-            {
-              loader: '@grexie/pages-json-loader',
+      // if (context.isServer) {
+      config.module?.rules?.push({
+        type: 'javascript/esm',
+        test: require.resolve('@grexie/pages-plugin-metadata/loader'),
+        use: [
+          {
+            loader: '@grexie/pages-json-loader',
+          },
+          {
+            loader: '@grexie/pages-plugin-metadata/loader',
+            options: {
+              pagesDir,
+              plugin,
             },
-            {
-              loader: '@grexie/pages-plugin-metadata/loader',
-              options: {
-                pagesDir,
-                plugin,
-              },
-            },
-          ],
-          sideEffects: false,
-        });
-      }
+          },
+        ],
+        sideEffects: false,
+      });
+      // }
 
       config.module?.rules?.push(
         {
