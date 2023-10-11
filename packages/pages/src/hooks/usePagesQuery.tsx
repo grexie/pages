@@ -24,6 +24,7 @@ export class QueryCollector {
       <Head>
         <script
           id="__PAGES_DATA__"
+          type="application/json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(this.data),
           }}
