@@ -40,7 +40,7 @@ function lineBreak() {
 
 /* Return nothing. */
 function empty() {
-  return { type: 'text', value: '' };
+  return { type: 'text', value: ' ' };
 }
 
 class MDXStrip {
@@ -125,7 +125,7 @@ class MDXStrip {
       value = values[index];
 
       if (prev && 'value' in value && value.type === prev.type) {
-        prev.value += value.value;
+        prev.value += value.value + ' ';
       } else {
         result.push(value);
         prev = value;
