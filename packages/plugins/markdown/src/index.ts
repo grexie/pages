@@ -30,7 +30,10 @@ export default () => (config: NextConfig) => {
     extension: /\.mdx?$/,
     options: {
       jsx: true,
-      remarkPlugins: [remarkFrontmatter, [remarkPages, { name: 'meta' }]],
+      remarkPlugins: [
+        remarkFrontmatter,
+        [remarkPages as any, { name: 'meta' }],
+      ],
       rehypePlugins: [],
     },
   })(config);
