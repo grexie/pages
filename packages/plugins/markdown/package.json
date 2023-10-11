@@ -16,8 +16,13 @@
     "@grexie/pages": "^1.0.30",
     "@mdx-js/loader": "^2.3.0",
     "@next/mdx": "^13.4.4",
+    "mdast-excerpt": "^0.0.10",
+    "rehype-stringify": "^10.0.0",
+    "remark": "^15.0.1",
     "remark-frontmatter": "^4.0.1",
-    "remark-mdx-next": "^0.1.1"
+    "remark-html": "^16.0.1",
+    "remark-mdx-next": "^0.1.1",
+    "remark-mdx-to-plain-text": "^3.0.0"
   },
   "exports": {
     ".": {

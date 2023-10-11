@@ -159,6 +159,9 @@ export default {
           $ref: 'Category',
         },
       },
+      excerpt: {
+        type: 'string',
+      },
       head: {
         id: 'Head',
         type: ['object', 'null'],
