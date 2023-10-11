@@ -5,14 +5,10 @@ import { MdxjsEsm } from 'mdast-util-mdx';
 import { parse } from 'toml';
 import { Plugin } from 'unified';
 import excerptAst from 'mdast-excerpt';
-import strip from 'remark-mdx-to-plain-text';
+import { strip } from './strip.js';
 import remarkMdx from 'remark-mdx';
 import { remark } from 'remark';
 import remarkStringify from 'remark-stringify';
-
-const asExcerpt: Plugin<any> = ((options: any) =>
-  (node: Node): Node =>
-    (excerptAst as any)(node, options || {})) as any;
 
 export interface RemarkPagesOptions {
   excerptLength?: number;
@@ -51,7 +47,8 @@ export const remarkPages: Plugin<[RemarkPagesOptions]> =
         .use(remarkMdx as any)
         .use(strip)
         .processSync(file)
-        .toString();
+        .toString()
+        .replace(/\s+/g, ' ');
 
       if (data.excerpt.trim().length > excerptLength - 1) {
         data.excerpt =
