@@ -48,7 +48,8 @@ export const remarkPages: Plugin<[RemarkPagesOptions]> =
         .use(strip)
         .processSync(file)
         .toString()
-        .replace(/\s+/g, ' ');
+        .replace(/\s+/g, ' ')
+        .replace(/&#x20;/g, ' ');
 
       if (data.excerpt.trim().length > excerptLength - 1) {
         data.excerpt =
