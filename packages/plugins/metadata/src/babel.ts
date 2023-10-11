@@ -205,6 +205,12 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
               [],
               babel.types.objectExpression([
                 babel.types.objectProperty(
+                  babel.types.identifier('resources'),
+                  babel.types.valueToNode(
+                    Object.values((state.opts as any).plugin.resources ?? {})
+                  )
+                ),
+                babel.types.objectProperty(
                   babel.types.identifier('filename'),
                   babel.types.memberExpression(
                     babel.types.memberExpression(
