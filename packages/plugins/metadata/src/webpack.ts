@@ -319,6 +319,7 @@ export class Loader {
 
       await new Promise<void>((resolve, reject) => {
         try {
+          this.compilation.buildQueue.increaseParallelism();
           this.compilation.buildQueue.add(webpackModule, err => {
             if (err) {
               reject(err);
@@ -331,6 +332,7 @@ export class Loader {
           reject(err);
         }
       });
+      this.compilation.buildQueue.decreaseParallelism();
 
       if ([...(webpackModule.getErrors() ?? [])].length) {
         throw [...(webpackModule.getErrors() ?? [])];
