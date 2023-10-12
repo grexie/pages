@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-metadata-loader",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
@@ -19,7 +19,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@grexie/pages-runtime-metadata": "^1.0.37",
+    "@grexie/pages-runtime-metadata": "^1.0.38",
     "webpack": "^5.84.1"
   },
   "exports": {
