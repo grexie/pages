@@ -8,6 +8,7 @@ import yaml from 'yaml';
 import { readFileSync } from 'fs';
 import generator from '@babel/generator';
 import { createRequire } from 'module';
+import grayMatter from 'gray-matter';
 
 const require = createRequire(import.meta.url);
 
@@ -882,9 +883,17 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             })
           );
 
-          const data = new Function(
-            `return (${generator.default(state.get('metadata')).code})`
-          )();
+          let data: any;
+
+          if (/\.mdx?$/.test(state.filename!)) {
+            const content = readFileSync(state.filename!);
+            const { data: d } = grayMatter(content);
+            data = d;
+          } else {
+            data = new Function(
+              `return (${generator.default(state.get('metadata')).code})`
+            )();
+          }
 
           p2.get('init')
             .get('properties')
@@ -899,7 +908,9 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             (state.get('files') as string[]).reduce((a, b) => {
               const extension = path.extname(b);
               let data: any;
-              if (/\.ya?ml$/.test(extension)) {
+              if ((state.opts as any).plugin.cache[b]) {
+                data = (state.opts as any).plugin.cache[b];
+              } else if (/\.ya?ml$/.test(extension)) {
                 data = yaml.parse(readFileSync(b).toString());
               } else if (/\.json$/.test(extension)) {
                 data = JSON.parse(readFileSync(b).toString());
@@ -926,6 +937,7 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                 throw new Error('invalid pages file: ' + b);
               }
 
+              (state.opts as any).plugin.cache[b] = data;
               return wrapMetadata(data)({ filename: b }, a);
             }, undefined as any)
           );

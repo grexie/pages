@@ -22,7 +22,8 @@
     "@grexie/pages-metadata-loader": "^1.0.39",
     "@grexie/pages-runtime-metadata": "^1.0.39",
     "@grexie/pages-yaml-loader": "^1.0.39",
-    "babel-loader": "^9.1.2"
+    "babel-loader": "^9.1.2",
+    "gray-matter": "^4.0.3"
   },
   "exports": {
     ".": {

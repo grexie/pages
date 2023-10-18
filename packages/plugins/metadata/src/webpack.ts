@@ -403,6 +403,7 @@ export class WebpackPagesPlugin {
   readonly pagesDir: string;
   resources?: Record<string, Resource>;
   ready?: ResolvablePromise<void>;
+  cache: Record<string, any> = {};
 
   #loader?: Loader;
   readonly #config: NextConfig;
@@ -456,6 +457,10 @@ export class WebpackPagesPlugin {
 
         if (modifiedFiles) {
           modifiedFiles = new Set(loader.evict(...(modifiedFiles ?? [])));
+        }
+
+        for (const f of [...(modifiedFiles ?? [])]) {
+          delete this.cache[f];
         }
 
         const files = glob.sync('**/*.{js,jsx,mjs,cjs,ts,tsx,md,mdx}', {
