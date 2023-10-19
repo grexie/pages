@@ -6,11 +6,14 @@ import NodeModule, { createRequire, builtinModules } from 'module';
 import { ResolvablePromise, createResolver } from '@grexie/resolvable';
 import { Metadata, Resource } from '@grexie/pages';
 import fs from 'fs/promises';
+import { createReadStream } from 'fs';
 import { existsSync } from 'fs';
 import type { NextConfig } from 'next';
 import { setConfig } from 'next/config.js';
 import grayMatter from 'gray-matter';
 import { wrapMetadata } from '@grexie/pages-runtime-metadata';
+
+const MAX_FRONTMATTER_WORKERS = 1;
 
 type WrappedScript = (
   exports: any,
@@ -477,7 +480,34 @@ export class WebpackPagesPlugin {
         );
       });
   }
+
+  readonly #frontmatterWorkers: Promise<void>[] = [];
+
   async parseFrontmatter(
+    loader: Loader,
+    file: string,
+    pagesDir: string
+  ): Promise<{ resource: Resource }> {
+    while (this.#frontmatterWorkers.length >= MAX_FRONTMATTER_WORKERS) {
+      await Promise.race(this.#frontmatterWorkers);
+    }
+
+    const promise = this.parseFrontmatterWorker(loader, file, pagesDir);
+    const handle = promise.then(
+      () => {},
+      () => {}
+    );
+    handle.finally(() => {
+      this.#frontmatterWorkers.splice(
+        this.#frontmatterWorkers.indexOf(handle),
+        1
+      );
+    });
+    this.#frontmatterWorkers.push(handle);
+    return promise;
+  }
+
+  async parseFrontmatterWorker(
     loader: Loader,
     file: string,
     pagesDir: string
@@ -528,8 +558,15 @@ export class WebpackPagesPlugin {
 
     const slug = ['', ...resourcePath].join('/');
 
-    const content = await fs.readFile(file);
-    let { data: metadata } = grayMatter(content);
+    const chunks = [];
+    for await (let chunk of createReadStream(file, {
+      start: 0,
+      end: 4096,
+    })) {
+      chunks.push(chunk);
+    }
+
+    let { data: metadata } = grayMatter(Buffer.concat(chunks));
     metadata = wrapMetadata({ path: resourcePath, slug, ...metadata })(
       { filename: path.resolve(process.cwd(), file) },
       parent
@@ -540,7 +577,7 @@ export class WebpackPagesPlugin {
       slug,
       metadata: metadata as Metadata,
     };
-    console.info(resource);
+
     if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
       console.info(
         '- pages',
@@ -548,6 +585,7 @@ export class WebpackPagesPlugin {
         path.resolve(process.cwd(), file)
       );
     }
+
     return { resource };
   }
 
