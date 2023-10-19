@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-runtime-metadata",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
@@ -17,7 +17,7 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.47",
+    "@grexie/pages": "^1.0.48",
     "@grexie/proxy": "^1.0.0",
     "mdast-util-mdx": "^2.0.1"
   }
