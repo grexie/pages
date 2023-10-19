@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages",
-  "version": "1.0.45",
+  "version": "1.0.46",
   "license": "MIT",
   "type": "module",
   "types": "./lib/index.d.ts",
