@@ -4,11 +4,13 @@ import path, { isAbsolute } from 'path';
 import vm, { SourceTextModule } from 'vm';
 import NodeModule, { createRequire, builtinModules } from 'module';
 import { ResolvablePromise, createResolver } from '@grexie/resolvable';
-import { Resource } from '@grexie/pages';
+import { Metadata, Resource } from '@grexie/pages';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import type { NextConfig } from 'next';
 import { setConfig } from 'next/config.js';
+import grayMatter from 'gray-matter';
+import { wrapMetadata } from '@grexie/pages-runtime-metadata';
 
 type WrappedScript = (
   exports: any,
@@ -20,6 +22,24 @@ type WrappedScript = (
 
 const wrapScript = (code: string): string =>
   `(exports, require, module, __filename, __dirname) => {\n${code}\n}`;
+
+const extensions = [
+  'yml',
+  'yaml',
+  'json',
+  'js',
+  'jsx',
+  'cjs',
+  'cjsx',
+  'mjs',
+  'mjsx',
+  'ts',
+  'tsx',
+  'cts',
+  'ctsx',
+  'mts',
+  'mtsx',
+];
 
 export class Loader {
   compilation: Compilation;
@@ -422,6 +442,115 @@ export class WebpackPagesPlugin {
     return this.#loader;
   }
 
+  async getPagesFiles(filename: string) {
+    return (
+      await new Promise<string[]>((resolve, reject) =>
+        glob(
+          '**/*.pages.{' + extensions.join(',') + '}',
+          {
+            cwd: process.cwd(),
+            ignore: ['**/node_modules/**', '**/.next/**'],
+            nodir: true,
+            dot: true,
+          },
+          (err, files) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            resolve(files);
+          }
+        )
+      )
+    )
+      .map(file => path.resolve(process.cwd(), file))
+      .filter(filename => {
+        const basename = path.basename(filename).replace(/\.pages\.\w+$/i, '');
+        const sourceBasename = path.basename(filename).replace(/\.\w+$/i, '');
+        const dirname = path.dirname(filename);
+
+        return (
+          (path.dirname(filename).substring(0, dirname.length) === dirname &&
+            basename === '') ||
+          (path.dirname(filename) === dirname && basename === sourceBasename)
+        );
+      });
+  }
+  async parseFrontmatter(
+    loader: Loader,
+    file: string,
+    pagesDir: string
+  ): Promise<{ resource: Resource }> {
+    if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
+      console.info(
+        '- pages',
+        'parsing front matter',
+        path.resolve(process.cwd(), file)
+      );
+    }
+
+    const pagesFiles = await this.getPagesFiles(
+      path.resolve(process.cwd(), file)
+    );
+    let parent: any = {};
+    for (const pagesFile of pagesFiles) {
+      // if (this.cache[pagesFile]) {
+      //   parent = this.cache[pagesFile];
+      //   continue;
+      // }
+
+      const { module } = await loader.importModule(
+        process.cwd(),
+        pagesFile,
+        undefined,
+        'pages'
+      );
+
+      parent = wrapMetadata((module.namespace as any).default)(
+        { filename: pagesFile },
+        parent
+      );
+      // this.cache[pagesFile] = parent;
+    }
+
+    const resourcePath = path
+      .relative(pagesDir, file)
+      .split(new RegExp(path.sep, 'g'));
+
+    resourcePath[resourcePath.length - 1] = resourcePath[
+      resourcePath.length - 1
+    ].replace(/\.\w+$/i, '');
+
+    if (resourcePath[resourcePath.length - 1] === 'index') {
+      resourcePath.pop();
+    }
+
+    const slug = ['', ...resourcePath].join('/');
+
+    const content = await fs.readFile(file);
+    let { data: metadata } = grayMatter(content);
+    metadata = wrapMetadata({ path: resourcePath, slug, ...metadata })(
+      { filename: path.resolve(process.cwd(), file) },
+      parent
+    );
+
+    const resource = {
+      path: resourcePath,
+      slug,
+      metadata: metadata as Metadata,
+    };
+    console.info(resource);
+    if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
+      console.info(
+        '- pages',
+        'parsed front matter',
+        path.resolve(process.cwd(), file)
+      );
+    }
+    return { resource };
+  }
+
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise(
       { name: 'PagesPlugin', stage: -Infinity },
@@ -523,22 +652,41 @@ export class WebpackPagesPlugin {
                           ...(this.resources ?? {}),
                           ...(
                             await Promise.all(
-                              filesToProcess.map(file =>
-                                loader
-                                  .importModule(
-                                    process.cwd(),
+                              filesToProcess
+                                .filter(file => /\.mdx?$/.test(file))
+                                .map(file =>
+                                  this.parseFrontmatter(
+                                    loader,
                                     path.resolve('pages', file),
-                                    undefined,
                                     'pages'
-                                  )
-                                  .then(({ webpackModule, module }) => {
+                                  ).then(({ resource }) => {
                                     return {
-                                      [path.resolve('pages', file)]: (
-                                        module.namespace as any
-                                      ).resource,
+                                      [path.resolve('pages', file)]: resource,
                                     };
                                   })
-                              )
+                                )
+                            )
+                          ).reduce((a, b) => ({ ...a, ...b }), {}),
+                          ...(
+                            await Promise.all(
+                              filesToProcess
+                                .filter(file => !/\.mdx?$/.test(file))
+                                .map(file =>
+                                  loader
+                                    .importModule(
+                                      process.cwd(),
+                                      path.resolve('pages', file),
+                                      undefined,
+                                      'pages'
+                                    )
+                                    .then(({ webpackModule, module }) => {
+                                      return {
+                                        [path.resolve('pages', file)]: (
+                                          module.namespace as any
+                                        ).resource,
+                                      };
+                                    })
+                                )
                             )
                           ).reduce((a, b) => ({ ...a, ...b }), {}),
                         };

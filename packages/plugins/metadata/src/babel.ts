@@ -909,7 +909,7 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
               const extension = path.extname(b);
               let data: any;
               if ((state.opts as any).plugin.cache[b]) {
-                data = (state.opts as any).plugin.cache[b];
+                return (state.opts as any).plugin.cache[b];
               } else if (/\.ya?ml$/.test(extension)) {
                 data = yaml.parse(readFileSync(b).toString());
               } else if (/\.json$/.test(extension)) {
@@ -937,8 +937,9 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
                 throw new Error('invalid pages file: ' + b);
               }
 
-              (state.opts as any).plugin.cache[b] = data;
-              return wrapMetadata(data)({ filename: b }, a);
+              const metadata = wrapMetadata(data)({ filename: b }, a);
+              (state.opts as any).plugin.cache[b] = metadata;
+              return metadata;
             }, undefined as any)
           );
 
