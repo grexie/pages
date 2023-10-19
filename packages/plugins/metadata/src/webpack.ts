@@ -579,8 +579,6 @@ export class WebpackPagesPlugin {
       parent
     );
 
-    console.info(metadata);
-
     const resource = {
       path: resourcePath,
       slug,
