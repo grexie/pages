@@ -17,7 +17,7 @@ export const Link: FC<PropsWithChildren<Omit<LinkProps, 'onClick'>>> = ({
     (async () => {
       const [, response] = await Promise.all([
         router.prefetch(props.href.toString(), props.as?.toString()),
-        fetch(props.as?.toString() ?? props.href?.toString()),
+        fetch(props.as?.toString() ?? router.basePath + props.href?.toString()),
       ]);
 
       const html = await response.text();
