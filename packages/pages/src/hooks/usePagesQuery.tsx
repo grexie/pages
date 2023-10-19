@@ -100,11 +100,26 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
     const router = useRouter();
 
     useEffect(() => {
+      const trimBasePath = (href: string): string => {
+        let basePath = router.basePath;
+        if (basePath.endsWith('/')) {
+          basePath = basePath.substring(0, basePath.length - 1);
+        }
+
+        href = href.substring(basePath.length);
+        console.info(href);
+        return href || '/';
+      };
+
       router.beforePopState(({ url, as, options }): boolean => {
         (async () => {
           const [, response] = await Promise.all([
-            router.prefetch(url, as, options),
-            fetch(as),
+            router.prefetch(
+              trimBasePath(url.toString()),
+              trimBasePath(as),
+              options
+            ),
+            fetch(url.toString()),
           ]);
 
           const html = await response.text();
@@ -116,11 +131,11 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
             data.innerHTML;
 
           props.update?.({ shallow: true });
-          await router.replace(
-            url.toString().substring(router.basePath.length),
-            as,
-            { shallow: true }
-          );
+
+          await router.replace(trimBasePath(url.toString()), trimBasePath(as), {
+            shallow: true,
+          });
+
           props.update?.();
         })();
 

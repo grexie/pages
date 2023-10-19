@@ -2,7 +2,8 @@
 ---
 
 import { Link } from '@grexie/pages';
+import { useRouter } from 'next/router';
 
-# <Link href={props.slug}>{props.title}</Link>
+# <Link href={useRouter().basePath + props.slug}>{props.title}</Link>
 
 {props.excerpt}
