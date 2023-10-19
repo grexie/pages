@@ -13,7 +13,7 @@ import { setConfig } from 'next/config.js';
 import grayMatter from 'gray-matter';
 import { wrapMetadata } from '@grexie/pages-runtime-metadata';
 
-const MAX_FRONTMATTER_WORKERS = 1;
+const MAX_FRONTMATTER_WORKERS = 30;
 
 type WrappedScript = (
   exports: any,
