@@ -22,8 +22,16 @@
     "@grexie/pages-metadata-loader": "^1.0.42",
     "@grexie/pages-runtime-metadata": "^1.0.42",
     "@grexie/pages-yaml-loader": "^1.0.42",
+    "@mdx-js/mdx": "^2.3.0",
     "babel-loader": "^9.1.2",
-    "gray-matter": "^4.0.3"
+    "cli-progress": "^3.12.0",
+    "gray-matter": "^4.0.3",
+    "remark": "^15.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-mdx": "^2.3.0",
+    "remark-mdx-to-plain-text": "^3.0.0",
+    "unified": "^11.0.3",
+    "vfile-matter": "^5.0.0"
   },
   "exports": {
     ".": {
@@ -51,6 +59,7 @@
   },
   "sideEffects": false,
   "devDependencies": {
+    "@types/cli-progress": "^3.11.4",
     "@types/js-yaml": "^4.0.5"
   }
 }

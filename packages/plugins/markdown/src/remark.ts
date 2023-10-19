@@ -3,20 +3,20 @@ import { load } from 'js-yaml';
 import { Root, YAML } from 'mdast';
 import { MdxjsEsm } from 'mdast-util-mdx';
 import { parse } from 'toml';
-import { Plugin } from 'unified';
-import excerptAst from 'mdast-excerpt';
+import remarkParse from 'remark-parse';
+import { unified, Plugin } from 'unified';
 import { strip } from './strip.js';
-import remarkMdx from 'remark-mdx';
-import { remark } from 'remark';
-import remarkStringify from 'remark-stringify';
+import mdx from 'remark-mdx';
+import frontmatter from 'remark-frontmatter';
+import stringify from 'remark-stringify';
 
 export interface RemarkPagesOptions {
   excerptLength?: number;
 }
 
 export const remarkPages: Plugin<[RemarkPagesOptions]> =
-  ({ excerptLength = 150 }) =>
-  ast => {
+  ({ excerptLength = 300 }) =>
+  (ast, file) => {
     const mdast = ast as Root;
     const imports: MdxjsEsm[] = [];
 
@@ -36,30 +36,22 @@ export const remarkPages: Plugin<[RemarkPagesOptions]> =
 
     data = data ?? {};
 
-    const file = remark()
-      .use(remarkStringify)
-      .use(remarkMdx as any)
-      .stringify(ast as any)
-      .toString();
+    let excerpt = unified()
+      .use(remarkParse as any)
+      .use(stringify)
+      .use(frontmatter as any)
+      .use(mdx as any)
+      .use(strip)
+      .processSync(file)
+      .toString()
+      .replace(/\s+/g, ' ');
 
-    try {
-      data.excerpt = remark()
-        .use(remarkMdx as any)
-        .use(strip)
-        .processSync(file)
-        .toString()
-        .replace(/\s+/g, ' ')
-        .replace(/&#x20;/g, ' ');
-
-      if (data.excerpt.trim().length > excerptLength - 1) {
-        data.excerpt =
-          data.excerpt.trim().substring(0, excerptLength - 1) + '…';
-      } else {
-        data.excerpt = data.excerpt.trim();
-      }
-    } catch (err) {
-      data.excerpt = '';
+    if (excerpt.trim().length > excerptLength - 1) {
+      excerpt = excerpt.trim().substring(0, excerptLength - 1) + '…';
+    } else {
+      excerpt = excerpt.trim();
     }
+    data.excerpt = excerpt;
 
     imports.unshift({
       type: 'mdxjsEsm',

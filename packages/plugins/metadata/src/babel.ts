@@ -3,7 +3,6 @@ import type * as BabelTypesNamespace from '@babel/types';
 import type { PluginObj } from '@babel/core';
 import path from 'path';
 import { wrapMetadata } from '@grexie/pages-runtime-metadata';
-import glob from 'glob';
 import yaml from 'yaml';
 import { readFileSync } from 'fs';
 import generator from '@babel/generator';
@@ -851,36 +850,8 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
           state.set('metadata', p2.get('init').node);
 
           state.set(
-            'pagesFiles',
-            glob
-              .sync('**/*.pages.{' + extensions.join(',') + '}', {
-                cwd: process.cwd(),
-                ignore: ['**/node_modules/**', '**/.next/**'],
-                nodir: true,
-                dot: true,
-              })
-              .map(file => path.resolve(process.cwd(), file))
-          );
-
-          state.set(
             'files',
-            (state.get('pagesFiles') as string[]).slice().filter(filename => {
-              const basename = path
-                .basename(filename)
-                .replace(/\.pages\.\w+$/i, '');
-              const sourceBasename = path
-                .basename(state.filename!)
-                .replace(/\.\w+$/i, '');
-              const dirname = path.dirname(filename);
-
-              return (
-                (path.dirname(state.filename!).substring(0, dirname.length) ===
-                  dirname &&
-                  basename === '') ||
-                (path.dirname(state.filename!) === dirname &&
-                  basename === sourceBasename)
-              );
-            })
+            (state.opts as any).plugin.getPagesFiles(state.filename!)
           );
 
           let data: any;

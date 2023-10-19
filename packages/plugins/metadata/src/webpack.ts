@@ -10,8 +10,12 @@ import { createReadStream } from 'fs';
 import { existsSync } from 'fs';
 import type { NextConfig } from 'next';
 import { setConfig } from 'next/config.js';
-import grayMatter from 'gray-matter';
+import * as mdx from '@mdx-js/mdx';
+import remarkFrontmatter from 'remark-frontmatter';
+import { matter } from 'vfile-matter';
+import { remarkExcerpt } from './remark.js';
 import { wrapMetadata } from '@grexie/pages-runtime-metadata';
+import cliProgress from 'cli-progress';
 
 const MAX_FRONTMATTER_WORKERS = 30;
 
@@ -427,6 +431,7 @@ export class WebpackPagesPlugin {
   resources?: Record<string, Resource>;
   ready?: ResolvablePromise<void>;
   cache: Record<string, any> = {};
+  pagesFiles?: string[];
 
   #loader?: Loader;
   readonly #config: NextConfig;
@@ -445,40 +450,24 @@ export class WebpackPagesPlugin {
     return this.#loader;
   }
 
-  async getPagesFiles(filename: string) {
-    return (
-      await new Promise<string[]>((resolve, reject) =>
-        glob(
-          '**/*.pages.{' + extensions.join(',') + '}',
-          {
-            cwd: process.cwd(),
-            ignore: ['**/node_modules/**', '**/.next/**'],
-            nodir: true,
-            dot: true,
-          },
-          (err, files) => {
-            if (err) {
-              reject(err);
-              return;
-            }
+  getPagesFiles(sourceFilename: string): string[] {
+    const files = this.pagesFiles!;
 
-            resolve(files);
-          }
-        )
-      )
-    )
-      .map(file => path.resolve(process.cwd(), file))
-      .filter(filename => {
-        const basename = path.basename(filename).replace(/\.pages\.\w+$/i, '');
-        const sourceBasename = path.basename(filename).replace(/\.\w+$/i, '');
-        const dirname = path.dirname(filename);
+    return files.filter(filename => {
+      const basename = path.basename(filename).replace(/\.pages\.\w+$/i, '');
+      const sourceBasename = path
+        .basename(sourceFilename!)
+        .replace(/\.\w+$/i, '');
+      const dirname = path.dirname(filename);
 
-        return (
-          (path.dirname(filename).substring(0, dirname.length) === dirname &&
-            basename === '') ||
-          (path.dirname(filename) === dirname && basename === sourceBasename)
-        );
-      });
+      return (
+        (path.dirname(sourceFilename!).substring(0, dirname.length) ===
+          dirname &&
+          basename === '') ||
+        (path.dirname(sourceFilename!) === dirname &&
+          basename === sourceBasename)
+      );
+    });
   }
 
   readonly #frontmatterWorkers: Promise<void>[] = [];
@@ -559,18 +548,38 @@ export class WebpackPagesPlugin {
     const slug = ['', ...resourcePath].join('/');
 
     const chunks = [];
-    for await (let chunk of createReadStream(file, {
-      start: 0,
-      end: 4096,
-    })) {
+    for await (let chunk of createReadStream(file)) {
       chunks.push(chunk);
     }
 
-    let { data: metadata } = grayMatter(Buffer.concat(chunks));
+    let vfile = await mdx.compile(
+      { value: Buffer.concat(chunks), path: file },
+      {
+        jsx: true,
+        format: 'detect',
+        baseUrl: file,
+        remarkPlugins: [
+          remarkFrontmatter,
+          () => (tree, file: any) => {
+            matter(file);
+            return tree;
+          },
+          remarkExcerpt as any,
+        ],
+      }
+    );
+
+    let metadata = {
+      ...(vfile.data.matter as any),
+      excerpt: vfile.data.excerpt,
+    };
+
     metadata = wrapMetadata({ path: resourcePath, slug, ...metadata })(
       { filename: path.resolve(process.cwd(), file) },
       parent
     );
+
+    console.info(metadata);
 
     const resource = {
       path: resourcePath,
@@ -629,6 +638,25 @@ export class WebpackPagesPlugin {
         for (const f of [...(modifiedFiles ?? [])]) {
           delete this.cache[f];
         }
+        this.pagesFiles = await new Promise<string[]>((resolve, reject) =>
+          glob(
+            '**/*.pages.{' + extensions.join(',') + '}',
+            {
+              cwd: process.cwd(),
+              ignore: ['**/node_modules/**', '**/.next/**'],
+              nodir: true,
+              dot: true,
+            },
+            (err, files) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(files);
+            }
+          )
+        ).then(files => files.map(file => path.resolve(process.cwd(), file)));
 
         const files = glob.sync('**/*.{js,jsx,mjs,cjs,ts,tsx,md,mdx}', {
           cwd: 'pages',
@@ -677,14 +705,26 @@ export class WebpackPagesPlugin {
                           return;
                         }
 
-                        if (process.env.PAGES_DEBUG_TRANSFORM === 'true') {
-                          console.info(
-                            '- pages',
-                            'evaluating resources for',
-                            filesToProcess.length,
-                            'files'
-                          );
-                        }
+                        const progress = new cliProgress.SingleBar(
+                          {
+                            clearOnComplete: true,
+                            hideCursor: true,
+                            noTTYOutput: true,
+                            notTTYSchedule: 500,
+                            format: '  {bar} | {percentage}% {eta_formatted}',
+                          },
+                          cliProgress.Presets.shades_grey
+                        );
+
+                        console.info(
+                          '- pages',
+                          'evaluating resources for',
+                          filesToProcess.length,
+                          'files'
+                        );
+
+                        let filesCompleted = 0;
+                        progress.start(filesToProcess.length, 0);
 
                         this.resources = {
                           ...(this.resources ?? {}),
@@ -697,11 +737,20 @@ export class WebpackPagesPlugin {
                                     loader,
                                     path.resolve('pages', file),
                                     'pages'
-                                  ).then(({ resource }) => {
-                                    return {
-                                      [path.resolve('pages', file)]: resource,
-                                    };
-                                  })
+                                  )
+                                    .then(
+                                      ({ resource }) => {
+                                        return {
+                                          [path.resolve('pages', file)]:
+                                            resource,
+                                        };
+                                      },
+                                      err => console.error(err)
+                                    )
+                                    .finally(() => {
+                                      filesCompleted++;
+                                      progress.update(filesCompleted);
+                                    })
                                 )
                             )
                           ).reduce((a, b) => ({ ...a, ...b }), {}),
@@ -717,17 +766,26 @@ export class WebpackPagesPlugin {
                                       undefined,
                                       'pages'
                                     )
-                                    .then(({ webpackModule, module }) => {
-                                      return {
-                                        [path.resolve('pages', file)]: (
-                                          module.namespace as any
-                                        ).resource,
-                                      };
+                                    .then(
+                                      ({ webpackModule, module }) => {
+                                        return {
+                                          [path.resolve('pages', file)]: (
+                                            module.namespace as any
+                                          ).resource,
+                                        };
+                                      },
+                                      err => console.error(err)
+                                    )
+                                    .finally(() => {
+                                      filesCompleted++;
+                                      progress.update(filesCompleted);
                                     })
                                 )
                             )
                           ).reduce((a, b) => ({ ...a, ...b }), {}),
                         };
+
+                        progress.stop();
 
                         await fs.mkdir(path.resolve('.next', 'cache'), {
                           recursive: true,
