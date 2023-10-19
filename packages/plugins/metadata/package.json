@@ -45,6 +45,10 @@
       "types": "./lib/webpack.d.ts",
       "default": "./lib/webpack.js"
     },
+    "./plugin": {
+      "types": "./lib/plugin.d.ts",
+      "default": "./lib/plugin.js"
+    },
     "./loader": {
       "types": "./lib/loader.d.ts",
       "default": "./lib/loader.cjs"

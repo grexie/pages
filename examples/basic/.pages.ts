@@ -52,6 +52,7 @@ export const resolvers: IResolvers<any, any>[] = [
         const index = resources.findIndex(
           (m: any) => m.metadata.slug === metadata.slug
         );
+
         return resources[index + 1]?.metadata;
       },
     },

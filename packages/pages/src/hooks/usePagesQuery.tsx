@@ -1,7 +1,15 @@
-import { PropsWithChildren, createContext, useContext } from 'react';
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'react';
 import { Pages, PagesContextOptions } from '../graphql/index.js';
 import { createComposableWithProps } from '@grexie/compose';
 import { Head } from '../components/Head.js';
+import { useRouter } from './useRouter.js';
 
 const PagesContext = createContext<Pages>(new Pages());
 const PagesContextOptionsContext = createContext<PagesContextOptions | null>(
@@ -34,27 +42,54 @@ export class QueryCollector {
   };
 }
 
+export const useUpdatePagesContext = () =>
+  useContext(PagesContextOptionsContext)?.update;
+
 export const withPagesContext = createComposableWithProps<PagesContextOptions>(
   ({ children, ...props }: PropsWithChildren<PagesContextOptions>) => {
     const context = useContext(PagesContextOptionsContext);
+    const [queryCollector] = useState<QueryCollector | undefined>(
+      typeof window === 'undefined' ? () => new QueryCollector() : undefined
+    );
 
-    if (!context) {
+    const getProps = (): any => {
+      if (context) {
+        return;
+      }
+
       if (typeof window === 'undefined') {
-        const queryCollector = new QueryCollector();
-        props = {
-          ...props,
-          queryCollector: queryCollector,
-          data: queryCollector.data,
+        return {
+          queryCollector,
+          data: queryCollector!.data,
         };
       } else {
-        props = {
-          ...props,
+        return {
           data: JSON.parse(
-            document.head.querySelector('script[id=__PAGES_DATA__]')
-              ?.innerHTML ?? '{}'
+            document.querySelector('script[id=__PAGES_DATA__]')?.innerHTML ??
+              '{}'
           ),
+          update: ({ shallow = false } = {}) => {
+            const props = getProps();
+            if (shallow) {
+              setExtraProps((p: any) => ({
+                data: { ...p.data, ...props.data },
+              }));
+            } else {
+              setExtraProps(props);
+            }
+            console.info('updated pages', props.data);
+          },
         };
       }
+    };
+
+    const [extraProps, setExtraProps] = useState<any>(getProps());
+
+    if (!context) {
+      props = {
+        ...props,
+        ...extraProps,
+      };
     }
 
     props = {
@@ -62,6 +97,33 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
       ...props,
       variables: { ...(context?.variables ?? {}), ...(props.variables ?? {}) },
     };
+
+    const router = useRouter();
+
+    useEffect(() => {
+      router.beforePopState(({ url, as, options }): boolean => {
+        (async () => {
+          const [, response] = await Promise.all([
+            router.prefetch(url, as, options),
+            fetch(as),
+          ]);
+
+          const html = await response.text();
+          const doc = document.implementation.createHTMLDocument();
+          doc.documentElement.innerHTML = html;
+
+          const data = doc.querySelector('script[id=__PAGES_DATA__]')!;
+          document.head.querySelector('script[id=__PAGES_DATA__]')!.innerHTML =
+            data.innerHTML;
+
+          props.update?.({ shallow: true });
+          await router.replace(url, as, { shallow: true });
+          props.update?.();
+        })();
+
+        return false;
+      });
+    }, [router.pathname]);
 
     return (
       <>

@@ -39,6 +39,7 @@ const PagesMetadataPlugin: Plugin<PagesMetadataPluginOptions> =
                 {
                   pagesDir,
                   plugin,
+                  isServer: context.isServer,
                 },
               ],
             ],

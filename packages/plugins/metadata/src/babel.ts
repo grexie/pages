@@ -204,12 +204,18 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             const pagesContext = babel.types.arrowFunctionExpression(
               [],
               babel.types.objectExpression([
-                babel.types.objectProperty(
-                  babel.types.identifier('resources'),
-                  babel.types.valueToNode(
-                    Object.values((state.opts as any).plugin.resources ?? {})
-                  )
-                ),
+                ...((state.opts as any).isServer
+                  ? [
+                      babel.types.objectProperty(
+                        babel.types.identifier('resources'),
+                        babel.types.valueToNode(
+                          Object.values(
+                            (state.opts as any).plugin.resources ?? {}
+                          )
+                        )
+                      ),
+                    ]
+                  : []),
                 babel.types.objectProperty(
                   babel.types.identifier('filename'),
                   babel.types.memberExpression(
@@ -843,7 +849,7 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
             ),
             babel.types.objectProperty(
               babel.types.identifier('slug'),
-              babel.types.valueToNode('/' + [...resourcePath, ''].join('/'))
+              babel.types.valueToNode('/' + [...resourcePath].join('/'))
             ),
           ]);
 

@@ -54,6 +54,7 @@ export interface PagesContextOptions {
   resourceMetadata?: Metadata | null;
   variables?: Record<string, any>;
   filename?: string;
+  update?: (opts?: { shallow?: boolean }) => void;
 }
 
 export class Pages {
