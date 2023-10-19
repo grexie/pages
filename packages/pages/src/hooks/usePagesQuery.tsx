@@ -116,7 +116,11 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
             data.innerHTML;
 
           props.update?.({ shallow: true });
-          await router.replace(url, as, { shallow: true });
+          await router.replace(
+            url.toString().substring(router.basePath.length),
+            as,
+            { shallow: true }
+          );
           props.update?.();
         })();
 
