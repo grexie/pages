@@ -77,7 +77,6 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
             } else {
               setExtraProps(props);
             }
-            console.info('updated pages', props.data);
           },
         };
       }
