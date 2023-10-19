@@ -119,7 +119,7 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
               trimBasePath(as),
               options
             ),
-            fetch(url.toString()),
+            fetch(as.toString()),
           ]);
 
           const html = await response.text();
