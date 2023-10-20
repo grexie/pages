@@ -16,7 +16,7 @@ export const Link: FC<PropsWithChildren<JSX.IntrinsicElements['a']>> = ({
     if (basePath.endsWith('/')) {
       basePath = basePath.substring(0, basePath.length - 1);
     }
-    return href.substring(basePath.length);
+    return href.substring(basePath.length) || '/';
   };
 
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {

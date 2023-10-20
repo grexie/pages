@@ -21,6 +21,7 @@ export const remarkExcerpt: Plugin<[RemarkPagesOptions]> =
       .use(strip)
       .processSync(file)
       .toString()
+      .replace(/&#x20;/g, ' ')
       .replace(/\s+/g, ' ');
 
     if (excerpt.trim().length > excerptLength - 1) {

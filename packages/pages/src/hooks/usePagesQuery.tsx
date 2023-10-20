@@ -107,7 +107,6 @@ export const withPagesContext = createComposableWithProps<PagesContextOptions>(
         }
 
         href = href.substring(basePath.length);
-        console.info(href);
         return href || '/';
       };
 
