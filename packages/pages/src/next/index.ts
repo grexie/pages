@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
 import { PagesInfrastructurePlugin } from './plugin.js';
 import { createRequire } from 'module';
+import path from 'path';
 
-const require = createRequire(process.cwd());
+const require = createRequire(path.resolve(process.cwd(), 'package.json'));
 
 export type Plugin<C extends any = void> = (
   config: C,
