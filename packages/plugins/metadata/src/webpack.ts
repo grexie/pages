@@ -557,7 +557,6 @@ export class WebpackPagesPlugin {
       {
         jsx: true,
         format: 'detect',
-        baseUrl: file,
         remarkPlugins: [
           remarkFrontmatter,
           () => (tree, file: any) => {
