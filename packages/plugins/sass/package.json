@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-plugin-sass",
-  "version": "1.0.50",
+  "version": "1.0.51",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.js",
@@ -13,9 +13,9 @@
     "react": ">=18.2.0"
   },
   "dependencies": {
-    "@grexie/pages": "^1.0.50",
-    "@grexie/pages-runtime-styles": "^1.0.50",
-    "@grexie/pages-style-loader": "^1.0.50",
+    "@grexie/pages": "^1.0.51",
+    "@grexie/pages-runtime-styles": "^1.0.51",
+    "@grexie/pages-style-loader": "^1.0.51",
     "css-loader": "^6.8.1",
     "sass": "^1.62.1",
     "sass-loader": "^13.3.1"
