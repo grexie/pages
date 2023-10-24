@@ -803,14 +803,20 @@ const BabelPagesPlugin = (babel: Babel): PluginObj => {
       ExportNamedDeclaration(p, state) {
         if (
           p.get('declaration').isVariableDeclaration({ kind: 'const' }) &&
-          p
+          (p
             .get('declaration')
             .get('declarations')
             .find((p: any) =>
               p.get('id').isIdentifier({ name: 'getStaticProps' })
-            )
+            ) ||
+            p
+              .get('declaration')
+              .get('declarations')
+              .find((p: any) =>
+                p.get('id').isIdentifier({ name: 'getServerSideProps' })
+              ))
         ) {
-          console.info('has getStaticProps');
+          // NOOP
         } else if (
           p.get('declaration').isVariableDeclaration({ kind: 'const' })
         ) {
