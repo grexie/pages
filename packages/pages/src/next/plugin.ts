@@ -1,6 +1,6 @@
-import { NextConfig } from 'next';
-import { Plugin } from './index.js';
-import { Configuration } from 'webpack';
+import type { NextConfig } from 'next';
+import type { Plugin } from './index.js';
+import type { Configuration } from 'webpack';
 
 export const PagesInfrastructurePlugin: Plugin = () => (config: NextConfig) => {
   const nextWebpackConfig = config.webpack;
