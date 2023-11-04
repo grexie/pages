@@ -1,6 +1,6 @@
 {
   "name": "@grexie/pages-style-loader",
-  "version": "1.0.53",
+  "version": "1.0.54",
   "license": "MIT",
   "type": "module",
   "module": "lib/index.mjs",
